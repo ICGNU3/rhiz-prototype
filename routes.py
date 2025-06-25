@@ -1,5 +1,6 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from app import app
+import uuid
 from models import Database, User, Contact, Goal, AISuggestion, ContactInteraction, ContactIntelligence, OutreachSuggestion
 from openai_utils import OpenAIUtils
 from database_utils import seed_demo_data, match_contacts_to_goal
@@ -7,6 +8,7 @@ from contact_intelligence import ContactNLP
 from csv_import import CSVContactImporter
 from simple_email import SimpleEmailSender
 from analytics import NetworkingAnalytics
+from network_visualization import NetworkMapper
 import logging
 
 # Initialize database and models
@@ -21,6 +23,7 @@ contact_intelligence = ContactIntelligence(db)
 openai_utils = OpenAIUtils()
 email_sender = SimpleEmailSender(db)
 analytics = NetworkingAnalytics(db)
+network_mapper = NetworkMapper(db)
 
 # Get or create default user
 DEFAULT_USER_ID = user_model.get_or_create_default()
@@ -582,6 +585,90 @@ def analytics_api(metric_type):
     except Exception as e:
         logging.error(f"Analytics API error: {e}")
         return jsonify({'error': 'Failed to fetch analytics data'}), 500
+
+@app.route('/network')
+def network_visualization():
+    """Network visualization and relationship mapping interface"""
+    try:
+        # Get network data
+        network_graph = network_mapper.build_network_graph(DEFAULT_USER_ID)
+        network_metrics = network_mapper.get_network_metrics(DEFAULT_USER_ID)
+        clusters = network_mapper.get_network_clusters(DEFAULT_USER_ID)
+        intro_suggestions = network_mapper.suggest_introductions(DEFAULT_USER_ID, limit=5)
+        
+        return render_template('network_visualization.html',
+                             network_graph=network_graph,
+                             metrics=network_metrics,
+                             clusters=clusters,
+                             intro_suggestions=intro_suggestions)
+    
+    except Exception as e:
+        logging.error(f"Network visualization error: {e}")
+        flash('Error loading network visualization', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/network/api/graph')
+def network_graph_api():
+    """API endpoint for network graph data"""
+    try:
+        graph_data = network_mapper.build_network_graph(DEFAULT_USER_ID)
+        return jsonify(graph_data)
+    except Exception as e:
+        logging.error(f"Network graph API error: {e}")
+        return jsonify({'error': 'Failed to fetch network data'}), 500
+
+@app.route('/network/api/metrics')
+def network_metrics_api():
+    """API endpoint for network metrics"""
+    try:
+        metrics = network_mapper.get_network_metrics(DEFAULT_USER_ID)
+        return jsonify(metrics)
+    except Exception as e:
+        logging.error(f"Network metrics API error: {e}")
+        return jsonify({'error': 'Failed to fetch network metrics'}), 500
+
+@app.route('/network/api/introductions')
+def network_introductions_api():
+    """API endpoint for introduction suggestions"""
+    try:
+        limit = int(request.args.get('limit', 10))
+        suggestions = network_mapper.suggest_introductions(DEFAULT_USER_ID, limit)
+        return jsonify(suggestions)
+    except Exception as e:
+        logging.error(f"Network introductions API error: {e}")
+        return jsonify({'error': 'Failed to fetch introduction suggestions'}), 500
+
+@app.route('/add_relationship', methods=['POST'])
+def add_relationship():
+    """Add a new relationship between contacts"""
+    contact_a_id = request.form.get('contact_a_id')
+    contact_b_id = request.form.get('contact_b_id')
+    relationship_type = request.form.get('relationship_type', 'knows')
+    strength = int(request.form.get('strength', 1))
+    notes = request.form.get('notes', '')
+    
+    if not all([contact_a_id, contact_b_id]):
+        flash('Both contacts are required', 'error')
+        return redirect(request.referrer or url_for('network_visualization'))
+    
+    try:
+        # Direct database insertion for relationship
+        conn = db.get_connection()
+        relationship_id = str(uuid.uuid4())
+        conn.execute(
+            "INSERT INTO contact_relationships (id, user_id, contact_a_id, contact_b_id, relationship_type, strength, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (relationship_id, DEFAULT_USER_ID, contact_a_id, contact_b_id, relationship_type, strength, notes)
+        )
+        conn.commit()
+        conn.close()
+        
+        flash('Relationship added successfully', 'success')
+    
+    except Exception as e:
+        logging.error(f"Add relationship error: {e}")
+        flash('Error adding relationship', 'error')
+    
+    return redirect(url_for('network_visualization'))
 
 @app.errorhandler(404)
 def not_found(error):
