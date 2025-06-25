@@ -32,7 +32,7 @@ class NetworkingAnalytics:
             WHERE user_id = ? 
             AND interaction_type = 'Email' 
             AND direction = 'outbound'
-            AND created_at >= ?
+            AND timestamp >= ?
             GROUP BY status
         """, (user_id, cutoff_date.isoformat()))
         
@@ -45,7 +45,7 @@ class NetworkingAnalytics:
             WHERE user_id = ? 
             AND interaction_type = 'Email' 
             AND direction = 'inbound'
-            AND created_at >= ?
+            AND timestamp >= ?
         """, (user_id, cutoff_date.isoformat()))
         
         responses = cursor.fetchone()[0]
