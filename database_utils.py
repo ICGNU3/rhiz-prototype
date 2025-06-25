@@ -14,15 +14,98 @@ def cosine_similarity(a, b):
     except:
         return 0.0
 
-def match_contacts_to_goal(goal_id):
-    """Match contacts to a goal using cosine similarity"""
+def load_contact_bio(contact_id):
+    """Load comprehensive contact bio from notes, LinkedIn bios, tweets, and all available sources"""
     db = Database()
+    conn = db.get_connection()
+    
+    try:
+        contact = conn.execute(
+            """SELECT name, notes, linkedin, twitter, company, title, interests, 
+               narrative_thread, relationship_type, location, introduced_by, tags
+               FROM contacts WHERE id = ?""", 
+            (contact_id,)
+        ).fetchone()
+        
+        if not contact:
+            return ""
+        
+        # Build comprehensive bio from all available sources
+        bio_parts = []
+        
+        # Basic professional info
+        bio_parts.append(f"Name: {contact['name']}")
+        
+        if contact['company']:
+            bio_parts.append(f"Company: {contact['company']}")
+        
+        if contact['title']:
+            bio_parts.append(f"Title: {contact['title']}")
+        
+        if contact['location']:
+            bio_parts.append(f"Location: {contact['location']}")
+        
+        if contact['relationship_type']:
+            bio_parts.append(f"Relationship: {contact['relationship_type']}")
+        
+        # Rich content sources (notes, context, interests)
+        if contact['notes']:
+            bio_parts.append(f"Notes: {contact['notes']}")
+        
+        if contact['narrative_thread']:
+            bio_parts.append(f"Context: {contact['narrative_thread']}")
+        
+        if contact['interests']:
+            bio_parts.append(f"Interests: {contact['interests']}")
+        
+        if contact['tags']:
+            bio_parts.append(f"Tags: {contact['tags']}")
+        
+        if contact['introduced_by']:
+            bio_parts.append(f"Introduced by: {contact['introduced_by']}")
+        
+        # Social profiles (these contain bio information)
+        if contact['linkedin']:
+            bio_parts.append(f"LinkedIn: {contact['linkedin']}")
+        
+        if contact['twitter']:
+            bio_parts.append(f"Twitter: {contact['twitter']}")
+        
+        return ". ".join(bio_parts)
+        
+    except Exception as e:
+        logging.error(f"Error loading bio for contact {contact_id}: {e}")
+        return ""
+    finally:
+        conn.close()
+
+def generate_contact_embedding(contact_id):
+    """Generate embedding for a contact's comprehensive bio"""
     openai_utils = OpenAIUtils()
+    
+    # Load contact bio from all sources
+    bio = load_contact_bio(contact_id)
+    
+    if not bio:
+        logging.warning(f"No bio content found for contact {contact_id}")
+        return None
+    
+    try:
+        # Generate embedding for the full bio
+        embedding = openai_utils.generate_embedding(bio)
+        return embedding
+    except Exception as e:
+        logging.error(f"Error generating embedding for contact {contact_id}: {e}")
+        return None
+
+def match_contacts_to_goal(goal_id):
+    """Match contacts to a goal using cosine similarity with comprehensive bio embeddings"""
+    db = Database()
     
     conn = db.get_connection()
     try:
         # Get goal embedding
-        goal_row = conn.execute("SELECT embedding, user_id FROM goals WHERE id = ?", (goal_id,)).fetchone()
+        goal_row = conn.execute("SELECT embedding, user_id, title, description FROM goals WHERE id = ?", (goal_id,)).fetchone()
         if not goal_row or not goal_row['embedding']:
             logging.error(f"Goal {goal_id} not found or has no embedding")
             return []
@@ -32,42 +115,56 @@ def match_contacts_to_goal(goal_id):
         
         matches = []
         
-        # Get all contacts for the user
+        # Get all contacts for the user with comprehensive data
         contacts = conn.execute(
-            "SELECT id, name, notes, linkedin, twitter FROM contacts WHERE user_id = ?", 
+            """SELECT id, name, notes, linkedin, twitter, company, title, 
+               interests, narrative_thread, relationship_type 
+               FROM contacts WHERE user_id = ?""", 
             (user_id,)
         ).fetchall()
         
+        logging.info(f"Matching {len(contacts)} contacts to goal: {goal_row['title']}")
+        
         for contact in contacts:
             try:
-                # Create contact description from available data
-                description_parts = [contact['name']]
-                if contact['notes']:
-                    description_parts.append(contact['notes'])
-                if contact['linkedin']:
-                    description_parts.append(f"LinkedIn: {contact['linkedin']}")
-                if contact['twitter']:
-                    description_parts.append(f"Twitter: {contact['twitter']}")
+                # Load comprehensive bio
+                bio = load_contact_bio(contact['id'])
                 
-                contact_description = " | ".join(description_parts)
+                if not bio:
+                    # Fallback to basic name if no bio available
+                    bio = contact['name']
                 
-                # Generate embedding for contact
-                contact_embedding_json = openai_utils.generate_embedding(contact_description)
-                contact_vector = np.array(json.loads(contact_embedding_json))
+                # Generate embedding for contact bio
+                contact_embedding = generate_contact_embedding(contact['id'])
                 
-                # Calculate similarity
+                if not contact_embedding:
+                    continue
+                
+                contact_vector = np.array(json.loads(contact_embedding))
+                
+                # Calculate cosine similarity
                 score = cosine_similarity(goal_vector, contact_vector)
+                
                 matches.append((contact['id'], contact['name'], float(score)))
                 
+                logging.info(f"Contact {contact['name']}: similarity score {score:.3f}")
+                
             except Exception as e:
-                logging.error(f"Failed to process contact {contact['id']}: {e}")
+                logging.error(f"Error processing contact {contact['id']}: {e}")
                 # Add with low score if processing fails
                 matches.append((contact['id'], contact['name'], 0.0))
         
-        # Sort by score descending
+        # Sort by score descending and return top 10
         matches.sort(key=lambda x: x[2], reverse=True)
-        return matches
-    
+        top_matches = matches[:10]
+        
+        logging.info(f"Found {len(top_matches)} matches for goal {goal_row['title']}")
+        
+        return top_matches
+        
+    except Exception as e:
+        logging.error(f"Error matching contacts to goal {goal_id}: {e}")
+        return []
     finally:
         conn.close()
 
