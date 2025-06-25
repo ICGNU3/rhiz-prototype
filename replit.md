@@ -81,8 +81,14 @@ The application follows an enhanced Flask MVC architecture with AI-powered conta
 - **API Keys**: Stored in Replit Secrets or environment variables
 - **Logging**: Debug-level logging for development, configurable for production
 
-## Changelog
-- June 25, 2025. Initial setup
+## Recent Changes
+- **June 25, 2025**: Complete CRM intelligence module implemented
+  - Enhanced database schema with warmth tracking, interaction logging, and pipeline management
+  - Natural language query interface for contact intelligence
+  - Kanban pipeline view for relationship stages (Cold → Aware → Warm → Active → Contributor)
+  - AI-powered daily outreach suggestions with priority scoring
+  - Comprehensive contact detail views with interaction timelines
+  - Auto-running schema.sql on first boot with migration support
 
 ## User Preferences
 
