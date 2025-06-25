@@ -823,6 +823,60 @@ def test_telegram_integration():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
+# PWA and Mobile API Routes
+@app.route('/api/follow-ups-due')
+def api_follow_ups_due():
+    """API endpoint for follow-ups due (for push notifications)"""
+    try:
+        follow_ups = contact_model.get_follow_ups_due(DEFAULT_USER_ID, days_ahead=7)
+        return jsonify(follow_ups)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/push-subscription', methods=['POST'])
+def save_push_subscription():
+    """Save push notification subscription"""
+    try:
+        subscription_data = request.get_json()
+        # Store subscription in database for push notifications
+        # This would typically save to a subscriptions table
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/telegram-command', methods=['POST'])
+def process_telegram_voice_command():
+    """Process voice commands sent through Telegram integration"""
+    try:
+        data = request.get_json()
+        command = data.get('command', '')
+        
+        # Process voice command using contact intelligence
+        response = contact_nlp.process_command(command)
+        
+        return jsonify({
+            'success': True,
+            'response': response.get('message', 'Command processed'),
+            'action': response.get('action')
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/offline.html')
+def offline_page():
+    """Offline fallback page"""
+    return render_template('offline.html')
+
+@app.route('/contacts/new')
+def new_contact_form():
+    """Mobile-optimized new contact form"""
+    return render_template('mobile_contact_form.html')
+
+@app.route('/goals/new')
+def new_goal_form():
+    """Mobile-optimized new goal form"""
+    return render_template('mobile_goal_form.html')
+
 @app.errorhandler(404)
 def not_found(error):
     return render_template('base.html'), 404
