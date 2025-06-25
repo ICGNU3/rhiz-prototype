@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}AI Assistant - CRM Intelligence{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>
+                <i class="bi bi-chat-dots me-2"></i>
+                AI Assistant
+            </h2>
+            <p class="text-muted">Ask questions about your contacts in natural language</p>
+        </div>
+    </div>
+
+    <!-- Query Interface -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-magic me-2"></i>
+                        Ask Your CRM Assistant
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="command" class="form-label">What would you like to know?</label>
+                            <input type="text" class="form-control form-control-lg" id="command" name="command" 
+                                   placeholder="e.g., Show me warm allies I haven't contacted in 30 days"
+                                   value="{{ request.form.get('command', '') }}" autofocus>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-search me-1"></i>Ask AI
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Response -->
+    {% if response %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-robot me-2"></i>
+                        AI Response
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="response-content" style="white-space: pre-line;">{{ response }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Example Queries -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        Example Queries
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Contact Management</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <button class="btn btn-outline-secondary btn-sm w-100 text-start" onclick="fillQuery(this.textContent)">
+                                        Show me warm allies I haven't spoken to in 30+ days
+                                    </button>
+                                </li>
+                                <li class="mb-2">
+                                    <button class="btn btn-outline-secondary btn-sm w-100 text-start" onclick="fillQuery(this.textContent)">
+                                        Who should I follow up with this week?
+                                    </button>
+                                </li>
+                                <li class="mb-2">
+                                    <button class="btn btn-outline-secondary btn-sm w-100 text-start" onclick="fillQuery(this.textContent)">
+                                        Show me all high priority contacts
+                                    </button>
+                                </li>
+                                <li class="mb-2">
+                                    <button class="btn btn-outline-secondary btn-sm w-100 text-start" onclick="fillQuery(this.textContent)">
+                                        List my investors
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Analytics & Insights</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <button class="btn btn-outline-secondary btn-sm w-100 text-start" onclick="fillQuery(this.textContent)">
+                                        Tell me about Sarah Chen
+                                    </button>
+                                </li>
+                                <li class="mb-2">
+                                    <button class="btn btn-outline-secondary btn-sm w-100 text-start" onclick="fillQuery(this.textContent)">
+                                        Show me my pipeline
+                                    </button>
+                                </li>
+                                <li class="mb-2">
+                                    <button class="btn btn-outline-secondary btn-sm w-100 text-start" onclick="fillQuery(this.textContent)">
+                                        Show me cold contacts
+                                    </button>
+                                </li>
+                                <li class="mb-2">
+                                    <button class="btn btn-outline-secondary btn-sm w-100 text-start" onclick="fillQuery(this.textContent)">
+                                        What's my recent activity?
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h6 class="text-primary">Follow-ups & Suggestions</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            <button class="btn btn-outline-secondary btn-sm w-100 text-start" onclick="fillQuery(this.textContent)">
+                                                Show me follow-ups due in the next 7 days
+                                            </button>
+                                        </li>
+                                        <li class="mb-2">
+                                            <button class="btn btn-outline-secondary btn-sm w-100 text-start" onclick="fillQuery(this.textContent)">
+                                                Get my outreach suggestions
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            <button class="btn btn-outline-secondary btn-sm w-100 text-start" onclick="fillQuery(this.textContent)">
+                                                Show me my interaction timeline
+                                            </button>
+                                        </li>
+                                        <li class="mb-2">
+                                            <button class="btn btn-outline-secondary btn-sm w-100 text-start" onclick="fillQuery(this.textContent)">
+                                                Suggest introductions for Marcus Rodriguez
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Capabilities -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        AI Assistant Capabilities
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6 class="text-info">Contact Filtering</h6>
+                            <p class="small text-muted">Filter contacts by warmth level, relationship type, priority, or days since last contact</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-info">Smart Suggestions</h6>
+                            <p class="small text-muted">Get AI-powered recommendations for daily outreach and follow-ups</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-info">Contact Insights</h6>
+                            <p class="small text-muted">Detailed summaries and interaction histories for any contact</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function fillQuery(text) {
+    document.getElementById('command').value = text;
+    document.getElementById('command').focus();
+}
+</script>
+{% endblock %}

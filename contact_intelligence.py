@@ -360,7 +360,7 @@ Provide a concise, actionable response. If the query is unclear, ask for clarifi
                 temperature=0.7
             )
             
-            return response.choices[0].message.content.strip()
+            return response.choices[0].message.content.strip() if response.choices[0].message.content else "No response generated"
             
         except Exception as e:
             logging.error(f"AI fallback error: {e}")

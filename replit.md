@@ -1,17 +1,18 @@
-# Founder Network AI
+# Founder Network AI - Contact Intelligence CRM
 
 ## Overview
 
-This is a Flask-based web application that helps founders connect with the right people in their network to achieve specific goals. The system uses OpenAI's embedding API to match contacts with goals based on semantic similarity, providing AI-powered networking recommendations.
+This is a comprehensive Flask-based contact intelligence and CRM system specifically designed for founders to manage their network relationships with AI-powered insights. The system combines traditional CRM functionality with advanced AI features including semantic goal matching, natural language query processing, and intelligent outreach suggestions.
 
 ## System Architecture
 
-The application follows a traditional Flask MVC architecture with the following key components:
+The application follows an enhanced Flask MVC architecture with AI-powered contact intelligence:
 
-- **Frontend**: HTML templates with Bootstrap for UI, using a dark theme optimized for Replit
-- **Backend**: Flask web framework with Python 3.11
-- **Database**: SQLite for local data storage with a well-defined schema
-- **AI Integration**: OpenAI API for embeddings and content generation
+- **Frontend**: Bootstrap 5.3 responsive UI with dark theme, featuring dashboard views, Kanban pipeline, and natural language interface
+- **Backend**: Flask web framework with Python 3.11, modular CRM intelligence system
+- **Database**: SQLite with comprehensive contact relationship schema supporting warmth tracking, interaction logging, and pipeline management
+- **AI Integration**: OpenAI GPT-4o for embeddings, content generation, and natural language processing
+- **CRM Intelligence**: Advanced contact scoring, outreach suggestions, and relationship pipeline management
 - **Deployment**: Gunicorn WSGI server with autoscale deployment on Replit
 
 ## Key Components

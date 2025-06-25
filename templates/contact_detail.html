@@ -1,0 +1,416 @@
+{% extends "base.html" %}
+
+{% block title %}{{ contact.name }} - Contact Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h2>
+                        <i class="bi bi-person-circle me-2"></i>
+                        {{ contact.name }}
+                    </h2>
+                    <div class="mb-2">
+                        <span class="badge bg-{{ 'danger' if contact.warmth_label == 'Cold' else 'warning' if contact.warmth_label == 'Aware' else 'info' if contact.warmth_label == 'Warm' else 'primary' if contact.warmth_label == 'Active' else 'success' }} me-2">
+                            {{ contact.warmth_label }}
+                        </span>
+                        <span class="badge bg-secondary me-2">{{ contact.relationship_type }}</span>
+                        <span class="badge bg-{{ 'warning' if contact.priority_level == 'High' else 'secondary' if contact.priority_level == 'Medium' else 'light text-dark' }}">
+                            {{ contact.priority_level }} Priority
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <a href="{{ url_for('contacts') }}" class="btn btn-outline-secondary me-2">
+                        <i class="bi bi-arrow-left me-1"></i>Back to Contacts
+                    </a>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#logInteractionModal">
+                        <i class="bi bi-plus-lg me-1"></i>Log Interaction
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Contact Information -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-person-vcard me-2"></i>
+                        Contact Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if contact.company %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">Company</h6>
+                        <p class="mb-0">{{ contact.company }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if contact.title %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">Title</h6>
+                        <p class="mb-0">{{ contact.title }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if contact.location %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">Location</h6>
+                        <p class="mb-0">{{ contact.location }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if contact.email %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">Email</h6>
+                        <p class="mb-0">
+                            <a href="mailto:{{ contact.email }}" class="text-decoration-none">{{ contact.email }}</a>
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    {% if contact.phone %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">Phone</h6>
+                        <p class="mb-0">
+                            <a href="tel:{{ contact.phone }}" class="text-decoration-none">{{ contact.phone }}</a>
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    {% if contact.linkedin %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">LinkedIn</h6>
+                        <p class="mb-0">
+                            <a href="https://{{ contact.linkedin }}" target="_blank" class="text-decoration-none">View Profile</a>
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    {% if contact.twitter %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">Twitter</h6>
+                        <p class="mb-0">
+                            <a href="https://twitter.com/{{ contact.twitter.replace('@', '') }}" target="_blank" class="text-decoration-none">{{ contact.twitter }}</a>
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    {% if contact.introduced_by %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">Introduced By</h6>
+                        <p class="mb-0">{{ contact.introduced_by }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Tags -->
+                    {% if contact.tags %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">Tags</h6>
+                        <div>
+                            {% for tag in contact.tags.split(',') %}
+                            <span class="badge bg-light text-dark me-1 mb-1">{{ tag.strip() }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if contact.interests %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">Interests</h6>
+                        <div>
+                            {% for interest in contact.interests.split(',') %}
+                            <span class="badge bg-info me-1 mb-1">{{ interest.strip() }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Contact Stats -->
+                    <div class="mb-3">
+                        <h6 class="text-muted">Stats</h6>
+                        <p class="mb-1">
+                            <i class="bi bi-chat-dots me-1"></i>
+                            {{ contact.interaction_count or 0 }} interactions
+                        </p>
+                        {% if contact.last_interaction_date %}
+                        <p class="mb-1">
+                            <i class="bi bi-clock me-1"></i>
+                            Last contact: {{ contact.last_interaction_date[:10] }}
+                        </p>
+                        {% endif %}
+                        <p class="mb-0">
+                            <i class="bi bi-calendar me-1"></i>
+                            Added: {{ contact.created_at[:10] }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Follow-up Action -->
+            {% if contact.follow_up_action %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="bi bi-alarm me-2"></i>
+                        Next Action
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1">{{ contact.follow_up_action }}</p>
+                    {% if contact.follow_up_due_date %}
+                    <small class="text-danger">
+                        <i class="bi bi-calendar-event me-1"></i>
+                        Due: {{ contact.follow_up_due_date[:10] }}
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- AI Summary and Interaction History -->
+        <div class="col-lg-8 mb-4">
+            <!-- AI Summary -->
+            {% if summary %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-robot me-2"></i>
+                        AI Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div style="white-space: pre-line;">{{ summary }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Notes -->
+            {% if contact.notes or contact.narrative_thread %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-file-text me-2"></i>
+                        Notes & Context
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if contact.notes %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">Notes</h6>
+                        <p>{{ contact.notes }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if contact.narrative_thread %}
+                    <div class="mb-0">
+                        <h6 class="text-muted">Relationship Context</h6>
+                        <p class="mb-0">{{ contact.narrative_thread }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Interaction History -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Interaction History
+                    </h5>
+                    <span class="badge bg-secondary">{{ interactions|length }} interactions</span>
+                </div>
+                <div class="card-body">
+                    {% if interactions %}
+                        {% for interaction in interactions %}
+                        <div class="d-flex mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                            <div class="flex-shrink-0 me-3">
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-{{ 'envelope' if interaction.interaction_type == 'Email' else 'telephone' if interaction.interaction_type == 'Call' else 'person-video' if interaction.interaction_type == 'Meeting' else 'chat' }} text-white"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                    <h6 class="mb-0">{{ interaction.interaction_type }}</h6>
+                                    <div>
+                                        <span class="badge bg-{{ 'success' if interaction.sentiment == 'positive' else 'warning' if interaction.sentiment == 'neutral' else 'danger' }} me-1">
+                                            {{ interaction.sentiment|title }}
+                                        </span>
+                                        <small class="text-muted">{{ interaction.timestamp[:16] }}</small>
+                                    </div>
+                                </div>
+                                
+                                {% if interaction.subject %}
+                                <p class="text-muted mb-1"><strong>{{ interaction.subject }}</strong></p>
+                                {% endif %}
+                                
+                                {% if interaction.summary %}
+                                <p class="mb-1">{{ interaction.summary }}</p>
+                                {% endif %}
+                                
+                                {% if interaction.notes %}
+                                <p class="text-muted small mb-1">{{ interaction.notes }}</p>
+                                {% endif %}
+                                
+                                {% if interaction.duration_minutes %}
+                                <small class="text-muted">
+                                    <i class="bi bi-stopwatch me-1"></i>
+                                    {{ interaction.duration_minutes }} minutes
+                                </small>
+                                {% endif %}
+                                
+                                {% if interaction.follow_up_needed %}
+                                <div class="mt-2">
+                                    <span class="badge bg-warning">
+                                        <i class="bi bi-arrow-right me-1"></i>
+                                        Follow-up needed: {{ interaction.follow_up_action }}
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-chat-dots display-4 text-muted mb-3"></i>
+                            <p class="text-muted">No interactions recorded yet</p>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#logInteractionModal">
+                                <i class="bi bi-plus-lg me-1"></i>Log First Interaction
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Log Interaction Modal -->
+<div class="modal fade" id="logInteractionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>Log New Interaction
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form action="{{ url_for('crm_log_interaction') }}" method="POST">
+                <input type="hidden" name="contact_id" value="{{ contact.id }}">
+                
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="interaction_type" class="form-label">Interaction Type</label>
+                            <select class="form-select" name="interaction_type" id="interaction_type" required>
+                                <option value="Email">Email</option>
+                                <option value="Call">Phone Call</option>
+                                <option value="Meeting">In-Person Meeting</option>
+                                <option value="Video">Video Call</option>
+                                <option value="Social">Social Media</option>
+                                <option value="Text">Text Message</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="direction" class="form-label">Direction</label>
+                            <select class="form-select" name="direction" id="direction" required>
+                                <option value="outbound">Outbound (I initiated)</option>
+                                <option value="inbound">Inbound (They initiated)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" name="status" id="status" required>
+                                <option value="completed">Completed</option>
+                                <option value="scheduled">Scheduled</option>
+                                <option value="missed">Missed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="sentiment" class="form-label">Sentiment</label>
+                            <select class="form-select" name="sentiment" id="sentiment">
+                                <option value="positive">Positive</option>
+                                <option value="neutral" selected>Neutral</option>
+                                <option value="negative">Negative</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Subject/Topic</label>
+                        <input type="text" class="form-control" name="subject" id="subject" placeholder="Brief subject or topic">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="summary" class="form-label">Summary</label>
+                        <textarea class="form-control" name="summary" id="summary" rows="3" placeholder="Brief summary of the interaction"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="duration_minutes" class="form-label">Duration (minutes)</label>
+                        <input type="number" class="form-control" name="duration_minutes" id="duration_minutes" placeholder="For calls/meetings">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Additional Notes</label>
+                        <textarea class="form-control" name="notes" id="notes" rows="2" placeholder="Any additional notes or details"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="follow_up_needed" id="follow_up_needed">
+                            <label class="form-check-label" for="follow_up_needed">
+                                Follow-up needed
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="row" id="follow_up_fields" style="display: none;">
+                        <div class="col-md-8 mb-3">
+                            <label for="follow_up_action" class="form-label">Follow-up Action</label>
+                            <input type="text" class="form-control" name="follow_up_action" id="follow_up_action" placeholder="What needs to be done next?">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="follow_up_date" class="form-label">Due Date</label>
+                            <input type="date" class="form-control" name="follow_up_date" id="follow_up_date">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-1"></i>Log Interaction
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('follow_up_needed').addEventListener('change', function() {
+    const followUpFields = document.getElementById('follow_up_fields');
+    if (this.checked) {
+        followUpFields.style.display = 'block';
+    } else {
+        followUpFields.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}
