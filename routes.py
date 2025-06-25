@@ -5,6 +5,7 @@ from openai_utils import OpenAIUtils
 from database_utils import seed_demo_data, match_contacts_to_goal
 from contact_intelligence import ContactNLP
 from csv_import import CSVContactImporter
+from simple_email import SimpleEmailSender
 import logging
 
 # Initialize database and models
@@ -17,6 +18,7 @@ interaction_model = ContactInteraction(db)
 outreach_suggestion_model = OutreachSuggestion(db)
 contact_intelligence = ContactIntelligence(db)
 openai_utils = OpenAIUtils()
+email_sender = SimpleEmailSender(db)
 
 # Get or create default user
 DEFAULT_USER_ID = user_model.get_or_create_default()
