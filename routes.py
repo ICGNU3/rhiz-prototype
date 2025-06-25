@@ -9,6 +9,7 @@ from csv_import import CSVContactImporter
 from simple_email import SimpleEmailSender
 from analytics import NetworkingAnalytics
 from network_visualization import NetworkMapper
+from integrations import AutomationEngine
 import logging
 
 # Initialize database and models
@@ -24,6 +25,7 @@ openai_utils = OpenAIUtils()
 email_sender = SimpleEmailSender(db)
 analytics = NetworkingAnalytics(db)
 network_mapper = NetworkMapper(db)
+automation_engine = AutomationEngine(db)
 
 # Get or create default user
 DEFAULT_USER_ID = user_model.get_or_create_default()
@@ -672,6 +674,135 @@ def add_relationship():
         flash('Error adding relationship', 'error')
     
     return redirect(url_for('network_visualization'))
+
+# Integration & Automation Routes
+@app.route('/integrations')
+def integrations_dashboard():
+    """Integration & Automation dashboard"""
+    try:
+        integration_status = automation_engine.get_integration_status()
+        return render_template('integrations_dashboard.html', 
+                             integration_status=integration_status)
+    except Exception as e:
+        logging.error(f"Error loading integrations dashboard: {str(e)}")
+        flash(f'Error loading dashboard: {str(e)}', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/integrations/slack/test', methods=['POST'])
+def test_slack_integration():
+    """Test Slack integration"""
+    try:
+        success = automation_engine.slack.send_networking_update(
+            "Integration test from Founder Network AI", 
+            "System Test"
+        )
+        return jsonify({
+            'success': success,
+            'message': 'Test message sent' if success else 'Slack not configured'
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/integrations/calendar/schedule', methods=['POST'])
+def schedule_follow_up_integration():
+    """Schedule follow-up via calendar integration"""
+    try:
+        data = request.get_json()
+        contact_name = data.get('contact_name')
+        days_ahead = data.get('days_ahead', 7)
+        note = data.get('note', 'Follow up on previous conversation')
+        
+        # Find contact by name
+        contacts = contact_model.get_all(DEFAULT_USER_ID)
+        contact = next((c for c in contacts if c['name'].lower() == contact_name.lower()), None)
+        
+        if not contact:
+            return jsonify({'success': False, 'error': 'Contact not found'})
+        
+        result = automation_engine.calendar.schedule_follow_up(
+            contact['id'], days_ahead, note
+        )
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/integrations/export/csv')
+def export_contacts_csv():
+    """Export contacts to CSV format"""
+    try:
+        csv_content = automation_engine.crm_sync.export_contacts_to_csv(DEFAULT_USER_ID)
+        
+        if not csv_content:
+            flash('No contacts to export', 'warning')
+            return redirect(url_for('integrations_dashboard'))
+        
+        from flask import Response
+        return Response(
+            csv_content,
+            mimetype='text/csv',
+            headers={'Content-Disposition': 'attachment; filename=founder_network_contacts.csv'}
+        )
+        
+    except Exception as e:
+        logging.error(f"CSV export error: {str(e)}")
+        flash(f'Export failed: {str(e)}', 'error')
+        return redirect(url_for('integrations_dashboard'))
+
+@app.route('/integrations/export/hubspot')
+def export_contacts_hubspot():
+    """Export contacts in HubSpot format"""
+    return export_contacts_csv()
+
+@app.route('/integrations/social/updates')
+def get_social_updates():
+    """Get social media updates for contacts"""
+    try:
+        # Get sample updates for demo
+        updates = []
+        contacts = contact_model.get_all(DEFAULT_USER_ID)
+        
+        for contact in contacts[:3]:  # Show updates for first 3 contacts
+            contact_updates = automation_engine.social_monitor.get_contact_social_updates(contact['id'])
+            updates.extend(contact_updates)
+        
+        return jsonify({'updates': updates})
+        
+    except Exception as e:
+        return jsonify({'updates': [], 'error': str(e)})
+
+@app.route('/integrations/automation/daily', methods=['POST'])
+def run_daily_automation():
+    """Run daily automation tasks"""
+    try:
+        automation_engine.run_daily_automation(DEFAULT_USER_ID)
+        return jsonify({'success': True, 'message': 'Daily automation completed'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/integrations/test/all', methods=['POST'])
+def test_all_integrations():
+    """Test all integrations"""
+    try:
+        results = {
+            'slack': automation_engine.slack.is_configured(),
+            'calendar': True,
+            'crm_sync': True,
+            'social_monitoring': True
+        }
+        return jsonify({'success': True, 'results': results})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/integrations/followups/check')
+def check_follow_ups():
+    """Check follow-ups due"""
+    try:
+        follow_ups = contact_model.get_follow_ups_due(DEFAULT_USER_ID, days_ahead=7)
+        return jsonify({'count': len(follow_ups), 'follow_ups': follow_ups})
+    except Exception as e:
+        return jsonify({'count': 0, 'error': str(e)})
 
 @app.errorhandler(404)
 def not_found(error):
