@@ -82,6 +82,15 @@ The application follows an enhanced Flask MVC architecture with AI-powered conta
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
+- **June 25, 2025**: CSV import functionality for bulk contact uploads completed
+  - Automatic field detection supporting various CSV formats and column names
+  - Data validation with comprehensive error handling and warnings
+  - Duplicate contact detection based on email addresses
+  - Sample CSV template download functionality
+  - Import statistics and detailed error reporting
+  - Support for all contact fields including company, title, LinkedIn, relationship type
+  - Navigation integration with dedicated import interface
+
 - **June 25, 2025**: Single-page goal-based contact matcher implemented
   - Fast template-based message generation with multiple tone options (warm, professional, casual, urgent)
   - Streamlined goal creation form with instant contact matching
