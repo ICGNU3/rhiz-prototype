@@ -30,6 +30,7 @@ def index():
         # Handle goal creation and matching
         goal_title = request.form.get('goal_title', '').strip()
         goal_description = request.form.get('goal_description', '').strip()
+        tone = request.form.get('tone', 'warm')
         
         if not goal_title or not goal_description:
             flash('Both goal title and description are required', 'error')
@@ -46,24 +47,30 @@ def index():
                 # Get matched contacts
                 matches = match_contacts_to_goal(goal_id)
                 
-                # Generate AI messages for top matches
+                # Generate AI messages for top 5 matches
                 message_data = []
-                for contact_id, contact_name, score in matches[:10]:
+                for contact_id, contact_name, score in matches[:5]:
                     try:
                         # Get contact details
                         contact = contact_model.get_by_id(contact_id)
                         
-                        # Generate personalized message
-                        from database_utils import load_contact_bio
-                        contact_bio = load_contact_bio(contact_id)
-                        
-                        message = openai_utils.generate_message(
-                            contact_name=contact_name,
-                            goal_title=goal_title,
-                            goal_description=goal_description,
-                            contact_bio=contact_bio,
-                            tone="warm"
-                        )
+                        # Generate message - try AI first, fallback to template
+                        try:
+                            from database_utils import load_contact_bio
+                            contact_bio = load_contact_bio(contact_id)[:300]  # Shorter bio
+                            
+                            message = openai_utils.generate_message(
+                                contact_name=contact_name,
+                                goal_title=goal_title,
+                                goal_description=goal_description[:200],  # Shorter description
+                                contact_bio=contact_bio,
+                                tone=tone
+                            )
+                        except Exception as ai_error:
+                            logging.warning(f"AI generation failed for {contact_name}: {ai_error}")
+                            # Use template message as fallback
+                            company_info = f" at {contact.company}" if contact.company else ""
+                            message = f"Hi {contact_name},\n\nI hope this message finds you well. I'm reaching out because I'm working on {goal_title} and thought you might have valuable insights given your experience{company_info}.\n\nWould you be open to a brief conversation to share your perspective?\n\nBest regards"
                         
                         message_data.append({
                             'contact_id': contact_id,
@@ -74,7 +81,7 @@ def index():
                         })
                         
                     except Exception as e:
-                        logging.error(f"Error generating message for contact {contact_id}: {e}")
+                        logging.error(f"Error processing contact {contact_id}: {e}")
                         continue
                 
                 # Render results page
