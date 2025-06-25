@@ -1,8 +1,9 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from app import app
-from models import Database, User, Contact, Goal, AISuggestion, ContactInteraction
+from models import Database, User, Contact, Goal, AISuggestion, ContactInteraction, ContactIntelligence, OutreachSuggestion
 from openai_utils import OpenAIUtils
 from database_utils import seed_demo_data, match_contacts_to_goal
+from contact_intelligence import ContactNLP
 import logging
 
 # Initialize database and models
@@ -12,10 +13,15 @@ contact_model = Contact(db)
 goal_model = Goal(db)
 ai_suggestion_model = AISuggestion(db)
 interaction_model = ContactInteraction(db)
+outreach_suggestion_model = OutreachSuggestion(db)
+contact_intelligence = ContactIntelligence(db)
 openai_utils = OpenAIUtils()
 
 # Get or create default user
 DEFAULT_USER_ID = user_model.get_or_create_default()
+
+# Initialize NLP processor
+contact_nlp = ContactNLP(DEFAULT_USER_ID)
 
 @app.route('/')
 def index():
@@ -168,6 +174,149 @@ def log_interaction():
         flash('Failed to log interaction', 'error')
     
     return redirect(request.referrer or url_for('index'))
+
+# ============ CRM INTELLIGENCE ROUTES ============
+
+@app.route('/crm')
+def crm_dashboard():
+    """Enhanced CRM dashboard with intelligence features"""
+    # Generate daily suggestions
+    contact_intelligence.generate_daily_suggestions(DEFAULT_USER_ID)
+    
+    # Get data for dashboard
+    suggestions = outreach_suggestion_model.get_daily_suggestions(DEFAULT_USER_ID, limit=5)
+    follow_ups = contact_model.get_follow_ups_due(DEFAULT_USER_ID, days_ahead=7)
+    timeline = interaction_model.get_timeline(DEFAULT_USER_ID, days_back=7)
+    pipeline = contact_model.get_pipeline_view(DEFAULT_USER_ID)
+    
+    # Get contact stats
+    all_contacts = contact_model.get_all(DEFAULT_USER_ID)
+    high_priority = contact_model.get_by_filters(DEFAULT_USER_ID, priority_level="High")
+    
+    stats = {
+        'total_contacts': len(all_contacts),
+        'high_priority': len(high_priority),
+        'follow_ups_due': len(follow_ups),
+        'suggestions': len(suggestions)
+    }
+    
+    return render_template('crm_dashboard.html', 
+                         suggestions=suggestions, 
+                         follow_ups=follow_ups, 
+                         timeline=timeline,
+                         pipeline=pipeline,
+                         stats=stats)
+
+@app.route('/crm/pipeline')
+def crm_pipeline():
+    """Kanban-style pipeline view"""
+    pipeline = contact_model.get_pipeline_view(DEFAULT_USER_ID)
+    return render_template('crm_pipeline.html', pipeline=pipeline)
+
+@app.route('/crm/timeline')
+def crm_timeline():
+    """Interaction timeline view"""
+    days_back = request.args.get('days', 30, type=int)
+    timeline = interaction_model.get_timeline(DEFAULT_USER_ID, days_back)
+    return render_template('crm_timeline.html', timeline=timeline, days_back=days_back)
+
+@app.route('/crm/suggestions')
+def crm_suggestions():
+    """Daily outreach suggestions"""
+    contact_intelligence.generate_daily_suggestions(DEFAULT_USER_ID)
+    suggestions = outreach_suggestion_model.get_daily_suggestions(DEFAULT_USER_ID)
+    return render_template('crm_suggestions.html', suggestions=suggestions)
+
+@app.route('/crm/contact/<contact_id>')
+def contact_detail(contact_id):
+    """Detailed contact view with intelligence"""
+    contact = contact_model.get_by_id(contact_id)
+    if not contact:
+        flash('Contact not found', 'error')
+        return redirect(url_for('contacts'))
+    
+    interactions = interaction_model.get_by_contact(contact_id)
+    summary = contact_intelligence.summarize_contact_history(contact_id)
+    
+    return render_template('contact_detail.html', 
+                         contact=contact, 
+                         interactions=interactions,
+                         summary=summary)
+
+@app.route('/crm/nlp', methods=['GET', 'POST'])
+def crm_nlp():
+    """Natural language processing interface"""
+    response = None
+    
+    if request.method == 'POST':
+        command = request.form.get('command', '').strip()
+        if command:
+            try:
+                response = contact_nlp.process_command(command)
+            except Exception as e:
+                logging.error(f"NLP processing error: {e}")
+                response = "Sorry, I couldn't process that request. Please try again."
+    
+    return render_template('crm_nlp.html', response=response)
+
+@app.route('/crm/update_warmth', methods=['POST'])
+def update_warmth():
+    """Update contact warmth status"""
+    contact_id = request.form.get('contact_id')
+    warmth_status = request.form.get('warmth_status', type=int)
+    warmth_label = request.form.get('warmth_label')
+    
+    if contact_id and warmth_status and warmth_label:
+        contact_model.update_warmth_status(contact_id, warmth_status, warmth_label)
+        flash('Contact warmth updated successfully', 'success')
+    else:
+        flash('Invalid warmth update data', 'error')
+    
+    return redirect(request.referrer or url_for('crm_dashboard'))
+
+@app.route('/crm/log_interaction', methods=['POST'])
+def crm_log_interaction():
+    """Enhanced interaction logging"""
+    contact_id = request.form.get('contact_id')
+    interaction_type = request.form.get('interaction_type', 'Email')
+    status = request.form.get('status', 'completed')
+    direction = request.form.get('direction', 'outbound')
+    subject = request.form.get('subject')
+    summary = request.form.get('summary')
+    sentiment = request.form.get('sentiment', 'neutral')
+    notes = request.form.get('notes')
+    follow_up_needed = request.form.get('follow_up_needed') == 'on'
+    follow_up_action = request.form.get('follow_up_action')
+    follow_up_date = request.form.get('follow_up_date')
+    duration_minutes = request.form.get('duration_minutes', type=int)
+    
+    if contact_id:
+        interaction_id = interaction_model.create(
+            contact_id=contact_id,
+            user_id=DEFAULT_USER_ID,
+            interaction_type=interaction_type,
+            status=status,
+            direction=direction,
+            subject=subject,
+            summary=summary,
+            sentiment=sentiment,
+            notes=notes,
+            follow_up_needed=follow_up_needed,
+            follow_up_action=follow_up_action,
+            follow_up_date=follow_up_date,
+            duration_minutes=duration_minutes
+        )
+        
+        if interaction_id:
+            # Update contact last interaction
+            contact_model.update_last_interaction(contact_id, interaction_type)
+            flash('Interaction logged successfully', 'success')
+        else:
+            flash('Failed to log interaction', 'error')
+    else:
+        flash('Contact ID required', 'error')
+    
+    return redirect(request.referrer or url_for('crm_dashboard'))
 
 @app.route('/api/copy_message', methods=['POST'])
 def copy_message():

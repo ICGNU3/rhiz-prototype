@@ -34,6 +34,29 @@
                             <i class="bi bi-house me-1"></i>Dashboard
                         </a>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-diagram-3 me-1"></i>CRM Intelligence
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('crm_dashboard') }}">
+                                <i class="bi bi-speedometer2 me-1"></i>CRM Dashboard
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('crm_pipeline') }}">
+                                <i class="bi bi-kanban me-1"></i>Pipeline View
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('crm_timeline') }}">
+                                <i class="bi bi-clock-history me-1"></i>Timeline
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('crm_suggestions') }}">
+                                <i class="bi bi-lightbulb me-1"></i>AI Suggestions
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('crm_nlp') }}">
+                                <i class="bi bi-chat-dots me-1"></i>Ask AI Assistant
+                            </a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link text-light" href="{{ url_for('goals') }}">
                             <i class="bi bi-target me-1"></i>Goals

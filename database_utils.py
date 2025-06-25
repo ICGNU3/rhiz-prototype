@@ -3,6 +3,7 @@ import json
 import numpy as np
 from numpy.linalg import norm
 import logging
+from datetime import datetime, timedelta
 from models import Database, Contact, Goal
 from openai_utils import OpenAIUtils
 
@@ -79,48 +80,141 @@ def seed_demo_data(user_id):
     
     logging.info("Seeding demo data...")
     
-    # Demo contacts
+    # Enhanced demo contacts with CRM intelligence data
     demo_contacts = [
         {
             "name": "Sarah Chen",
             "email": "sarah@techstartup.com",
             "linkedin": "linkedin.com/in/sarahchen",
+            "relationship_type": "Ally",
+            "warmth_status": 4,
+            "warmth_label": "Active",
+            "priority_level": "High",
+            "company": "TechStartup Inc",
+            "title": "CEO & Founder",
+            "location": "San Francisco, CA",
             "notes": "Serial entrepreneur, founded 3 successful B2B SaaS companies. Expert in product-market fit and scaling teams. Currently advising early-stage startups.",
-            "tags": "entrepreneur,saas,advisor"
+            "narrative_thread": "Met at TechCrunch Disrupt. Very responsive and helpful. Offered to make introductions to her investor network.",
+            "tags": "entrepreneur,saas,advisor,san-francisco",
+            "interests": "product-market-fit,scaling,mentorship",
+            "introduced_by": "Alex from YC",
+            "follow_up_action": "Share our latest metrics and ask for investor intros",
+            "follow_up_due_date": (datetime.now() + timedelta(days=3)).isoformat()
         },
         {
             "name": "Marcus Rodriguez",
             "email": "marcus@vcfund.com",
             "phone": "+1-555-0123",
             "linkedin": "linkedin.com/in/marcusrodriguez",
+            "relationship_type": "Investor",
+            "warmth_status": 3,
+            "warmth_label": "Warm",
+            "priority_level": "High",
+            "company": "Vertex Ventures",
+            "title": "Partner",
+            "location": "New York, NY",
             "notes": "Partner at Series A VC fund. Focuses on fintech and healthcare investments. Former Goldman Sachs analyst.",
-            "tags": "vc,fintech,healthcare"
+            "narrative_thread": "Had great coffee meeting last month. Interested in our healthcare AI approach. Asked for follow-up on user traction.",
+            "tags": "vc,fintech,healthcare,new-york",
+            "interests": "healthcare-ai,fintech,series-a",
+            "introduced_by": "Sarah Chen",
+            "follow_up_action": "Send updated deck with traction metrics",
+            "follow_up_due_date": (datetime.now() + timedelta(days=7)).isoformat()
         },
         {
             "name": "Dr. Emily Watson",
             "email": "emily.watson@techcorp.com",
             "linkedin": "linkedin.com/in/emilywatson",
+            "relationship_type": "Collaborator",
+            "warmth_status": 2,
+            "warmth_label": "Aware",
+            "priority_level": "Medium",
+            "company": "TechCorp",
+            "title": "VP of Engineering",
+            "location": "Seattle, WA",
             "notes": "VP of Engineering at Fortune 500 tech company. PhD in Computer Science. Expert in AI/ML and distributed systems.",
-            "tags": "engineering,ai,enterprise"
+            "narrative_thread": "Connected through LinkedIn. Expressed interest in our technical approach. Could be potential technical advisor or customer.",
+            "tags": "engineering,ai,enterprise,seattle",
+            "interests": "ai-ml,distributed-systems,technical-advisory",
+            "follow_up_action": "Schedule technical deep-dive call",
+            "follow_up_due_date": (datetime.now() + timedelta(days=14)).isoformat()
         },
         {
             "name": "James Park",
             "email": "james@designstudio.com",
             "twitter": "@jamespark",
             "linkedin": "linkedin.com/in/jamespark",
+            "relationship_type": "Collaborator",
+            "warmth_status": 3,
+            "warmth_label": "Warm",
+            "priority_level": "Medium",
+            "company": "DesignStudio",
+            "title": "Creative Director",
+            "location": "Los Angeles, CA",
             "notes": "Creative director and UX designer. Led design for several unicorn startups. Specializes in consumer mobile apps.",
-            "tags": "design,ux,mobile"
+            "narrative_thread": "Met at design conference. Loved our product vision. Offered to help with UX review and potential design partnership.",
+            "tags": "design,ux,mobile,los-angeles",
+            "interests": "product-design,mobile-ux,design-systems",
+            "follow_up_action": "Share wireframes for UX feedback",
+            "follow_up_due_date": (datetime.now() + timedelta(days=10)).isoformat()
         },
         {
             "name": "Lisa Thompson",
             "email": "lisa@marketingpro.com",
             "phone": "+1-555-0199",
+            "relationship_type": "Ally",
+            "warmth_status": 4,
+            "warmth_label": "Active",
+            "priority_level": "High",
+            "company": "MarketingPro",
+            "title": "Head of Growth",
+            "location": "Austin, TX",
             "notes": "Growth marketing expert. Scaled 5 companies from zero to $10M+ ARR. Specialist in B2B marketing and lead generation.",
-            "tags": "marketing,growth,b2b"
+            "narrative_thread": "Regular advisor calls. Helping with our go-to-market strategy. Very engaged and provides excellent advice.",
+            "tags": "marketing,growth,b2b,austin",
+            "interests": "growth-marketing,b2b-sales,go-to-market",
+            "follow_up_action": "Monthly advisor check-in call",
+            "follow_up_due_date": (datetime.now() + timedelta(days=5)).isoformat()
+        },
+        {
+            "name": "David Kim",
+            "email": "david@coldoutreach.com",
+            "linkedin": "linkedin.com/in/davidkim",
+            "relationship_type": "Contact",
+            "warmth_status": 1,
+            "warmth_label": "Cold",
+            "priority_level": "Low",
+            "company": "TechCorp",
+            "title": "Product Manager",
+            "location": "Boston, MA",
+            "notes": "Product manager at mid-size tech company. Found through mutual connections. Potential customer for our enterprise solution.",
+            "narrative_thread": "Initial LinkedIn connection. No response to first outreach. Need to find better angle.",
+            "tags": "product-management,enterprise,boston",
+            "interests": "product-strategy,enterprise-software",
+            "follow_up_action": "Try different outreach angle through warm intro",
+            "follow_up_due_date": (datetime.now() + timedelta(days=21)).isoformat()
+        },
+        {
+            "name": "Anna Foster",
+            "email": "anna@presstech.com",
+            "twitter": "@annafoster",
+            "relationship_type": "Press",
+            "warmth_status": 3,
+            "warmth_label": "Warm",
+            "priority_level": "Medium",
+            "company": "TechPress",
+            "title": "Senior Reporter",
+            "location": "San Francisco, CA",
+            "notes": "Senior tech reporter covering AI and startups. Wrote about our competitors. Could be good for coverage when we have news.",
+            "narrative_thread": "Brief Twitter exchange about AI trends. Seemed interested in our approach. Good relationship for future PR.",
+            "tags": "press,journalist,ai-coverage,san-francisco",
+            "interests": "ai-trends,startup-stories,tech-news",
+            "follow_up_action": "Share company updates for potential story",
+            "follow_up_due_date": (datetime.now() + timedelta(days=30)).isoformat()
         }
     ]
     
-    # Create demo contacts
+    # Create demo contacts with enhanced CRM data
     for contact_data in demo_contacts:
         contact_model.create(
             user_id=user_id,
@@ -129,8 +223,21 @@ def seed_demo_data(user_id):
             phone=contact_data.get("phone"),
             twitter=contact_data.get("twitter"),
             linkedin=contact_data.get("linkedin"),
+            handle=contact_data.get("handle"),
+            relationship_type=contact_data.get("relationship_type", "Contact"),
+            warmth_status=contact_data.get("warmth_status", 1),
+            warmth_label=contact_data.get("warmth_label", "Cold"),
+            priority_level=contact_data.get("priority_level", "Medium"),
             notes=contact_data.get("notes"),
-            tags=contact_data.get("tags")
+            narrative_thread=contact_data.get("narrative_thread"),
+            tags=contact_data.get("tags"),
+            introduced_by=contact_data.get("introduced_by"),
+            location=contact_data.get("location"),
+            company=contact_data.get("company"),
+            title=contact_data.get("title"),
+            interests=contact_data.get("interests"),
+            follow_up_action=contact_data.get("follow_up_action"),
+            follow_up_due_date=contact_data.get("follow_up_due_date")
         )
     
     # Demo goals
