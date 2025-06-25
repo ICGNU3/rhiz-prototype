@@ -23,11 +23,81 @@ DEFAULT_USER_ID = user_model.get_or_create_default()
 # Initialize NLP processor
 contact_nlp = ContactNLP(DEFAULT_USER_ID)
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    """Main dashboard showing goals and recent contacts"""
+    """Enhanced single-page UI for goal-based contact matching"""
+    if request.method == 'POST':
+        # Handle goal creation and matching
+        goal_title = request.form.get('goal_title', '').strip()
+        goal_description = request.form.get('goal_description', '').strip()
+        
+        if not goal_title or not goal_description:
+            flash('Both goal title and description are required', 'error')
+            return redirect(url_for('index'))
+        
+        try:
+            # Generate embedding for the goal
+            embedding = openai_utils.generate_embedding(goal_description)
+            
+            # Create goal with embedding
+            goal_id = goal_model.create(DEFAULT_USER_ID, goal_title, goal_description, embedding)
+            
+            if goal_id:
+                # Get matched contacts
+                matches = match_contacts_to_goal(goal_id)
+                
+                # Generate AI messages for top matches
+                message_data = []
+                for contact_id, contact_name, score in matches[:10]:
+                    try:
+                        # Get contact details
+                        contact = contact_model.get_by_id(contact_id)
+                        
+                        # Generate personalized message
+                        from database_utils import load_contact_bio
+                        contact_bio = load_contact_bio(contact_id)
+                        
+                        message = openai_utils.generate_message(
+                            contact_name=contact_name,
+                            goal_title=goal_title,
+                            goal_description=goal_description,
+                            contact_bio=contact_bio,
+                            tone="warm"
+                        )
+                        
+                        message_data.append({
+                            'contact_id': contact_id,
+                            'contact_name': contact_name,
+                            'contact': contact,
+                            'similarity_score': score,
+                            'message': message
+                        })
+                        
+                    except Exception as e:
+                        logging.error(f"Error generating message for contact {contact_id}: {e}")
+                        continue
+                
+                # Render results page
+                return render_template('goal_matcher.html', 
+                                     goal_title=goal_title,
+                                     goal_description=goal_description,
+                                     matches=message_data,
+                                     show_results=True)
+            else:
+                flash('Failed to create goal', 'error')
+                
+        except Exception as e:
+            logging.error(f"Failed to process goal: {e}")
+            flash(f'Error processing goal: {str(e)}', 'error')
+    
+    # GET request - show the main interface
     goals = goal_model.get_all(DEFAULT_USER_ID)
-    contacts = contact_model.get_all(DEFAULT_USER_ID)
+    recent_contacts = contact_model.get_all(DEFAULT_USER_ID)[:6]  # Show recent 6
+    
+    return render_template('goal_matcher.html', 
+                         goals=goals, 
+                         recent_contacts=recent_contacts,
+                         show_results=False)
     
     # If no data exists, seed demo data
     if not goals and not contacts:
