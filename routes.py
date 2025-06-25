@@ -472,6 +472,77 @@ def download_sample_csv():
     
     return response
 
+@app.route('/email_settings', methods=['GET', 'POST'])
+def email_settings():
+    """Email configuration and settings management"""
+    if request.method == 'POST':
+        # Handle email configuration test
+        test_result = email_sender.test_connection()
+        if test_result['success']:
+            flash(test_result['message'], 'success')
+        else:
+            flash(test_result['error'], 'error')
+    
+    # Get current configuration status
+    config_status = email_sender.get_configuration_status()
+    
+    return render_template('email_settings.html', 
+                         config_status=config_status)
+
+@app.route('/send_email', methods=['POST'])
+def send_email():
+    """Send email to a specific contact"""
+    contact_id = request.form.get('contact_id')
+    subject = request.form.get('subject', '').strip()
+    message = request.form.get('message', '').strip()
+    goal_title = request.form.get('goal_title', '')
+    
+    if not all([contact_id, subject, message]):
+        flash('Contact, subject, and message are required', 'error')
+        return redirect(request.referrer or url_for('index'))
+    
+    # Get contact details
+    contact = contact_model.get_by_id(contact_id)
+    if not contact:
+        flash('Contact not found', 'error')
+        return redirect(request.referrer or url_for('index'))
+    
+    if not contact.get('email'):
+        flash('Contact has no email address', 'error')
+        return redirect(request.referrer or url_for('index'))
+    
+    # Send email
+    result = email_sender.send_email(
+        to_email=contact['email'],
+        subject=subject,
+        message_body=message,
+        contact_id=contact_id,
+        user_id=DEFAULT_USER_ID,
+        goal_title=goal_title
+    )
+    
+    if result['success']:
+        flash(f"Email sent successfully to {contact['name']}", 'success')
+    else:
+        flash(f"Failed to send email: {result['error']}", 'error')
+    
+    return redirect(request.referrer or url_for('index'))
+
+@app.route('/compose_email/<contact_id>')
+def compose_email(contact_id):
+    """Compose email interface for a specific contact"""
+    contact = contact_model.get_by_id(contact_id)
+    if not contact:
+        flash('Contact not found', 'error')
+        return redirect(url_for('contacts'))
+    
+    # Get email configuration status
+    config_status = email_sender.get_configuration_status()
+    
+    return render_template('compose_email.html', 
+                         contact=contact,
+                         config_status=config_status)
+
 @app.errorhandler(404)
 def not_found(error):
     return render_template('base.html'), 404
