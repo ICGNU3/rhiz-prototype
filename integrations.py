@@ -11,6 +11,7 @@ import json
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from models import Database, Contact, ContactInteraction
+from telegram_integration import TelegramNetworkingBot
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -316,6 +317,7 @@ class AutomationEngine:
     def __init__(self, db: Database):
         self.db = db
         self.slack = SlackIntegration(db)
+        self.telegram = TelegramNetworkingBot(db)
         self.calendar = CalendarIntegration(db)
         self.crm_sync = CRMSync(db)
         self.social_monitor = SocialMediaMonitoring(db)
@@ -332,12 +334,22 @@ class AutomationEngine:
             
             contact_name = contact['name']
             
-            # Send Slack notification
+            # Send notifications
             if interaction_type == 'email_sent':
                 self.slack.send_networking_update(
                     f"Email sent successfully", 
                     contact_name
                 )
+                
+                # Send Telegram notification  
+                import asyncio
+                try:
+                    asyncio.create_task(self.telegram.send_notification(
+                        f"Email sent successfully", 
+                        contact_name
+                    ))
+                except Exception as e:
+                    logger.warning(f"Telegram notification failed: {e}")
                 
                 # Schedule follow-up reminder
                 self.calendar.schedule_follow_up(
@@ -370,8 +382,12 @@ class AutomationEngine:
                 "configured": self.slack.is_configured(),
                 "status": "active" if self.slack.is_configured() else "needs_setup"
             },
+            "telegram": {
+                "configured": self.telegram.is_configured(),
+                "status": "active" if self.telegram.is_configured() else "needs_setup"
+            },
             "calendar": {
-                "configured": False,  # Would check OAuth status
+                "configured": False,
                 "status": "mock_mode"
             },
             "crm_sync": {
@@ -380,7 +396,7 @@ class AutomationEngine:
                 "supported_platforms": self.crm_sync.supported_crms
             },
             "social_monitoring": {
-                "configured": False,  # Would check API keys
+                "configured": False,
                 "status": "mock_mode"
             }
         }

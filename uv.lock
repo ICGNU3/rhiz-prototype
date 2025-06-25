@@ -563,6 +563,18 @@ wheels = [
 ]
 
 [[package]]
+name = "python-telegram-bot"
+version = "22.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/35/2f/52ad8a19b75a6b5c9525abce9e3d9c57dfe21c29a4723ba2aeeb2c611a9d/python_telegram_bot-22.1.tar.gz", hash = "sha256:b6c7fc1f3635cef6aff0c431827407cafde183e7e1992060edeacc2bf08d23d8", size = 459976 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5e/7b/b06663b3563299e15dac0b3a2044830db35c676753caeb45ae0acbf029a9/python_telegram_bot-22.1-py3-none-any.whl", hash = "sha256:71afd091fde9037ac44728c2768eb958682140dcc350900a191da0e9cef319d3", size = 702289 },
+]
+
+[[package]]
 name = "repl-nix-workspace"
 version = "0.1.0"
 source = { virtual = "." }
@@ -574,6 +586,7 @@ dependencies = [
     { name = "numpy" },
     { name = "openai" },
     { name = "psycopg2-binary" },
+    { name = "python-telegram-bot" },
     { name = "slack-sdk" },
     { name = "werkzeug" },
 ]
@@ -587,6 +600,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.3.1" },
     { name = "openai", specifier = ">=1.91.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
+    { name = "python-telegram-bot", specifier = ">=22.1" },
     { name = "slack-sdk", specifier = ">=3.35.0" },
     { name = "werkzeug", specifier = ">=3.1.3" },
 ]
