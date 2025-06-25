@@ -82,6 +82,15 @@ The application follows an enhanced Flask MVC architecture with AI-powered conta
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
+- **June 25, 2025**: Telegram bot integration completed with comprehensive automation features
+  - Full-featured Telegram bot with interactive commands (/stats, /contacts, /goals, /followups, /digest, /export)
+  - Natural language processing for conversational queries ("Show warm contacts", "What's due?")
+  - Automated networking notifications for email sends, follow-ups, and daily digests
+  - Interactive inline buttons for quick actions (mark follow-ups complete, refresh data)
+  - CSV export functionality directly through Telegram with automatic file delivery
+  - Comprehensive setup instructions and configuration interface
+  - Integration with existing automation engine for dual Slack/Telegram notifications
+
 - **June 25, 2025**: Network visualization and relationship mapping completed
   - Interactive network graph with vis.js rendering (12 contacts, 15 relationships)
   - Network metrics analysis (22.7% density, 2.5 avg connections per contact)

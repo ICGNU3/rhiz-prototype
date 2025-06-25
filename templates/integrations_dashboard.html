@@ -452,6 +452,20 @@
             testSlackIntegration();
         }
 
+        function testTelegramIntegration() {
+            fetch('/integrations/telegram/test', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        logActivity('✅ Telegram bot test successful');
+                        showAlert('Telegram test message sent successfully!', 'success');
+                    } else {
+                        logActivity('❌ Telegram bot test failed: ' + data.error);
+                        showAlert('Telegram test failed: ' + data.error, 'danger');
+                    }
+                });
+        }
+
         function exportToHubSpot() {
             logActivity('📤 Exporting in HubSpot format...');
             window.location.href = '/integrations/export/hubspot';
@@ -480,9 +494,21 @@
                 return;
             }
             
-            // This would save to environment variables or user settings
             showAlert('Slack configuration would be saved (requires environment variable setup)', 'info');
             bootstrap.Modal.getInstance(document.getElementById('slackConfigModal')).hide();
+        }
+
+        function saveTelegramConfig() {
+            const token = document.getElementById('telegramToken').value;
+            const chatId = document.getElementById('telegramChatId').value;
+            
+            if (!token || !chatId) {
+                showAlert('Please fill in both bot token and chat ID', 'warning');
+                return;
+            }
+            
+            showAlert('Telegram configuration would be saved (requires environment variable setup)', 'info');
+            bootstrap.Modal.getInstance(document.getElementById('telegramConfigModal')).hide();
         }
 
         // Utility functions

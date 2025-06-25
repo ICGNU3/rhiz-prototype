@@ -804,6 +804,25 @@ def check_follow_ups():
     except Exception as e:
         return jsonify({'count': 0, 'error': str(e)})
 
+@app.route('/integrations/telegram/test', methods=['POST'])
+def test_telegram_integration():
+    """Test Telegram bot integration"""
+    try:
+        import asyncio
+        
+        # Create a simple test notification
+        success = asyncio.run(automation_engine.telegram.send_notification(
+            "Integration test from Founder Network AI", 
+            "System Test"
+        ))
+        
+        return jsonify({
+            'success': success,
+            'message': 'Test message sent to Telegram' if success else 'Telegram not configured'
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.errorhandler(404)
 def not_found(error):
     return render_template('base.html'), 404
