@@ -399,6 +399,77 @@ def copy_message():
     """API endpoint to handle message copying (returns success response)"""
     return jsonify({'status': 'success', 'message': 'Message copied to clipboard'})
 
+@app.route('/import_contacts', methods=['GET', 'POST'])
+def import_contacts():
+    """CSV import interface for bulk contact uploads"""
+    if request.method == 'POST':
+        # Handle CSV upload
+        if 'csv_file' not in request.files:
+            flash('No CSV file uploaded', 'error')
+            return redirect(request.url)
+        
+        file = request.files['csv_file']
+        if file.filename == '':
+            flash('No file selected', 'error')
+            return redirect(request.url)
+        
+        if file and file.filename and file.filename.lower().endswith('.csv'):
+            try:
+                # Read CSV content
+                csv_content = file.read().decode('utf-8')
+                
+                # Import contacts
+                importer = CSVContactImporter(DEFAULT_USER_ID)
+                skip_duplicates = request.form.get('skip_duplicates') == 'on'
+                import_stats = importer.import_from_csv(csv_content, skip_duplicates)
+                
+                # Generate summary
+                summary = importer.generate_import_summary()
+                
+                # Flash results
+                if summary['successful'] > 0:
+                    flash(f"Successfully imported {summary['successful']} contacts!", 'success')
+                
+                if summary['failed'] > 0:
+                    flash(f"{summary['failed']} contacts failed to import", 'warning')
+                
+                if summary['warnings'] > 0:
+                    flash(f"{summary['warnings']} warnings during import", 'info')
+                
+                # Render results
+                return render_template('csv_import.html', 
+                                     import_stats=import_stats,
+                                     summary=summary,
+                                     show_results=True)
+                
+            except Exception as e:
+                logging.error(f"CSV import failed: {e}")
+                flash(f'Import failed: {str(e)}', 'error')
+        else:
+            flash('Please upload a valid CSV file', 'error')
+    
+    # GET request - show import form
+    importer = CSVContactImporter(DEFAULT_USER_ID)
+    sample_csv = importer.get_sample_csv_format()
+    
+    return render_template('csv_import.html', 
+                         sample_csv=sample_csv,
+                         show_results=False)
+
+@app.route('/download_sample_csv')
+def download_sample_csv():
+    """Download sample CSV template"""
+    from flask import make_response
+    
+    importer = CSVContactImporter(DEFAULT_USER_ID)
+    sample_csv = importer.get_sample_csv_format()
+    
+    response = make_response(sample_csv)
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = 'attachment; filename=sample_contacts.csv'
+    
+    return response
+
 @app.errorhandler(404)
 def not_found(error):
     return render_template('base.html'), 404
