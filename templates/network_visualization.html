@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Visualization - Founder Network AI</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        #network-graph {
+            width: 100%;
+            height: 600px;
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.375rem;
+            background: var(--bs-body-bg);
+        }
+        .metric-card {
+            background: var(--bs-body-bg);
+            border: 1px solid var(--bs-border-color);
+            border-radius: 0.375rem;
+            padding: 1rem;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--bs-primary);
+        }
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        .cluster-item {
+            background: var(--bs-secondary-bg);
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .intro-suggestion {
+            background: var(--bs-info-bg-subtle);
+            border-left: 4px solid var(--bs-info);
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1><i class="bi bi-diagram-3"></i> Network Visualization</h1>
+                        <p class="text-muted">Interactive mapping of your founder network relationships</p>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-2">
+                            <i class="bi bi-house"></i> Home
+                        </a>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRelationshipModal">
+                            <i class="bi bi-plus-lg"></i> Add Relationship
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value">{{ metrics.total_contacts }}</div>
+                    <div class="text-muted">Total Contacts</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value">{{ metrics.total_relationships }}</div>
+                    <div class="text-muted">Relationships</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value">{{ metrics.network_density }}%</div>
+                    <div class="text-muted">Network Density</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value">{{ metrics.avg_connections_per_contact }}</div>
+                    <div class="text-muted">Avg Connections</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Network Graph -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-graph-up"></i> Interactive Network Graph</h5>
+                        <small class="text-muted">Click and drag to explore. Node size = interaction count, colors = warmth level</small>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="network-graph"></div>
+                    </div>
+                </div>
+
+                <!-- Legend -->
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h6>Legend</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Warmth Levels:</strong><br>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #6c757d;"></div>
+                                    Cold
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #ffc107;"></div>
+                                    Aware
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #fd7e14;"></div>
+                                    Warm
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #20c997;"></div>
+                                    Active
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color" style="background-color: #198754;"></div>
+                                    Contributor
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Node Size:</strong> Based on interaction count<br>
+                                <strong>Edge Width:</strong> Relationship strength (1-5)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Network Clusters -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5><i class="bi bi-collection"></i> Network Clusters</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if clusters %}
+                            {% for cluster in clusters[:5] %}
+                            <div class="cluster-item">
+                                <strong>{{ cluster.name }}</strong>
+                                <span class="badge bg-secondary ms-2">{{ cluster.count }} contacts</span>
+                                <div class="mt-1">
+                                    <small class="text-muted">{{ cluster.type|title }} cluster</small>
+                                </div>
+                                <div class="mt-1">
+                                    {% for warmth, count in cluster.warmth_distribution.items() %}
+                                        <span class="badge bg-info me-1">{{ warmth }}: {{ count }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No significant clusters detected. Add more relationships to see network patterns.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Introduction Suggestions -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5><i class="bi bi-people"></i> Introduction Suggestions</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if intro_suggestions %}
+                            {% for suggestion in intro_suggestions[:3] %}
+                            <div class="intro-suggestion">
+                                <strong>{{ suggestion.contact_a }} ↔ {{ suggestion.contact_b }}</strong>
+                                <div class="mt-1">
+                                    <small>{{ suggestion.reason }}</small>
+                                </div>
+                                <div class="mt-1">
+                                    <span class="badge bg-success">Score: {{ suggestion.score }}</span>
+                                    {% if suggestion.mutual_connections %}
+                                        <small class="text-muted ms-2">Via: {{ suggestion.mutual_connections|join(', ') }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">Add more relationships to get introduction suggestions.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Most Connected Contact -->
+                {% if metrics.most_connected_contact %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-star"></i> Network Hub</h5>
+                    </div>
+                    <div class="card-body">
+                        <strong>{{ metrics.most_connected_contact.label }}</strong>
+                        <div class="mt-1">
+                            <span class="badge bg-primary">{{ metrics.connection_counts[metrics.most_connected_contact.id] }} connections</span>
+                            <span class="badge bg-{{ 'success' if metrics.most_connected_contact.warmth == 'Contributor' else 'warning' if metrics.most_connected_contact.warmth == 'Active' else 'secondary' }}">
+                                {{ metrics.most_connected_contact.warmth }}
+                            </span>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">{{ metrics.most_connected_contact.company }}</small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Relationship Modal -->
+    <div class="modal fade" id="addRelationshipModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Relationship</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{{ url_for('add_relationship') }}">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="contact_a_id" class="form-label">First Contact</label>
+                            <select class="form-select" id="contact_a_id" name="contact_a_id" required>
+                                <option value="">Select contact...</option>
+                                {% for node in network_graph.nodes %}
+                                <option value="{{ node.id }}">{{ node.label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contact_b_id" class="form-label">Second Contact</label>
+                            <select class="form-select" id="contact_b_id" name="contact_b_id" required>
+                                <option value="">Select contact...</option>
+                                {% for node in network_graph.nodes %}
+                                <option value="{{ node.id }}">{{ node.label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="relationship_type" class="form-label">Relationship Type</label>
+                            <select class="form-select" id="relationship_type" name="relationship_type">
+                                <option value="knows">Knows</option>
+                                <option value="worked_with">Worked With</option>
+                                <option value="introduced_by">Introduced By</option>
+                                <option value="business_partners">Business Partners</option>
+                                <option value="mentor_mentee">Mentor/Mentee</option>
+                                <option value="investor_founder">Investor/Founder</option>
+                                <option value="colleagues">Colleagues</option>
+                                <option value="friends">Friends</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="strength" class="form-label">Relationship Strength</label>
+                            <select class="form-select" id="strength" name="strength">
+                                <option value="1">1 - Weak</option>
+                                <option value="2">2 - Moderate</option>
+                                <option value="3" selected>3 - Strong</option>
+                                <option value="4">4 - Very Strong</option>
+                                <option value="5">5 - Extremely Strong</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes (Optional)</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Additional context about this relationship..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Relationship</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Network visualization data
+        const networkData = {{ network_graph | tojson }};
+        
+        // Create network graph
+        const container = document.getElementById('network-graph');
+        
+        const data = {
+            nodes: new vis.DataSet(networkData.nodes.map(node => ({
+                id: node.id,
+                label: node.label,
+                title: node.title,
+                color: {
+                    background: node.color,
+                    border: '#000000'
+                },
+                size: node.size,
+                font: {
+                    color: '#ffffff',
+                    size: 12
+                }
+            }))),
+            edges: new vis.DataSet(networkData.edges.map(edge => ({
+                from: edge.from,
+                to: edge.to,
+                label: edge.label,
+                title: edge.title,
+                color: edge.color,
+                width: edge.width,
+                font: {
+                    color: '#ffffff',
+                    size: 10
+                }
+            })))
+        };
+        
+        const options = {
+            layout: {
+                improvedLayout: true,
+                clusterThreshold: 150
+            },
+            physics: {
+                enabled: true,
+                stabilization: {
+                    enabled: true,
+                    iterations: 100
+                },
+                barnesHut: {
+                    gravitationalConstant: -2000,
+                    centralGravity: 0.3,
+                    springLength: 95,
+                    springConstant: 0.04,
+                    damping: 0.09
+                }
+            },
+            interaction: {
+                hover: true,
+                tooltipDelay: 200
+            },
+            nodes: {
+                shape: 'dot',
+                borderWidth: 2,
+                borderWidthSelected: 4,
+                chosen: true
+            },
+            edges: {
+                width: 1,
+                color: {
+                    color: '#848484',
+                    highlight: '#ffffff',
+                    hover: '#ffffff'
+                },
+                smooth: {
+                    enabled: true,
+                    type: 'continuous'
+                }
+            }
+        };
+        
+        const network = new vis.Network(container, data, options);
+        
+        // Handle node selection
+        network.on('selectNode', function(params) {
+            if (params.nodes.length > 0) {
+                const nodeId = params.nodes[0];
+                const node = networkData.nodes.find(n => n.id === nodeId);
+                if (node) {
+                    // Could show contact details in a modal or sidebar
+                    console.log('Selected contact:', node.label);
+                }
+            }
+        });
+        
+        // Network stabilization
+        network.on('stabilizationIterationsDone', function() {
+            network.setOptions({physics: false});
+        });
+        
+        // Auto-refresh network data every 30 seconds
+        setInterval(function() {
+            fetch('/network/api/graph')
+                .then(response => response.json())
+                .then(data => {
+                    // Update nodes and edges if data changed
+                    // This is a simple implementation - could be more sophisticated
+                    console.log('Network data refreshed');
+                })
+                .catch(error => console.log('Network refresh failed:', error));
+        }, 30000);
+    </script>
+</body>
+</html>

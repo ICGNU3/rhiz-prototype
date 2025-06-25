@@ -3,16 +3,35 @@ Contact relationship mapping and network visualization module.
 Provides graph-based network analysis and visualization for founder networking.
 """
 
-from models import Database, Contact, ContactRelationship, ContactInteraction
+from models import Database, Contact, ContactInteraction
+import uuid
 import json
 import logging
 from collections import defaultdict
+
+class ContactRelationshipModel:
+    """Simple relationship model for network visualization"""
+    def __init__(self, db):
+        self.db = db
+    
+    def create(self, user_id, contact_a_id, contact_b_id, relationship_type='knows', strength=1, notes=None):
+        relationship_id = str(uuid.uuid4())
+        conn = self.db.get_connection()
+        try:
+            conn.execute(
+                "INSERT INTO contact_relationships (id, user_id, contact_a_id, contact_b_id, relationship_type, strength, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (relationship_id, user_id, contact_a_id, contact_b_id, relationship_type, strength, notes)
+            )
+            conn.commit()
+            return relationship_id
+        finally:
+            conn.close()
 
 class NetworkMapper:
     def __init__(self, db):
         self.db = db
         self.contact_model = Contact(db)
-        self.relationship_model = ContactRelationship(db)
+        self.relationship_model = ContactRelationshipModel(db)
         self.interaction_model = ContactInteraction(db)
     
     def build_network_graph(self, user_id):

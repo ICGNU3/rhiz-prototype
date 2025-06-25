@@ -652,17 +652,20 @@ def add_relationship():
         return redirect(request.referrer or url_for('network_visualization'))
     
     try:
-        # Direct database insertion for relationship
-        conn = db.get_connection()
-        relationship_id = str(uuid.uuid4())
-        conn.execute(
-            "INSERT INTO contact_relationships (id, user_id, contact_a_id, contact_b_id, relationship_type, strength, notes) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (relationship_id, DEFAULT_USER_ID, contact_a_id, contact_b_id, relationship_type, strength, notes)
+        # Use the network mapper's relationship model
+        relationship_id = network_mapper.relationship_model.create(
+            user_id=DEFAULT_USER_ID,
+            contact_a_id=contact_a_id,
+            contact_b_id=contact_b_id,
+            relationship_type=relationship_type,
+            strength=strength,
+            notes=notes
         )
-        conn.commit()
-        conn.close()
         
-        flash('Relationship added successfully', 'success')
+        if relationship_id:
+            flash('Relationship added successfully', 'success')
+        else:
+            flash('Failed to add relationship', 'error')
     
     except Exception as e:
         logging.error(f"Add relationship error: {e}")
