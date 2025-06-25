@@ -4,6 +4,7 @@ from models import Database, User, Contact, Goal, AISuggestion, ContactInteracti
 from openai_utils import OpenAIUtils
 from database_utils import seed_demo_data, match_contacts_to_goal
 from contact_intelligence import ContactNLP
+from csv_import import CSVContactImporter
 import logging
 
 # Initialize database and models
@@ -47,30 +48,28 @@ def index():
                 # Get matched contacts
                 matches = match_contacts_to_goal(goal_id)
                 
-                # Generate AI messages for top 5 matches
+                # Generate messages for top 5 matches - fast template-based approach
                 message_data = []
                 for contact_id, contact_name, score in matches[:5]:
                     try:
                         # Get contact details
                         contact = contact_model.get_by_id(contact_id)
                         
-                        # Generate message - try AI first, fallback to template
-                        try:
-                            from database_utils import load_contact_bio
-                            contact_bio = load_contact_bio(contact_id)[:300]  # Shorter bio
+                        # Generate personalized template message
+                        def generate_template_message(contact, goal_title, goal_description, tone):
+                            company_info = f" at {contact['company']}" if contact.get('company') else ""
+                            title_info = f", {contact['title']}," if contact.get('title') else ""
                             
-                            message = openai_utils.generate_message(
-                                contact_name=contact_name,
-                                goal_title=goal_title,
-                                goal_description=goal_description[:200],  # Shorter description
-                                contact_bio=contact_bio,
-                                tone=tone
-                            )
-                        except Exception as ai_error:
-                            logging.warning(f"AI generation failed for {contact_name}: {ai_error}")
-                            # Use template message as fallback
-                            company_info = f" at {contact.company}" if contact.company else ""
-                            message = f"Hi {contact_name},\n\nI hope this message finds you well. I'm reaching out because I'm working on {goal_title} and thought you might have valuable insights given your experience{company_info}.\n\nWould you be open to a brief conversation to share your perspective?\n\nBest regards"
+                            if tone == "professional":
+                                return f"Dear {contact_name}{title_info}\n\nI hope this message finds you well. I'm reaching out regarding {goal_title.lower()} and believe your expertise{company_info} would provide valuable insights.\n\n{goal_description}\n\nWould you be available for a brief discussion at your convenience?\n\nBest regards"
+                            elif tone == "casual":
+                                return f"Hi {contact_name}!\n\nHope you're doing well. I'm working on {goal_title.lower()} and thought you'd be a great person to chat with given your background{company_info}.\n\n{goal_description}\n\nWould love to grab coffee or have a quick call if you're interested!\n\nCheers"
+                            elif tone == "urgent":
+                                return f"Hi {contact_name},\n\nI'm reaching out because I'm {goal_title.lower()} and need to move quickly. Your experience{company_info} makes you someone I'd really value input from.\n\n{goal_description}\n\nWould you have 15 minutes this week to discuss?\n\nThanks"
+                            else:  # warm (default)
+                                return f"Hi {contact_name},\n\nI hope you're doing well! I'm reaching out because I'm {goal_title.lower()} and thought you might have some great insights given your experience{company_info}.\n\n{goal_description}\n\nWould you be open to a brief conversation to share your perspective?\n\nBest regards"
+                        
+                        message = generate_template_message(contact, goal_title, goal_description, tone)
                         
                         message_data.append({
                             'contact_id': contact_id,
