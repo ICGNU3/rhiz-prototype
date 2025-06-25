@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}AI Suggestions - {{ goal.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Goal Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h4 class="mb-1">
+                                <i class="bi bi-target me-2"></i>
+                                {{ goal.title }}
+                            </h4>
+                            <p class="mb-0 opacity-75">{{ goal.description }}</p>
+                        </div>
+                        <a href="{{ url_for('goals') }}" class="btn btn-outline-light btn-sm">
+                            <i class="bi bi-arrow-left me-1"></i>Back to Goals
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Suggestions -->
+    <div class="row">
+        <div class="col-12">
+            <h5 class="mb-3">
+                <i class="bi bi-robot me-2"></i>
+                AI-Generated Contact Suggestions
+                <span class="badge bg-secondary ms-2">{{ suggestions|length }} matches</span>
+            </h5>
+            
+            {% if suggestions %}
+                {% for suggestion in suggestions %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <h6 class="mb-1">
+                                        <i class="bi bi-person-circle me-2"></i>
+                                        {{ suggestion.contact.name }}
+                                    </h6>
+                                    <div class="d-flex align-items-center">
+                                        {% if suggestion.contact.email %}
+                                            <span class="badge bg-info me-2">
+                                                <i class="bi bi-envelope me-1"></i>{{ suggestion.contact.email }}
+                                            </span>
+                                        {% endif %}
+                                        {% if suggestion.contact.linkedin %}
+                                            <span class="badge bg-primary me-2">
+                                                <i class="bi bi-linkedin me-1"></i>LinkedIn
+                                            </span>
+                                        {% endif %}
+                                        {% if suggestion.contact.twitter %}
+                                            <span class="badge bg-info me-2">
+                                                <i class="bi bi-twitter me-1"></i>Twitter
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-success me-2">
+                                            <i class="bi bi-graph-up me-1"></i>
+                                            {{ "%.1f%%" | format(suggestion.score * 100) }} match
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body">
+                            <!-- Contact Notes -->
+                            {% if suggestion.contact.notes %}
+                                <div class="mb-3">
+                                    <h6 class="text-muted">
+                                        <i class="bi bi-file-text me-1"></i>Notes
+                                    </h6>
+                                    <p class="text-muted small">{{ suggestion.contact.notes }}</p>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- AI Generated Message -->
+                            <div class="mb-3">
+                                <h6 class="text-primary">
+                                    <i class="bi bi-magic me-1"></i>AI-Generated Message
+                                </h6>
+                                <div class="border rounded p-3 bg-light">
+                                    <p class="mb-0" style="white-space: pre-line;">{{ suggestion.message }}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <button 
+                                        type="button" 
+                                        class="btn btn-outline-secondary w-100"
+                                        id="copy-btn-{{ loop.index }}"
+                                        onclick="copyToClipboard(`{{ suggestion.message | replace('`', '\\`') | replace('\n', '\\n') }}`, 'copy-btn-{{ loop.index }}')"
+                                    >
+                                        <i class="bi bi-clipboard me-1"></i>Copy Message
+                                    </button>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <button 
+                                        type="button" 
+                                        class="btn btn-outline-primary w-100"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#interaction-{{ loop.index }}"
+                                    >
+                                        <i class="bi bi-pencil me-1"></i>Log Interaction
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Interaction Logging Form -->
+                            <div class="collapse mt-3" id="interaction-{{ loop.index }}">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <form action="{{ url_for('log_interaction') }}" method="POST">
+                                            <input type="hidden" name="contact_id" value="{{ suggestion.contact.id }}">
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="status-{{ loop.index }}" class="form-label">Status</label>
+                                                    <select class="form-select" name="status" id="status-{{ loop.index }}" required>
+                                                        <option value="">Select status...</option>
+                                                        <option value="sent">Message Sent</option>
+                                                        <option value="replied">Contact Replied</option>
+                                                        <option value="scheduled">Meeting Scheduled</option>
+                                                        <option value="completed">Meeting Completed</option>
+                                                        <option value="ignored">No Response</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="notes-{{ loop.index }}" class="form-label">Notes (Optional)</label>
+                                                    <input type="text" class="form-control" name="notes" id="notes-{{ loop.index }}" placeholder="Additional notes...">
+                                                </div>
+                                            </div>
+                                            
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-check-lg me-1"></i>Log Interaction
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-search display-4 text-muted mb-3"></i>
+                        <h5 class="text-muted">No Contact Matches Found</h5>
+                        <p class="text-muted">Try adding more contacts or creating a different goal to get AI suggestions.</p>
+                        <div class="mt-3">
+                            <a href="{{ url_for('contacts') }}" class="btn btn-primary me-2">
+                                <i class="bi bi-plus-lg me-1"></i>Add Contacts
+                            </a>
+                            <a href="{{ url_for('goals') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Back to Goals
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

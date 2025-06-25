@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="text-center py-5">
+                <h1 class="display-4 mb-3">
+                    <i class="bi bi-stars me-3"></i>
+                    AI-Powered Founder Network
+                </h1>
+                <p class="lead text-muted">
+                    Connect your goals with the right people using advanced AI matching
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="bi bi-target display-4 text-primary mb-2"></i>
+                    <h5 class="card-title">{{ goals|length }}</h5>
+                    <p class="card-text text-muted">Active Goals</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="bi bi-people display-4 text-info mb-2"></i>
+                    <h5 class="card-title">{{ contacts|length }}</h5>
+                    <p class="card-text text-muted">Network Contacts</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="bi bi-robot display-4 text-success mb-2"></i>
+                    <h5 class="card-title">AI</h5>
+                    <p class="card-text text-muted">Smart Matching</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Goals and Contacts -->
+    <div class="row">
+        <!-- Recent Goals -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-target me-2"></i>
+                        Recent Goals
+                    </h5>
+                    <a href="{{ url_for('goals') }}" class="btn btn-sm btn-outline-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if goals %}
+                        {% for goal in goals %}
+                            <div class="d-flex justify-content-between align-items-start mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ goal.title }}</h6>
+                                    <p class="text-muted small mb-1">
+                                        {{ goal.description[:100] }}{% if goal.description|length > 100 %}...{% endif %}
+                                    </p>
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar me-1"></i>
+                                        {{ goal.created_at[:10] }}
+                                    </small>
+                                </div>
+                                <a href="{{ url_for('match_goal', goal_id=goal.id) }}" class="btn btn-sm btn-outline-primary ms-2">
+                                    <i class="bi bi-search me-1"></i>Match
+                                </a>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-target display-4 text-muted mb-3"></i>
+                            <p class="text-muted">No goals yet. Create your first goal to get started!</p>
+                            <a href="{{ url_for('goals') }}" class="btn btn-primary">
+                                <i class="bi bi-plus-lg me-1"></i>Create Goal
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Contacts -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-people me-2"></i>
+                        Recent Contacts
+                    </h5>
+                    <a href="{{ url_for('contacts') }}" class="btn btn-sm btn-outline-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if contacts %}
+                        {% for contact in contacts %}
+                            <div class="d-flex justify-content-between align-items-start mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ contact.name }}</h6>
+                                    {% if contact.email %}
+                                        <p class="text-muted small mb-1">
+                                            <i class="bi bi-envelope me-1"></i>{{ contact.email }}
+                                        </p>
+                                    {% endif %}
+                                    {% if contact.tags %}
+                                        <div class="mb-1">
+                                            {% for tag in contact.tags.split(',') %}
+                                                <span class="badge bg-secondary me-1">{{ tag.strip() }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar me-1"></i>
+                                        {{ contact.created_at[:10] }}
+                                    </small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-people display-4 text-muted mb-3"></i>
+                            <p class="text-muted">No contacts yet. Add contacts to build your network!</p>
+                            <a href="{{ url_for('contacts') }}" class="btn btn-primary">
+                                <i class="bi bi-plus-lg me-1"></i>Add Contact
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Getting Started Guide -->
+    {% if not goals and not contacts %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        Getting Started
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="bi bi-1-circle display-4 text-primary mb-2"></i>
+                                <h6>Add Contacts</h6>
+                                <p class="text-muted small">Build your network by adding contacts with their details and notes</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="bi bi-2-circle display-4 text-primary mb-2"></i>
+                                <h6>Create Goals</h6>
+                                <p class="text-muted small">Define what you want to achieve and let AI understand your objectives</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="text-center">
+                                <i class="bi bi-3-circle display-4 text-primary mb-2"></i>
+                                <h6>Get AI Matches</h6>
+                                <p class="text-muted small">Receive personalized outreach messages for the most relevant contacts</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
