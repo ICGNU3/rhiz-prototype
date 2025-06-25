@@ -22,41 +22,55 @@ class OpenAIUtils:
             logging.error(f"Failed to generate embedding: {e}")
             raise e
     
-    def generate_outreach_message(self, contact_name, goal_title, goal_description, contact_notes="", tone="warm"):
-        """Generate personalized outreach message"""
+    def generate_message(self, contact_name, goal_title, goal_description, contact_bio="", interaction_history="", tone="warm"):
+        """Generate a message that connects the user's goal with a suggested contact, based on tone and history"""
         try:
-            # Prepare context from contact notes
-            context = f" Based on what I know: {contact_notes}" if contact_notes else ""
+            # Build comprehensive context from contact bio and interaction history
+            context_parts = []
             
-            prompt = f"""You are helping a founder craft a personalized outreach message.
+            if contact_bio:
+                context_parts.append(f"Contact Background: {contact_bio}")
+            
+            if interaction_history:
+                context_parts.append(f"Previous Interactions: {interaction_history}")
+            
+            context = "\n\n".join(context_parts) if context_parts else ""
+            
+            prompt = f"""You are helping a founder deepen a connection with {contact_name}.
+The founder's goal is: "{goal_title}".
 
-Contact: {contact_name}
-Founder's Goal: "{goal_title}"
-Goal Details: {goal_description}{context}
+Details: {goal_description}
 
-Write a {tone} and professional message that:
-1. References the founder's specific goal
-2. Explains why this contact might be valuable for achieving it
-3. Suggests a clear next step (call, coffee, introduction, etc.)
-4. Keeps it concise (2-3 paragraphs max)
-5. Feels personal, not templated
+{context}
 
-Do not include subject line or greetings like "Hi [Name]" - just the message body."""
+Write a {tone} message to re-engage this contact that:
+1. References their specific background and expertise
+2. Connects naturally to the founder's goal
+3. Acknowledges any previous interactions if mentioned
+4. Suggests a concrete next step
+5. Feels authentic and relationship-focused, not transactional
+6. Keeps it conversational and concise (2-3 paragraphs)
+
+Do not include subject line or formal greetings - just the message body that could be used in email, LinkedIn, or text."""
             
             # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
             # do not change this unless explicitly requested by the user
             response = self.client.chat.completions.create(
                 model="gpt-4o",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=500,
+                max_tokens=600,
                 temperature=0.7
             )
             
-            return response.choices[0].message.content.strip()
+            return response.choices[0].message.content.strip() if response.choices[0].message.content else "No message generated"
         
         except Exception as e:
-            logging.error(f"Failed to generate outreach message: {e}")
+            logging.error(f"Failed to generate message: {e}")
             raise e
+
+    def generate_outreach_message(self, contact_name, goal_title, goal_description, contact_notes="", tone="warm"):
+        """Generate personalized outreach message (legacy method for backward compatibility)"""
+        return self.generate_message(contact_name, goal_title, goal_description, contact_notes, "", tone)
     
     def analyze_contact_relevance(self, contact_description, goal_description):
         """Analyze how relevant a contact is for a specific goal"""
