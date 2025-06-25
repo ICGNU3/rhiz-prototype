@@ -6,6 +6,7 @@ from database_utils import seed_demo_data, match_contacts_to_goal
 from contact_intelligence import ContactNLP
 from csv_import import CSVContactImporter
 from simple_email import SimpleEmailSender
+from analytics import NetworkingAnalytics
 import logging
 
 # Initialize database and models
@@ -19,6 +20,7 @@ outreach_suggestion_model = OutreachSuggestion(db)
 contact_intelligence = ContactIntelligence(db)
 openai_utils = OpenAIUtils()
 email_sender = SimpleEmailSender(db)
+analytics = NetworkingAnalytics(db)
 
 # Get or create default user
 DEFAULT_USER_ID = user_model.get_or_create_default()
@@ -542,6 +544,44 @@ def compose_email(contact_id):
     return render_template('compose_email.html', 
                          contact=contact,
                          config_status=config_status)
+
+@app.route('/analytics')
+def analytics_dashboard():
+    """Analytics dashboard showing outreach success rates and networking metrics"""
+    try:
+        # Get comprehensive analytics data
+        dashboard_data = analytics.get_comprehensive_dashboard_data(DEFAULT_USER_ID)
+        
+        return render_template('analytics_dashboard.html', 
+                             data=dashboard_data)
+    
+    except Exception as e:
+        logging.error(f"Analytics dashboard error: {e}")
+        flash('Error loading analytics data', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/analytics/api/<metric_type>')
+def analytics_api(metric_type):
+    """API endpoint for specific analytics metrics"""
+    try:
+        if metric_type == 'outreach_metrics':
+            days_back = int(request.args.get('days', 30))
+            data = analytics.get_outreach_success_metrics(DEFAULT_USER_ID, days_back)
+        elif metric_type == 'interaction_trends':
+            days_back = int(request.args.get('days', 30))
+            data = analytics.get_interaction_trends(DEFAULT_USER_ID, days_back)
+        elif metric_type == 'contact_effectiveness':
+            data = analytics.get_contact_effectiveness(DEFAULT_USER_ID)
+        elif metric_type == 'pipeline_metrics':
+            data = analytics.get_warmth_pipeline_metrics(DEFAULT_USER_ID)
+        else:
+            return jsonify({'error': 'Invalid metric type'}), 400
+        
+        return jsonify(data)
+    
+    except Exception as e:
+        logging.error(f"Analytics API error: {e}")
+        return jsonify({'error': 'Failed to fetch analytics data'}), 500
 
 @app.errorhandler(404)
 def not_found(error):
