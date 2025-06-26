@@ -2056,3 +2056,185 @@ def api_relationship_health(contact_id):
     except Exception as e:
         logging.error(f"Relationship health error for contact {contact_id}: {e}")
         return jsonify({"error": "Failed to analyze relationship health"}), 500
+
+# Collective Actions Routes
+@app.route('/collective_actions')
+@login_required
+def collective_actions():
+    """Main collective actions page"""
+    user_id = session.get('user_id')
+    
+    # Initialize predefined actions if needed
+    collective_actions_manager.create_predefined_actions()
+    
+    # Get all available actions
+    available_actions = collective_actions_manager.get_all_actions()
+    
+    # Get user's active actions
+    user_actions = collective_actions_manager.get_user_actions(user_id)
+    
+    # Check which actions user is participating in
+    user_participating = {}
+    for action in available_actions:
+        user_participating[action['id']] = collective_actions_manager.is_user_participating(action['id'], user_id)
+    
+    return render_template('collective_actions.html',
+                         available_actions=available_actions,
+                         user_actions=user_actions,
+                         user_participating=user_participating,
+                         now=datetime.now())
+
+@app.route('/collective_actions/join', methods=['POST'])
+@login_required
+def join_collective_action():
+    """Join a collective action"""
+    user_id = session.get('user_id')
+    action_id = request.form.get('action_id')
+    individual_goal = request.form.get('individual_goal', '').strip()
+    
+    if not action_id:
+        return jsonify({'success': False, 'error': 'Action ID required'})
+    
+    # Check if user has access to this feature
+    if not subscription_manager.has_feature_access(user_id, 'collective_actions'):
+        return jsonify({'success': False, 'error': 'Upgrade to Founder+ to join collective actions'})
+    
+    try:
+        success = collective_actions_manager.join_action(action_id, user_id, individual_goal)
+        
+        if success:
+            # Award XP for joining
+            gamification.award_xp(user_id, 'collective_action_joined', 15)
+            
+            action = collective_actions_manager.get_action_by_id(action_id)
+            return jsonify({
+                'success': True,
+                'action_title': action['title'] if action else 'Collective Action'
+            })
+        else:
+            return jsonify({'success': False, 'error': 'Unable to join action (may be full or already joined)'})
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/collective_actions/<action_id>')
+@login_required
+def collective_action_detail(action_id):
+    """Detailed view of a collective action"""
+    user_id = session.get('user_id')
+    
+    # Get action details
+    action = collective_actions_manager.get_action_by_id(action_id)
+    if not action:
+        flash('Collective action not found', 'error')
+        return redirect(url_for('collective_actions'))
+    
+    # Check if user is participating
+    user_participating = collective_actions_manager.is_user_participating(action_id, user_id)
+    user_participation = None
+    
+    if user_participating:
+        user_actions = collective_actions_manager.get_user_actions(user_id)
+        user_participation = next((a for a in user_actions if a['id'] == action_id), None)
+    
+    # Get group progress
+    group_progress = collective_actions_manager.get_group_progress(action_id)
+    
+    # Get activity feed
+    feed_items = collective_actions_manager.get_action_feed(action_id, limit=30)
+    
+    return render_template('collective_action_detail.html',
+                         action=action,
+                         user_participating=user_participating,
+                         user_participation=user_participation,
+                         group_progress=group_progress,
+                         feed_items=feed_items)
+
+@app.route('/collective_actions/update_progress', methods=['POST'])
+@login_required
+def update_collective_action_progress():
+    """Update user progress in collective action"""
+    user_id = session.get('user_id')
+    action_id = request.form.get('action_id')
+    content = request.form.get('content', '').strip()
+    progress_percentage = request.form.get('progress_percentage')
+    milestone_achieved = request.form.get('milestone_achieved', '').strip()
+    
+    if not all([action_id, content]):
+        return jsonify({'success': False, 'error': 'Action ID and content required'})
+    
+    # Verify user is participating
+    if not collective_actions_manager.is_user_participating(action_id, user_id):
+        return jsonify({'success': False, 'error': 'You are not participating in this action'})
+    
+    try:
+        progress_float = float(progress_percentage) if progress_percentage else None
+        milestone = milestone_achieved if milestone_achieved else None
+        
+        success = collective_actions_manager.update_progress(
+            action_id=action_id,
+            user_id=user_id,
+            update_type='progress',
+            content=content,
+            milestone_achieved=milestone,
+            progress_percentage=progress_float
+        )
+        
+        if success:
+            # Award XP for progress update
+            base_xp = 10
+            milestone_bonus = 20 if milestone else 0
+            progress_bonus = int(progress_float / 10) if progress_float else 0
+            total_xp = base_xp + milestone_bonus + progress_bonus
+            
+            gamification.award_xp(user_id, 'collective_action_progress', total_xp)
+            
+            return jsonify({'success': True, 'xp_earned': total_xp})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to update progress'})
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/collective_actions/post_message', methods=['POST'])
+@login_required
+def post_collective_action_message():
+    """Post a message to collective action feed"""
+    user_id = session.get('user_id')
+    action_id = request.form.get('action_id')
+    message_type = request.form.get('message_type', 'update')
+    content = request.form.get('content', '').strip()
+    
+    if not all([action_id, content]):
+        return jsonify({'success': False, 'error': 'Action ID and content required'})
+    
+    # Verify user is participating
+    if not collective_actions_manager.is_user_participating(action_id, user_id):
+        return jsonify({'success': False, 'error': 'You are not participating in this action'})
+    
+    try:
+        success = collective_actions_manager.post_message(action_id, user_id, message_type, content)
+        
+        if success:
+            # Award XP for community engagement
+            gamification.award_xp(user_id, 'collective_action_message', 5)
+            
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to post message'})
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/collective_actions/dashboard/<user_id>')
+@login_required
+def collective_actions_dashboard_api(user_id):
+    """API endpoint for collective actions dashboard data"""
+    if session.get('user_id') != user_id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        dashboard_data = collective_actions_manager.get_user_dashboard_data(user_id)
+        return jsonify(dashboard_data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

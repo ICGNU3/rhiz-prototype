@@ -82,6 +82,18 @@ The application follows an enhanced Flask MVC architecture with AI-powered conta
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
+- **June 26, 2025**: Collective Actions - Cohort-based Collaboration System completed
+  - Built comprehensive collective actions system with predefined initiatives ("Raise Together," "Hire Smart," "Find Beta Users," "Scale Operations")
+  - Created database schema supporting action participation, progress tracking, and community messaging
+  - Implemented shared resources system with templates, advisor access, and intro opportunities
+  - Added individual and group progress tracking with milestone achievements and percentage completion
+  - Built activity feed with progress updates, community messages, and celebration posts
+  - Created automated reminder system with scheduled nudges and public participation momentum
+  - Added XP rewards for joining actions (15 XP), progress updates (10-30 XP), and community engagement (5 XP)
+  - Integrated collective actions into main navigation for easy access and discovery
+  - Built responsive web interface with action cards, progress bars, and real-time updates
+  - Completed cohort-based collaboration workflow from joining to completion with full tracking
+
 - **June 26, 2025**: Enhanced Email Integration for Direct AI Message Sending completed
   - Built comprehensive enhanced email integration system with SMTP auto-detection for Gmail, Outlook, and Yahoo
   - Created seamless email composer modal with AI message generation directly from goal matcher interface
