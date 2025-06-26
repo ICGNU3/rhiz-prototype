@@ -1,6 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify, session
 from app import app
 import uuid
+import json
 from models import Database, User, Contact, Goal, AISuggestion, ContactInteraction, ContactIntelligence, OutreachSuggestion
 from openai_utils import OpenAIUtils
 from database_utils import seed_demo_data, match_contacts_to_goal
@@ -15,8 +16,11 @@ from ai_contact_matcher import AIContactMatcher
 from rhizomatic_intelligence import RhizomaticIntelligence
 from contact_search import ContactSearchEngine
 from gamification import GamificationEngine
+from auth import AuthManager, SubscriptionManager, EmailService as AuthEmailService
+from stripe_integration import StripePaymentManager, PricingHelper
 import logging
 from datetime import datetime
+from functools import wraps
 
 # Initialize database and models
 db = Database()
@@ -37,11 +41,266 @@ ai_matcher = AIContactMatcher(db)
 search_engine = ContactSearchEngine(db)
 gamification = GamificationEngine(db)
 
+# Initialize authentication and subscription managers
+auth_manager = AuthManager(db)
+subscription_manager = SubscriptionManager(db)
+auth_email_service = AuthEmailService()
+stripe_manager = StripePaymentManager(db)
+
 # Get or create default user
 DEFAULT_USER_ID = user_model.get_or_create_default()
 
 # Initialize NLP processor
 contact_nlp = ContactNLP(DEFAULT_USER_ID)
+
+# Authentication helpers
+def get_current_user():
+    """Get current authenticated user or None"""
+    user_id = session.get('user_id')
+    if user_id:
+        return subscription_manager.get_user_with_usage(user_id)
+    return None
+
+def require_auth(f):
+    """Decorator to require authentication"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('user_id'):
+            return redirect(url_for('signup'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def get_effective_user_id():
+    """Get user ID for operations - authenticated user or default guest"""
+    return session.get('user_id', DEFAULT_USER_ID)
+
+def check_tier_limits(user, action_type):
+    """Check if user can perform action based on their tier"""
+    if not user:
+        # Guest user - default limits
+        if action_type == 'goals':
+            return user_model.count_goals(DEFAULT_USER_ID) < 1
+        elif action_type == 'contacts':
+            return user_model.count_contacts(DEFAULT_USER_ID) < 50
+        elif action_type == 'ai_suggestions':
+            return user_model.count_ai_suggestions_today(DEFAULT_USER_ID) < 3
+    else:
+        # Authenticated user
+        if user.get('subscription_tier') == 'founder_plus':
+            # Founder+ tier - generous limits
+            if action_type == 'goals':
+                return user['goals_count'] < 100  # Effectively unlimited
+            elif action_type == 'contacts':
+                return user['contacts_count'] < 1000
+            elif action_type == 'ai_suggestions':
+                return True  # Unlimited for paid tier
+        else:
+            # Explorer tier - same as guest
+            if action_type == 'goals':
+                return user['goals_count'] < 1
+            elif action_type == 'contacts':
+                return user['contacts_count'] < 50
+            elif action_type == 'ai_suggestions':
+                return user['ai_suggestions_today'] < 3
+    
+    return False
+
+# Authentication and Subscription Routes
+
+@app.route('/signup')
+def signup():
+    """Signup page with free and paid tier options"""
+    return render_template('signup.html')
+
+@app.route('/pricing')
+def pricing():
+    """Pricing page showcasing Explorer and Founder+ tiers"""
+    return render_template('pricing.html')
+
+@app.route('/onboarding/goal')
+def onboarding_goal():
+    """Onboarding flow for creating first goal"""
+    return render_template('onboarding_goal.html')
+
+@app.route('/auth/magic-link', methods=['POST'])
+def send_magic_link():
+    """Send magic link for authentication"""
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+        
+        # Create or get user
+        user_id = auth_manager.create_or_get_user(email)
+        if not user_id:
+            return jsonify({'error': 'Failed to create user account'}), 500
+        
+        # Generate magic link token
+        token = auth_manager.generate_magic_link_token(user_id)
+        if not token:
+            return jsonify({'error': 'Failed to generate authentication token'}), 500
+        
+        # Send magic link email
+        magic_link = f"{request.host_url}auth/verify?token={token}"
+        success = auth_email_service.send_magic_link(email, magic_link)
+        
+        if success:
+            return jsonify({'success': True})
+        else:
+            return jsonify({'error': 'Failed to send magic link email'}), 500
+            
+    except Exception as e:
+        logging.error(f"Magic link error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/auth/verify')
+def verify_magic_link():
+    """Verify magic link and log in user"""
+    token = request.args.get('token')
+    
+    if not token:
+        flash('Invalid or missing verification token')
+        return redirect(url_for('signup'))
+    
+    # Verify token and get user
+    user_id = auth_manager.verify_magic_link_token(token)
+    if not user_id:
+        flash('Invalid or expired verification link')
+        return redirect(url_for('signup'))
+    
+    # Log in user
+    session['user_id'] = user_id
+    session.permanent = True
+    
+    # Redirect to onboarding or dashboard
+    return redirect(url_for('onboarding_goal') + '?verified=true')
+
+@app.route('/auth/logout')
+def logout():
+    """Log out current user"""
+    session.clear()
+    return redirect(url_for('landing'))
+
+@app.route('/auth/check-session')
+def check_session():
+    """Check if user is authenticated"""
+    return jsonify({
+        'authenticated': bool(session.get('user_id')),
+        'user_id': session.get('user_id')
+    })
+
+@app.route('/upgrade')
+@require_auth
+def upgrade():
+    """Subscription upgrade page"""
+    plan = request.args.get('plan', 'founder_plus_monthly')
+    user = get_current_user()
+    
+    if not user:
+        return redirect(url_for('signup'))
+    
+    # Create Stripe checkout session
+    success_url = f"{request.host_url}dashboard?upgraded=true"
+    cancel_url = f"{request.host_url}pricing"
+    
+    checkout_session = stripe_manager.create_checkout_session(
+        user_id=user['id'],
+        plan=plan,
+        success_url=success_url,
+        cancel_url=cancel_url
+    )
+    
+    if checkout_session:
+        return redirect(checkout_session['url'])
+    else:
+        flash('Failed to create checkout session. Please try again.')
+        return redirect(url_for('pricing'))
+
+@app.route('/billing/portal')
+@require_auth
+def billing_portal():
+    """Redirect to Stripe customer portal"""
+    user = get_current_user()
+    
+    if not user:
+        return redirect(url_for('signup'))
+    
+    return_url = f"{request.host_url}dashboard"
+    portal_url = stripe_manager.create_customer_portal_session(user['id'], return_url)
+    
+    if portal_url:
+        return redirect(portal_url)
+    else:
+        flash('Unable to access billing portal. Please contact support.')
+        return redirect(url_for('dashboard'))
+
+@app.route('/webhooks/stripe', methods=['POST'])
+def stripe_webhook():
+    """Handle Stripe webhook events"""
+    payload = request.data
+    signature = request.headers.get('Stripe-Signature')
+    
+    if stripe_manager.handle_webhook(payload, signature):
+        return jsonify({'status': 'success'})
+    else:
+        return jsonify({'status': 'error'}), 400
+
+@app.route('/api/goals', methods=['POST'])
+def api_create_goal():
+    """API endpoint for creating goals (supports both guest and authenticated users)"""
+    try:
+        data = request.get_json()
+        title = data.get('title', '').strip()
+        description = data.get('description', '').strip()
+        
+        if not title or not description:
+            return jsonify({'error': 'Title and description are required'}), 400
+        
+        # Get current user or use guest
+        current_user = get_current_user()
+        user_id = get_effective_user_id()
+        
+        # Check tier limits
+        if not check_tier_limits(current_user, 'goals'):
+            if current_user:
+                return jsonify({
+                    'error': 'Goal limit reached for your plan',
+                    'upgrade_required': True
+                }), 403
+            else:
+                return jsonify({
+                    'error': 'Guest goal limit reached. Sign up to create more goals.',
+                    'signup_required': True
+                }), 403
+        
+        # Create goal
+        goal_id = goal_model.create_goal(
+            user_id=user_id,
+            title=title,
+            description=description
+        )
+        
+        if goal_id:
+            # Award XP for authenticated users
+            if current_user:
+                gamification.award_xp(user_id, 'goal_created', {
+                    'goal_title': title,
+                    'description_length': len(description)
+                })
+            
+            return jsonify({
+                'success': True,
+                'goal_id': goal_id,
+                'user_authenticated': bool(current_user)
+            })
+        else:
+            return jsonify({'error': 'Failed to create goal'}), 500
+            
+    except Exception as e:
+        logging.error(f"Goal creation error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/')
 def landing():
