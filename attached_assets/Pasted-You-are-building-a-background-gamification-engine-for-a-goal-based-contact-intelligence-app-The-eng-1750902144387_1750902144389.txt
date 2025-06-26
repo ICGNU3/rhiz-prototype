@@ -1,0 +1,49 @@
+You are building a background gamification engine for a goal-based contact intelligence app. The engine must operate invisibly—supporting the user through motivational triggers, feedback loops, and subtle rewards—without surfacing as a main tab or feature.
+
+Build a system that:
+
+1. Tracks XP based on user actions (e.g., adding a contact, tagging a goal, sending follow-ups).
+2. Assigns levels and unlocks AI capabilities or insights at milestones.
+3. Generates subtle UI feedback (like glow effects, toast alerts, or animated microrewards).
+4. Offers quests (small challenges) surfaced in the Dashboard or Relationship views.
+5. Supports toggle preferences (Motivated Mode, Clean Mode, Quiet Mode).
+6. Remains visible only in microinteractions, not main navigation.
+
+Constraints:
+- No explicit “Gamify” section in the navigation.
+- Quests and XP should appear only in goal-related or contact-related contexts.
+- Streaks and achievements should be motivational, never intrusive.
+- XP progression should map to user-defined goals and impact (not vanity metrics).
+
+Example Event Triggers:
+- `addContact(goalTagged=true)` → +10 XP
+- `followUpContact(within3Days=true)` → +25 XP
+- `reconnectDormantContact(daysInactive>90)` → +20 XP
+- `completeQuest(assignedByAI=true)` → +40 XP
+- `dailyStreakContinue()` → +15 XP
+- `levelUpReached(newTitle=“Connector”)` → unlock insight module
+
+Deliverables:
+- XP tracker (backend object per user)
+- Leveling system with milestones + unlocks
+- Quest generator function (daily, weekly)
+- Lightweight frontend feedback component (e.g., toast, ribbon, icon pulse)
+- Settings preferences for user mood (gamified, clean, quiet)
+
+Structure the gamification system to feel like:
+> “Your network is evolving alongside your goals.”
+
+Do **not** break immersion with dashboards, stats pages, or forced achievements. The user’s actions should create meaning passively, and rewards should mirror their real-life goals.
+
+Output: modular system (JS or TS), with support for future multiplayer expansions.
+✨ Bonus: Sample Output Hook
+ts
+Copy
+Edit
+// When user completes a meaningful action:
+triggerFeedback({
+  type: "toast",
+  message: "🔥 You reactivated a dormant contact linked to your fundraising goal!",
+  xpGained: 20,
+  levelProgress: "Connector – 85% to next title",
+});

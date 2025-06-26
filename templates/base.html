@@ -13,6 +13,71 @@
     
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Background Gamification Engine -->
+    <script src="{{ url_for('static', filename='js/background-gamification.js') }}"></script>
+    
+    <script>
+        // Integration helper functions
+        function trackAction(action, data = {}) {
+            // Track user actions for analytics (non-intrusive)
+            console.log(`Action tracked: ${action}`, data);
+        }
+        
+        function triggerXPEvent(xpData) {
+            // Trigger gamification feedback when XP is earned
+            if (window.triggerGamificationEvent) {
+                window.triggerGamificationEvent('xp-earned', {
+                    action: xpData.action,
+                    message: getActionMessage(xpData.action, xpData.contact_name),
+                    xpGained: xpData.xp_awarded,
+                    goalLinked: xpData.goal_linked
+                });
+                
+                if (xpData.level_up) {
+                    setTimeout(() => {
+                        window.triggerGamificationEvent('level-up', {
+                            newTitle: xpData.current_title,
+                            unlockMessage: xpData.unlock_message
+                        });
+                    }, 1000);
+                }
+            }
+        }
+        
+        function getActionMessage(action, contactName = '') {
+            const messages = {
+                'contact_added': `New contact added${contactName ? ': ' + contactName : ''}`,
+                'goal_created': 'Goal created and ready for matching',
+                'email_sent': `Email sent${contactName ? ' to ' + contactName : ''}`,
+                'follow_up': `Follow-up completed${contactName ? ' with ' + contactName : ''}`,
+                'relationship_created': 'New relationship mapped in your network',
+                'conference_contact': 'Conference contact captured',
+                'note_added': 'Contact note added'
+            };
+            return messages[action] || 'Progress made on your network';
+        }
+        
+        // Show quest hints contextually
+        function showDailyQuest() {
+            fetch('/api/daily-quest')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.quest && window.backgroundGamification) {
+                        window.backgroundGamification.showQuestHint(data.quest);
+                    }
+                })
+                .catch(error => console.log('Quest data not available'));
+        }
+        
+        // Initialize background features
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show daily quest hint on dashboard
+            if (window.location.pathname === '/' || window.location.pathname === '/dashboard') {
+                setTimeout(showDailyQuest, 2000);
+            }
+        });
+    </script>
 </head>
 <body>
     <!-- Navigation -->
@@ -98,11 +163,7 @@
                             <i class="bi bi-calendar-event me-1"></i>Conference Mode
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-light" href="{{ url_for('gamification_dashboard') }}">
-                            <i class="bi bi-trophy me-1"></i>Gamification
-                        </a>
-                    </li>
+
                 </ul>
             </div>
         </div>

@@ -19,7 +19,7 @@
 
     <!-- Quick Stats -->
     <div class="row mb-5">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card text-center">
                 <div class="card-body">
                     <i class="bi bi-target display-4 text-primary mb-2"></i>
@@ -28,7 +28,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card text-center">
                 <div class="card-body">
                     <i class="bi bi-people display-4 text-info mb-2"></i>
@@ -37,12 +37,21 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card text-center">
                 <div class="card-body">
                     <i class="bi bi-robot display-4 text-success mb-2"></i>
                     <h5 class="card-title">AI</h5>
                     <p class="card-text text-muted">Smart Matching</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center xp-counter">
+                <div class="card-body">
+                    <i class="bi bi-trophy display-4 text-warning mb-2"></i>
+                    <h5 class="card-title" id="user-xp">{{ user_progress.xp or 0 }}</h5>
+                    <p class="card-text text-muted">{{ user_progress.title or 'Contact Seeker' }}</p>
                 </div>
             </div>
         </div>
