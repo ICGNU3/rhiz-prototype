@@ -949,9 +949,6 @@
             </a>
             
             <div class="navbar-nav ms-auto">
-                <a href="{{ url_for('signup') }}" class="btn btn-outline-light btn-sm me-2" style="border-color: rgba(255, 255, 255, 0.3); color: var(--text-primary);">
-                    <i class="bi bi-person-plus me-1"></i>Join
-                </a>
                 <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); border: none;">
                     <i class="bi bi-box-arrow-in-right me-1"></i>Login
                 </a>
@@ -980,7 +977,7 @@
                     <p class="hero-tagline">
                         The relationship intelligence platform built for founders who need to move fast.
                     </p>
-                    <a href="{{ url_for('signup') }}" class="cta-button">
+                    <a href="#application-form" class="cta-button" onclick="document.getElementById('application-form').scrollIntoView({behavior: 'smooth'});">
                         Become a Root Member
                         <i class="bi bi-arrow-right"></i>
                     </a>
@@ -1356,7 +1353,7 @@
     </section>
 
     <!-- Apply / Join Section -->
-    <section class="final-cta">
+    <section class="final-cta" id="application-form">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-md-8">
