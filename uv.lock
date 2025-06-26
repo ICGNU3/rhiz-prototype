@@ -876,6 +876,7 @@ dependencies = [
     { name = "openai" },
     { name = "psycopg2-binary" },
     { name = "python-telegram-bot" },
+    { name = "resend" },
     { name = "sendgrid" },
     { name = "slack-sdk" },
     { name = "stripe" },
@@ -894,6 +895,7 @@ requires-dist = [
     { name = "openai", specifier = ">=1.91.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
     { name = "python-telegram-bot", specifier = ">=22.1" },
+    { name = "resend", specifier = ">=2.10.0" },
     { name = "sendgrid", specifier = ">=6.12.4" },
     { name = "slack-sdk", specifier = ">=3.35.0" },
     { name = "stripe", specifier = ">=12.2.0" },
@@ -915,6 +917,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e1/0a/929373653770d8a0d7ea76c37de6e41f11eb07559b103b1c02cafb3f7cf8/requests-2.32.4.tar.gz", hash = "sha256:27d0316682c8a29834d3264820024b62a36942083d52caf2f14c0591336d3422", size = 135258 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7c/e4/56027c4a6b4ae70ca9de302488c5ca95ad4a39e190093d6c1a8ace08341b/requests-2.32.4-py3-none-any.whl", hash = "sha256:27babd3cda2a6d50b30443204ee89830707d396671944c998b5975b031ac2b2c", size = 64847 },
+]
+
+[[package]]
+name = "resend"
+version = "2.10.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/03/6c/57f032ea10d19bede1f21195301a40722e81fe6563fafbae7e37af77c8d5/resend-2.10.0.tar.gz", hash = "sha256:f9091f487f0d878095bb7a744549969c624815413b7ac82ba92039e2d0804b75", size = 14779 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5c/5e/ad687375e7610050de72ea5c254514c002e18c38d96ffc4afa4c8aa4d924/resend-2.10.0-py2.py3-none-any.whl", hash = "sha256:1d65a36b032522d5eb738e08956ca29cbaa217a270efbe915a071eb72c0d6956", size = 21354 },
 ]
 
 [[package]]

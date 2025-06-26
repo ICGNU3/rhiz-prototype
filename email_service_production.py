@@ -1,34 +1,34 @@
 """
-Production Email Service using SendGrid
+Production Email Service using Resend
 Handles magic link authentication and transactional emails for launch
 """
 import os
 import logging
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Email, To, Content
+import resend
 
 logger = logging.getLogger(__name__)
 
 class ProductionEmailService:
-    """Production-ready email service using SendGrid"""
+    """Production-ready email service using Resend"""
     
     def __init__(self):
-        self.api_key = os.environ.get('SENDGRID_API_KEY')
-        self.from_email = os.environ.get('FROM_EMAIL', 'hello@ourhizome.app')
-        self.sg = None
+        self.api_key = os.environ.get('RESEND_API_KEY')
+        self.from_email = os.environ.get('FROM_EMAIL', 'info@ourhizome.com')
+        self._configured = False
         
         if self.api_key:
             try:
-                self.sg = SendGridAPIClient(api_key=self.api_key)
-                logger.info("SendGrid email service initialized successfully")
+                resend.api_key = self.api_key
+                self._configured = True
+                logger.info("Resend email service initialized successfully")
             except Exception as e:
-                logger.error(f"Failed to initialize SendGrid: {e}")
+                logger.error(f"Failed to initialize Resend: {e}")
         else:
-            logger.warning("SENDGRID_API_KEY not found - email features will be disabled")
+            logger.warning("RESEND_API_KEY not found - email features will be disabled")
     
     def is_configured(self) -> bool:
         """Check if email service is properly configured"""
-        return self.sg is not None
+        return self._configured
     
     def send_magic_link_email(self, to_email: str, magic_token: str, base_url: str = None) -> bool:
         """Send magic link email for passwordless authentication"""

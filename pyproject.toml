@@ -12,6 +12,7 @@ dependencies = [
     "openai>=1.91.0",
     "psycopg2-binary>=2.9.10",
     "python-telegram-bot>=22.1",
+    "resend>=2.10.0",
     "sendgrid>=6.12.4",
     "slack-sdk>=3.35.0",
     "stripe>=12.2.0",
