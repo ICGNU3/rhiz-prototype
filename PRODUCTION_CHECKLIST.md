@@ -32,12 +32,12 @@
 ### 📋 REQUIRED FOR LAUNCH (95%)
 
 #### Environment Configuration
-- [ ] **SENDGRID_API_KEY** - For production email delivery
+- [ ] **RESEND_API_KEY** - For production email delivery (replaces SendGrid)
 - [ ] **STRIPE_SECRET_KEY** - For payment processing
 - [ ] **STRIPE_WEBHOOK_SECRET** - For webhook verification
 - [ ] **OPENAI_API_KEY** - For AI-powered features
 - [ ] **SESSION_SECRET** - For secure sessions
-- [ ] **FROM_EMAIL** - Sender email address (e.g., hello@ourhizome.app)
+- [ ] **FROM_EMAIL** - Sender email address (e.g., info@ourhizome.com)
 - [ ] **BASE_URL** - Production domain URL
 
 #### Infrastructure Setup
