@@ -140,10 +140,62 @@ def check_tier_limits(user, action_type):
 
 # Authentication and Subscription Routes
 
-@app.route('/signup')
+@app.route('/signup', methods=['GET', 'POST'])
 def signup():
     """Signup page with free and paid tier options"""
+    if request.method == 'POST':
+        # Handle Root Membership application form submission
+        try:
+            first_name = request.form.get('firstName')
+            last_name = request.form.get('lastName')
+            email = request.form.get('email')
+            company = request.form.get('company')
+            stage = request.form.get('stage')
+            goals = request.form.get('goals')
+            agree_terms = request.form.get('agreeTerms')
+            
+            # Validate required fields
+            if not all([first_name, last_name, email, company, stage, goals, agree_terms]):
+                flash('All fields are required, including agreeing to the community guidelines.', 'error')
+                return redirect(url_for('landing') + '#application-form')
+            
+            # Store application details in session for now (simplified - no user creation yet)
+            session['application_data'] = {
+                'first_name': first_name,
+                'last_name': last_name,
+                'email': email,
+                'company': company,
+                'stage': stage,
+                'goals': goals,
+                'status': 'pending_review',
+                'submitted_at': datetime.now().isoformat()
+            }
+            
+            # Send welcome email to applicant
+            try:
+                from utils.email import EmailService
+                email_service = EmailService()
+                success = email_service.send_application_confirmation(email, first_name)
+                if not success:
+                    logging.warning(f"Failed to send application confirmation email to {email}")
+            except Exception as e:
+                logging.warning(f"Failed to send application email: {e}")
+            
+            flash('Application submitted successfully! You\'ll receive next steps via email within 48 hours.', 'success')
+            return redirect(url_for('application_success'))
+                
+        except Exception as e:
+            logging.error(f"Application submission error: {e}")
+            flash('An error occurred while processing your application. Please try again.', 'error')
+            return redirect(url_for('landing') + '#application-form')
+    
+    # GET request - show signup page
     return render_template('signup.html')
+
+@app.route('/application-success')
+def application_success():
+    """Application success page"""
+    return render_template('application_success.html')
 
 @app.route('/pricing')
 def pricing():

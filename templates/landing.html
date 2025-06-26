@@ -599,6 +599,31 @@
             transform: translate(-50%, -50%);
         }
 
+        /* Custom Checkbox Styling */
+        .custom-checkbox .form-check-input {
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            margin-top: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .custom-checkbox .form-check-input:checked {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+
+        .custom-checkbox .form-check-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .custom-checkbox .form-check-input:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
         /* AI Matching Demo Styles */
         .ai-matching-demo {
             background: rgba(255, 255, 255, 0.05);
@@ -1399,9 +1424,9 @@
                                     <textarea class="form-control" id="goals" name="goals" rows="4" required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);" placeholder="e.g., raising Series A, hiring senior engineers, finding co-founder, building advisor network..."></textarea>
                                 </div>
                                 <div class="col-12">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="agreeTerms" name="agreeTerms" required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
-                                        <label class="form-check-label" for="agreeTerms" style="color: var(--text-secondary);">
+                                    <div class="form-check custom-checkbox">
+                                        <input class="form-check-input" type="checkbox" id="agreeTerms" name="agreeTerms" required>
+                                        <label class="form-check-label" for="agreeTerms" style="color: var(--text-secondary); cursor: pointer;">
                                             I understand this is a limited membership program and agree to the community guidelines.
                                         </label>
                                     </div>
