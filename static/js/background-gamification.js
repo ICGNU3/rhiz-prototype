@@ -219,10 +219,14 @@ class BackgroundGamificationEngine {
     }
 
     createToastContainer() {
-        if (!document.getElementById('gamification-toast-container')) {
+        // Wait for document body to be available
+        if (document.body && !document.getElementById('gamification-toast-container')) {
             const container = document.createElement('div');
             container.id = 'gamification-toast-container';
             document.body.appendChild(container);
+        } else if (!document.body) {
+            // Retry when body is available
+            setTimeout(() => this.createToastContainer(), 100);
         }
     }
 
