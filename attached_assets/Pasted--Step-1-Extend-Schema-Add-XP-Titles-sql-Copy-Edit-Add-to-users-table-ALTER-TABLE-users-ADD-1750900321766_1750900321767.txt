@@ -1,0 +1,138 @@
+🟩 Step 1 — Extend Schema: Add XP + Titles
+sql
+Copy
+Edit
+-- Add to users table
+ALTER TABLE users ADD COLUMN xp INTEGER DEFAULT 0;
+ALTER TABLE users ADD COLUMN title TEXT DEFAULT 'Contact Seeker';
+
+-- Add to contacts table
+ALTER TABLE contacts ADD COLUMN last_action TIMESTAMP;
+🟦 Step 2 — Track XP from Actions
+In your contact action routes (e.g. follow-up, add note, tag goal), update user XP:
+
+python
+Copy
+Edit
+def award_xp(user_id, points):
+    conn = sqlite3.connect("db.sqlite3")
+    conn.execute("UPDATE users SET xp = xp + ? WHERE id = ?", (points, user_id))
+    conn.commit()
+Use this in routes:
+
+python
+Copy
+Edit
+@app.route("/followup/<contact_id>", methods=["POST"])
+def followup(contact_id):
+    # ... log follow-up
+    award_xp(session["user_id"], 20)
+    update_last_action(contact_id)
+    return redirect("/dashboard")
+🟨 Step 3 — Level Logic + Titles
+python
+Copy
+Edit
+def get_title(xp):
+    if xp < 100:
+        return "Contact Seeker"
+    elif xp < 250:
+        return "Connector"
+    elif xp < 500:
+        return "Network Weaver"
+    elif xp < 1000:
+        return "Intent Architect"
+    else:
+        return "Rhizomatic Operator"
+Update on XP change:
+
+python
+Copy
+Edit
+def update_title(user_id):
+    conn = sqlite3.connect("db.sqlite3")
+    xp = conn.execute("SELECT xp FROM users WHERE id = ?", (user_id,)).fetchone()[0]
+    new_title = get_title(xp)
+    conn.execute("UPDATE users SET title = ? WHERE id = ?", (new_title, user_id))
+    conn.commit()
+🟫 Step 4 — Contact Quests AI Prompt
+File: rhizome_ai.py
+
+python
+Copy
+Edit
+import openai
+import json
+
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+def generate_contact_quests(user_goals, recent_contacts):
+    prompt = f"""
+You are a relational AI layer. Your job is to suggest gamified relationship quests based on the user's active goals and contacts.
+
+Goals: {user_goals}
+Recent Contacts: {recent_contacts}
+
+Return 2 small quests, a contact-of-the-day, and a motivational reflection.
+"""
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return json.loads(response['choices'][0]['message']['content'])
+Use this in your /dashboard route to load daily quests.
+
+🟪 Step 5 — Daily Quest Display in Dashboard
+File: dashboard.html
+
+html
+Copy
+Edit
+<h2>🎯 Daily Rhizome Quests</h2>
+<ul>
+  {% for quest in quests %}
+    <li>{{ quest }}</li>
+  {% endfor %}
+</ul>
+
+<p><strong>Contact of the Day:</strong> {{ contact_of_the_day }}</p>
+<p><em>{{ encouragement }}</em></p>
+<p>You are a <strong>{{ title }}</strong> with {{ xp }} XP.</p>
+🟥 Step 6 — Add Streak Tracker (Optional)
+Create a user_streaks table to log daily engagement:
+
+sql
+Copy
+Edit
+CREATE TABLE IF NOT EXISTS user_streaks (
+  user_id TEXT,
+  date DATE,
+  PRIMARY KEY (user_id, date)
+);
+Then log new streak entries when a user completes any action:
+
+python
+Copy
+Edit
+def log_streak(user_id):
+    today = datetime.now().date()
+    conn = sqlite3.connect("db.sqlite3")
+    conn.execute("INSERT OR IGNORE INTO user_streaks VALUES (?, ?)", (user_id, today))
+    conn.commit()
+✅ Summary: What You Now Have
+XP and title system for gamified progression
+
+AI-generated daily contact quests and follow-ups
+
+Motivational nudges and warm contact suggestions
+
+Easy expansion path into seasonal badges, social leaderboards, or event quests
+
+🔜 Want to Build Next?
+ Add weekly boss quests (e.g. “Warm 10 cold contacts in 7 days”)
+
+ Public XP boards (optional social layer)
+
+ Real-time feedback from GPT when user completes an action
+

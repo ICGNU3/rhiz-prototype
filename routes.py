@@ -13,6 +13,7 @@ from integrations import AutomationEngine
 from ai_contact_matcher import AIContactMatcher
 from rhizomatic_intelligence import RhizomaticIntelligence
 from contact_search import ContactSearchEngine
+from gamification import GamificationEngine
 import logging
 from datetime import datetime
 
@@ -32,6 +33,7 @@ network_mapper = NetworkMapper(db)
 automation_engine = AutomationEngine(db)
 ai_matcher = AIContactMatcher(db)
 search_engine = ContactSearchEngine(db)
+gamification = GamificationEngine(db)
 
 # Get or create default user
 DEFAULT_USER_ID = user_model.get_or_create_default()
@@ -58,6 +60,9 @@ def index():
             
             # Create goal with embedding
             goal_id = goal_model.create(DEFAULT_USER_ID, goal_title, goal_description, embedding)
+            
+            # Award XP for creating a goal
+            gamification.award_xp(DEFAULT_USER_ID, 'goal_matched')
             
             if goal_id:
                 # Get matched contacts
