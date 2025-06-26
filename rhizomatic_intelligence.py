@@ -67,14 +67,16 @@ class RhizomaticIntelligence:
         SELECT id, title, description, created_at,
                (SELECT COUNT(*) FROM ai_suggestions WHERE goal_id = g.id) as suggestion_count
         FROM goals g 
-        WHERE user_id = ? 
+        WHERE user_id = %s 
         ORDER BY created_at DESC
         LIMIT 5
         """
         conn = self.db.get_connection()
         try:
-            cursor = conn.execute(sql, [user_id])
-            return [dict(row) for row in cursor.fetchall()]
+            cursor = conn.cursor()
+            cursor.execute(sql, [user_id])
+            columns = [desc[0] for desc in cursor.description]
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
         finally:
             conn.close()
     
@@ -89,14 +91,16 @@ class RhizomaticIntelligence:
                MAX(ci.interaction_date) as most_recent_contact
         FROM contacts c
         LEFT JOIN contact_interactions ci ON c.id = ci.contact_id
-        WHERE c.user_id = ?
-        GROUP BY c.id
+        WHERE c.user_id = %s
+        GROUP BY c.id, c.name, c.email, c.company, c.title, c.linkedin_url, c.tags, c.notes, c.relationship_type, c.warmth_level, c.created_at, ci.interaction_date, ci.interaction_type, ci.notes
         ORDER BY most_recent_contact DESC, c.created_at DESC
         """
         conn = self.db.get_connection()
         try:
-            cursor = conn.execute(sql, [user_id])
-            return [dict(row) for row in cursor.fetchall()]
+            cursor = conn.cursor()
+            cursor.execute(sql, [user_id])
+            columns = [desc[0] for desc in cursor.description]
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
         finally:
             conn.close()
     
@@ -108,13 +112,15 @@ class RhizomaticIntelligence:
         SELECT ci.*, c.name as contact_name, c.company
         FROM contact_interactions ci
         JOIN contacts c ON ci.contact_id = c.id
-        WHERE c.user_id = ? AND ci.interaction_date >= ?
+        WHERE c.user_id = %s AND ci.interaction_date >= %s
         ORDER BY ci.interaction_date DESC
         """
         conn = self.db.get_connection()
         try:
-            cursor = conn.execute(sql, [user_id, cutoff_date])
-            return [dict(row) for row in cursor.fetchall()]
+            cursor = conn.cursor()
+            cursor.execute(sql, [user_id, cutoff_date])
+            columns = [desc[0] for desc in cursor.description]
+            return [dict(zip(columns, row)) for row in cursor.fetchall()]
         finally:
             conn.close()
     

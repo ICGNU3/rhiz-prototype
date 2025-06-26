@@ -14,6 +14,7 @@ from ai_contact_matcher import AIContactMatcher
 from rhizomatic_intelligence import RhizomaticIntelligence
 from contact_search import ContactSearchEngine
 import logging
+from datetime import datetime
 
 # Initialize database and models
 db = Database()
@@ -1169,7 +1170,6 @@ def get_rhizomatic_insights():
     user_id = session.get('user_id', 1)
     
     try:
-        db = get_db()
         rhizome = RhizomaticIntelligence(db)
         insights = rhizome.generate_rhizomatic_insights(user_id)
         return jsonify(insights)
