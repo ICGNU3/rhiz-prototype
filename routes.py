@@ -2335,3 +2335,113 @@ def api_ticker_messages():
         return jsonify({'messages': messages})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+# Shared AI Assistant Routes
+
+@app.route('/ai-assistant')
+@require_auth
+def ai_assistant_dashboard():
+    """Shared AI Assistant - Ambient Intelligence Dashboard"""
+    user_id = get_current_user().id
+    
+    try:
+        # Get AI assistant summary data
+        assistant_data = shared_ai_assistant.get_user_assistant_summary(user_id)
+        
+        return render_template('ai_assistant.html',
+                             assistant_data=assistant_data)
+    
+    except Exception as e:
+        logging.error(f"Error loading AI assistant: {e}")
+        return render_template('ai_assistant.html',
+                             assistant_data={
+                                 'missed_connections': [],
+                                 'daily_actions': [],
+                                 'weekly_insights': []
+                             })
+
+@app.route('/api/ai-assistant/connection/act', methods=['POST'])
+@require_auth
+def act_on_connection():
+    """Mark a missed connection as acted upon"""
+    user_id = get_current_user().id
+    data = request.get_json()
+    connection_id = data.get('connection_id')
+    
+    success = shared_ai_assistant.mark_connection_acted_on(connection_id, user_id)
+    
+    if success:
+        # Award XP for making connections
+        gamification.award_xp(user_id, "connection_made", 15, "Made an AI-suggested connection")
+    
+    return jsonify({'success': success})
+
+@app.route('/api/ai-assistant/connection/dismiss', methods=['POST'])
+@require_auth
+def dismiss_connection():
+    """Dismiss a missed connection suggestion"""
+    user_id = get_current_user().id
+    data = request.get_json()
+    connection_id = data.get('connection_id')
+    
+    success = shared_ai_assistant.mark_connection_acted_on(connection_id, user_id)
+    
+    return jsonify({'success': success})
+
+@app.route('/api/ai-assistant/action/complete', methods=['POST'])
+@require_auth
+def complete_micro_action():
+    """Mark a micro-action as completed"""
+    user_id = get_current_user().id
+    data = request.get_json()
+    action_id = data.get('action_id')
+    
+    success = shared_ai_assistant.mark_micro_action_completed(action_id, user_id)
+    
+    if success:
+        # Award XP for completing actions
+        gamification.award_xp(user_id, "micro_action_completed", 5, "Completed daily micro-action")
+    
+    return jsonify({'success': success})
+
+@app.route('/api/ai-assistant/connections/refresh')
+@require_auth
+def refresh_connections():
+    """Refresh missed connections"""
+    user_id = get_current_user().id
+    
+    try:
+        connections = shared_ai_assistant.surface_missed_connections(user_id)
+        return jsonify({'success': True, 'connections': [
+            {
+                'id': conn.user_b_id,
+                'reason': conn.connection_reason,
+                'suggestion': conn.suggested_intro,
+                'confidence': conn.confidence_score
+            } for conn in connections
+        ]})
+    except Exception as e:
+        logging.error(f"Error refreshing connections: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/ai-assistant/actions/refresh')
+@require_auth
+def refresh_actions():
+    """Refresh daily micro-actions"""
+    user_id = get_current_user().id
+    
+    try:
+        actions = shared_ai_assistant.generate_daily_micro_actions(user_id)
+        return jsonify({'success': True, 'actions': [
+            {
+                'type': action.action_type,
+                'suggestion': action.suggestion,
+                'context': action.context,
+                'time': action.estimated_time,
+                'priority': action.priority_score
+            } for action in actions
+        ]})
+    except Exception as e:
+        logging.error(f"Error refreshing actions: {e}")
+        return jsonify({'success': False, 'error': str(e)})

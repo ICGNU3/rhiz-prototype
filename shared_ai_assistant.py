@@ -10,7 +10,8 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass
 import logging
-from openai_utils import OpenAIUtils
+import os
+from openai import OpenAI
 
 
 @dataclass
@@ -54,7 +55,7 @@ class SharedAIAssistant:
     
     def __init__(self, db_path: str = 'db.sqlite3'):
         self.db_path = db_path
-        self.openai_utils = OpenAIUtils()
+        self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self._init_database()
 
     def _init_database(self):
