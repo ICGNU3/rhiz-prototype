@@ -1,5 +1,5 @@
 """
-Monica-Inspired CRM Features for OuRhizome
+Monique-Inspired CRM Features for OuRhizome
 Handles reminders, journal entries, tasks, and file attachments
 """
 import os
@@ -28,7 +28,7 @@ def award_xp(user_id, action, points):
         pass  # Skip XP if gamification module not available
 
 # Create blueprint
-monica_bp = Blueprint('monica', __name__, url_prefix='/crm')
+monique_bp = Blueprint('monique', __name__, url_prefix='/crm')
 
 # File upload configuration
 UPLOAD_FOLDER = 'static/uploads'
@@ -50,7 +50,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Reminders Routes
-@monica_bp.route('/reminders')
+@monique_bp.route('/reminders')
 @require_login
 def reminders():
     """Display all reminders for the user"""
@@ -58,11 +58,11 @@ def reminders():
     all_reminders = reminder_model.get_all(user_id)
     due_reminders = reminder_model.get_due_reminders(user_id, days_ahead=30)
     
-    return render_template('monica/reminders.html', 
+    return render_template('monique/reminders.html', 
                          all_reminders=all_reminders,
                          due_reminders=due_reminders)
 
-@monica_bp.route('/reminder/create', methods=['GET', 'POST'])
+@monique_bp.route('/reminder/create', methods=['GET', 'POST'])
 @require_login
 def create_reminder():
     """Create a new reminder"""
@@ -96,7 +96,7 @@ def create_reminder():
                     'reminder_type': reminder_type
                 })
                 flash('Reminder created successfully!', 'success')
-                return redirect(url_for('monica.reminders'))
+                return redirect(url_for('monique.reminders'))
             else:
                 flash('Failed to create reminder.', 'error')
         else:
@@ -105,9 +105,9 @@ def create_reminder():
     # Get contacts for dropdown
     user_id = session.get('user_id')
     contacts = contact_model.get_all(user_id)
-    return render_template('monica/create_reminder.html', contacts=contacts)
+    return render_template('monique/create_reminder.html', contacts=contacts)
 
-@monica_bp.route('/reminder/<reminder_id>/complete', methods=['POST'])
+@monique_bp.route('/reminder/<reminder_id>/complete', methods=['POST'])
 @require_login
 def complete_reminder(reminder_id):
     """Mark a reminder as completed"""
@@ -121,10 +121,10 @@ def complete_reminder(reminder_id):
     })
     
     flash('Reminder marked as completed!', 'success')
-    return redirect(url_for('monica.reminders'))
+    return redirect(url_for('monique.reminders'))
 
 # Tasks Routes
-@monica_bp.route('/tasks')
+@monique_bp.route('/tasks')
 @require_login
 def tasks():
     """Display all tasks for the user"""
@@ -140,11 +140,11 @@ def tasks():
         'done': [t for t in all_tasks if t['status'] == 'done']
     }
     
-    return render_template('monica/tasks.html', 
+    return render_template('monique/tasks.html', 
                          tasks_by_status=tasks_by_status,
                          status_filter=status_filter)
 
-@monica_bp.route('/task/create', methods=['GET', 'POST'])
+@monique_bp.route('/task/create', methods=['GET', 'POST'])
 @require_login
 def create_task():
     """Create a new task"""
@@ -174,7 +174,7 @@ def create_task():
                     'priority': priority
                 })
                 flash('Task created successfully!', 'success')
-                return redirect(url_for('monica.tasks'))
+                return redirect(url_for('monique.tasks'))
             else:
                 flash('Failed to create task.', 'error')
         else:
@@ -183,9 +183,9 @@ def create_task():
     # Get contacts for dropdown
     user_id = session.get('user_id')
     contacts = contact_model.get_all(user_id)
-    return render_template('monica/create_task.html', contacts=contacts)
+    return render_template('monique/create_task.html', contacts=contacts)
 
-@monica_bp.route('/task/<task_id>/update', methods=['POST'])
+@monique_bp.route('/task/<task_id>/update', methods=['POST'])
 @require_login
 def update_task_status(task_id):
     """Update task status"""
@@ -207,10 +207,10 @@ def update_task_status(task_id):
     else:
         flash('Invalid task status.', 'error')
     
-    return redirect(url_for('monica.tasks'))
+    return redirect(url_for('monique.tasks'))
 
 # Journal Entries Routes
-@monica_bp.route('/contact/<contact_id>/journal')
+@monique_bp.route('/contact/<contact_id>/journal')
 @require_login
 def contact_journal(contact_id):
     """Display journal entries for a contact"""
@@ -222,10 +222,10 @@ def contact_journal(contact_id):
         return redirect(url_for('dashboard'))
     
     entries = journal_model.get_by_contact(contact_id)
-    return render_template('monica/contact_journal.html', 
+    return render_template('monique/contact_journal.html', 
                          contact=contact, entries=entries)
 
-@monica_bp.route('/contact/<contact_id>/journal/create', methods=['POST'])
+@monique_bp.route('/contact/<contact_id>/journal/create', methods=['POST'])
 @require_login
 def create_journal_entry(contact_id):
     """Create a new journal entry for a contact"""
@@ -256,10 +256,10 @@ def create_journal_entry(contact_id):
     else:
         flash('Please enter some content for the journal entry.', 'error')
     
-    return redirect(url_for('monica.contact_journal', contact_id=contact_id))
+    return redirect(url_for('monique.contact_journal', contact_id=contact_id))
 
 # File Attachments Routes
-@monica_bp.route('/contact/<contact_id>/attachments')
+@monique_bp.route('/contact/<contact_id>/attachments')
 @require_login
 def contact_attachments(contact_id):
     """Display attachments for a contact"""
@@ -271,10 +271,10 @@ def contact_attachments(contact_id):
         return redirect(url_for('dashboard'))
     
     attachments = attachment_model.get_by_contact(contact_id)
-    return render_template('monica/contact_attachments.html', 
+    return render_template('monique/contact_attachments.html', 
                          contact=contact, attachments=attachments)
 
-@monica_bp.route('/contact/<contact_id>/attachments/upload', methods=['POST'])
+@monique_bp.route('/contact/<contact_id>/attachments/upload', methods=['POST'])
 @require_login
 def upload_attachment(contact_id):
     """Upload a file attachment for a contact"""
@@ -287,12 +287,12 @@ def upload_attachment(contact_id):
     
     if 'file' not in request.files:
         flash('No file selected.', 'error')
-        return redirect(url_for('monica.contact_attachments', contact_id=contact_id))
+        return redirect(url_for('monique.contact_attachments', contact_id=contact_id))
     
     file = request.files['file']
     if file.filename == '':
         flash('No file selected.', 'error')
-        return redirect(url_for('monica.contact_attachments', contact_id=contact_id))
+        return redirect(url_for('monique.contact_attachments', contact_id=contact_id))
     
     if file and allowed_file(file.filename):
         # Check file size
@@ -302,7 +302,7 @@ def upload_attachment(contact_id):
         
         if file_size > MAX_FILE_SIZE:
             flash('File size too large. Maximum 16MB allowed.', 'error')
-            return redirect(url_for('monica.contact_attachments', contact_id=contact_id))
+            return redirect(url_for('monique.contact_attachments', contact_id=contact_id))
         
         # Generate unique filename
         filename = secure_filename(file.filename)
@@ -340,9 +340,9 @@ def upload_attachment(contact_id):
     else:
         flash('Invalid file type. Please check allowed formats.', 'error')
     
-    return redirect(url_for('monica.contact_attachments', contact_id=contact_id))
+    return redirect(url_for('monique.contact_attachments', contact_id=contact_id))
 
-@monica_bp.route('/attachment/<attachment_id>/download')
+@monique_bp.route('/attachment/<attachment_id>/download')
 @require_login
 def download_attachment(attachment_id):
     """Download an attachment file"""
@@ -358,10 +358,10 @@ def download_attachment(attachment_id):
                         download_name=attachment['filename'])
     else:
         flash('File not found on server.', 'error')
-        return redirect(url_for('monica.contact_attachments', 
+        return redirect(url_for('monique.contact_attachments', 
                               contact_id=attachment['contact_id']))
 
-@monica_bp.route('/attachment/<attachment_id>/delete', methods=['POST'])
+@monique_bp.route('/attachment/<attachment_id>/delete', methods=['POST'])
 @require_login
 def delete_attachment(attachment_id):
     """Delete an attachment"""
@@ -387,10 +387,10 @@ def delete_attachment(attachment_id):
     else:
         flash('Failed to delete attachment.', 'error')
     
-    return redirect(url_for('monica.contact_attachments', contact_id=contact_id))
+    return redirect(url_for('monique.contact_attachments', contact_id=contact_id))
 
 # API endpoints for AJAX updates
-@monica_bp.route('/api/due-reminders')
+@monique_bp.route('/api/due-reminders')
 @require_login
 def api_due_reminders():
     """Get due reminders for dashboard widget"""
@@ -398,7 +398,7 @@ def api_due_reminders():
     reminders = reminder_model.get_due_reminders(user_id, days_ahead=7)
     return jsonify(reminders)
 
-@monica_bp.route('/api/pending-tasks')
+@monique_bp.route('/api/pending-tasks')
 @require_login
 def api_pending_tasks():
     """Get pending tasks for dashboard widget"""
