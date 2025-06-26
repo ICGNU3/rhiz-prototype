@@ -2,52 +2,137 @@
 
 {% block content %}
 <div class="container mt-4">
-    <!-- Hero Section -->
-    <div class="row mb-5">
+    <!-- Goal-First Header -->
+    <div class="row mb-4">
         <div class="col-12">
-            <div class="text-center py-5">
-                <h1 class="display-4 mb-3">
-                    <i class="bi bi-stars me-3"></i>
-                    AI-Powered Founder Network
-                </h1>
-                <p class="lead text-muted">
-                    Connect your goals with the right people using advanced AI matching
-                </p>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">Your Network Today</h1>
+                    <p class="text-muted mb-0">Start with a goal, find your people, act with intention</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('goals') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>New Goal
+                    </a>
+                    <a href="/contacts/add" class="btn btn-outline-secondary">
+                        <i class="bi bi-person-plus me-1"></i>Add Contact
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Quick Stats -->
-    <div class="row mb-5">
-        <div class="col-md-3">
-            <div class="card text-center">
+    <!-- Goal-Relevant Feed -->
+    <div class="row">
+        <!-- Active Goals Column -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-bullseye me-1"></i>Active Goals</h6>
+                    <span class="badge bg-primary">{{ goals|length }}</span>
+                </div>
                 <div class="card-body">
-                    <i class="bi bi-target display-4 text-primary mb-2"></i>
-                    <h5 class="card-title">{{ goals|length }}</h5>
-                    <p class="card-text text-muted">Active Goals</p>
+                    {% if goals %}
+                        {% for goal in goals[:3] %}
+                        <div class="d-flex align-items-start mb-3 {% if not loop.last %}border-bottom pb-3{% endif %}">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ goal.title }}</h6>
+                                <p class="small text-muted mb-1">{{ goal.description[:80] }}{% if goal.description|length > 80 %}...{% endif %}</p>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('goal_matcher') }}?goal_id={{ goal.id }}" class="btn btn-sm btn-outline-primary">Find People</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if goals|length > 3 %}
+                        <a href="{{ url_for('goals') }}" class="btn btn-sm btn-link p-0">View all {{ goals|length }} goals →</a>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="bi bi-target text-muted mb-2" style="font-size: 2rem;"></i>
+                            <p class="text-muted mb-2">No goals yet</p>
+                            <a href="{{ url_for('goals') }}" class="btn btn-sm btn-primary">Create Your First Goal</a>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-center">
+
+        <!-- Relevant Contacts Column -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-people me-1"></i>Top Contacts</h6>
+                    <span class="badge bg-info">{{ contacts|length }}</span>
+                </div>
                 <div class="card-body">
-                    <i class="bi bi-people display-4 text-info mb-2"></i>
-                    <h5 class="card-title">{{ contacts|length }}</h5>
-                    <p class="card-text text-muted">Network Contacts</p>
+                    {% if contacts %}
+                        {% for contact in contacts[:3] %}
+                        <div class="d-flex align-items-start mb-3 {% if not loop.last %}border-bottom pb-3{% endif %}">
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between">
+                                    <h6 class="mb-1">{{ contact.name }}</h6>
+                                    <span class="badge bg-{{ 'success' if contact.warmth == 'warm' else 'warning' if contact.warmth == 'cold' else 'secondary' }}">
+                                        {{ contact.warmth|title }}
+                                    </span>
+                                </div>
+                                <p class="small text-muted mb-1">{{ contact.company }} {% if contact.title %}• {{ contact.title }}{% endif %}</p>
+                                <p class="small text-muted mb-0">{{ contact.relationship_type|title }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <a href="{{ url_for('contacts') }}" class="btn btn-sm btn-link p-0">View all contacts →</a>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="bi bi-person-plus text-muted mb-2" style="font-size: 2rem;"></i>
+                            <p class="text-muted mb-2">No contacts yet</p>
+                            <a href="/contacts/add" class="btn btn-sm btn-secondary">Add Your First Contact</a>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-center">
+
+        <!-- AI Intelligence Column -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-robot me-1"></i>AI Insights</h6>
+                    <span class="badge bg-success">Smart</span>
+                </div>
                 <div class="card-body">
-                    <i class="bi bi-robot display-4 text-success mb-2"></i>
-                    <h5 class="card-title">AI</h5>
-                    <p class="card-text text-muted">Smart Matching</p>
+                    {% if ai_suggestions %}
+                        {% for suggestion in ai_suggestions[:3] %}
+                        <div class="d-flex align-items-start mb-3 {% if not loop.last %}border-bottom pb-3{% endif %}">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ suggestion.contact_name }}</h6>
+                                <p class="small text-muted mb-2">{{ suggestion.reason[:60] }}{% if suggestion.reason|length > 60 %}...{% endif %}</p>
+                                <div class="d-flex gap-2">
+                                    <span class="badge bg-light text-dark">{{ (suggestion.confidence * 100)|round }}% match</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <a href="{{ url_for('crm_dashboard') }}" class="btn btn-sm btn-link p-0">View all suggestions →</a>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="bi bi-lightbulb text-muted mb-2" style="font-size: 2rem;"></i>
+                            <p class="text-muted mb-2">Create goals to get AI suggestions</p>
+                            <a href="{{ url_for('goals') }}" class="btn btn-sm btn-success">Start with a Goal</a>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-center xp-counter">
+    </div>
+
+    <!-- Network Stats Bar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-light border-0">
+                <div class="card-body py-3">
+                    <div class="row text-center">
+                        <div class="col-md-3 xp-counter">
                 <div class="card-body">
                     <i class="bi bi-trophy display-4 text-warning mb-2"></i>
                     <h5 class="card-title" id="user-xp">{{ user_progress.xp or 0 }}</h5>

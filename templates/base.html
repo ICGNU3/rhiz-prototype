@@ -77,6 +77,95 @@
                 setTimeout(showDailyQuest, 2000);
             }
         });
+        
+        // Gamification settings modal
+        function openGamificationSettings() {
+            const modalHtml = `
+                <div class="modal fade" id="gamificationModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Motivation Settings</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="text-muted mb-3">Choose how you'd like to receive motivation and progress feedback:</p>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="motivationMode" id="motivated" value="motivated" checked>
+                                    <label class="form-check-label" for="motivated">
+                                        <strong>Motivated Mode</strong><br>
+                                        <small class="text-muted">Full feedback with XP notifications, achievement celebrations, and quest hints</small>
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="motivationMode" id="clean" value="clean">
+                                    <label class="form-check-label" for="clean">
+                                        <strong>Clean Mode</strong><br>
+                                        <small class="text-muted">Minimal feedback with subtle progress indicators only</small>
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="motivationMode" id="quiet" value="quiet">
+                                    <label class="form-check-label" for="quiet">
+                                        <strong>Quiet Mode</strong><br>
+                                        <small class="text-muted">Silent progress tracking with no visible feedback</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" onclick="saveGamificationSettings()">Save Settings</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if present
+            const existingModal = document.getElementById('gamificationModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('gamificationModal'));
+            modal.show();
+        }
+        
+        function saveGamificationSettings() {
+            const selectedMode = document.querySelector('input[name="motivationMode"]:checked').value;
+            
+            // Save to localStorage
+            localStorage.setItem('gamificationMode', selectedMode);
+            
+            // Update background gamification engine
+            if (window.backgroundGamification) {
+                window.backgroundGamification.setMode(selectedMode);
+            }
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('gamificationModal'));
+            modal.hide();
+            
+            // Show confirmation
+            if (selectedMode !== 'quiet') {
+                setTimeout(() => {
+                    const toast = document.createElement('div');
+                    toast.className = 'toast show position-fixed top-0 end-0 m-3';
+                    toast.style.zIndex = '9999';
+                    toast.innerHTML = `
+                        <div class="toast-body bg-success text-white">
+                            Motivation settings updated to ${selectedMode} mode
+                        </div>
+                    `;
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 3000);
+                }, 500);
+            }
+        }
     </script>
 </head>
 <body>
@@ -96,74 +185,71 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link text-light" href="{{ url_for('index') }}">
-                            <i class="bi bi-house me-1"></i>Dashboard
+                            <i class="bi bi-house me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light" href="{{ url_for('goals') }}">
+                            <i class="bi bi-bullseye me-1"></i>Goals
                         </a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-diagram-3 me-1"></i>CRM Intelligence
+                            <i class="bi bi-people me-1"></i>Relationships
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('crm_pipeline') }}">
+                                <i class="bi bi-kanban me-1"></i>Pipeline
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('contacts') }}">
+                                <i class="bi bi-person-lines-fill me-1"></i>All Contacts
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('import_contacts') }}">
+                                <i class="bi bi-upload me-1"></i>Import Contacts
+                            </a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-robot me-1"></i>Intelligence
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{{ url_for('crm_dashboard') }}">
-                                <i class="bi bi-speedometer2 me-1"></i>CRM Dashboard
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('crm_pipeline') }}">
-                                <i class="bi bi-kanban me-1"></i>Pipeline View
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('crm_timeline') }}">
-                                <i class="bi bi-clock-history me-1"></i>Timeline
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('crm_suggestions') }}">
                                 <i class="bi bi-lightbulb me-1"></i>AI Suggestions
                             </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('ai_intelligence_dashboard') }}">
-                                <i class="bi bi-brain me-1"></i>AI Intelligence
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('rhizome_dashboard') }}">
-                                <i class="bi bi-diagram-3 me-1"></i>Rhizomatic Network
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('crm_nlp') }}">
                                 <i class="bi bi-chat-dots me-1"></i>Ask AI Assistant
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('rhizome_dashboard') }}">
+                                <i class="bi bi-diagram-3-fill me-1"></i>Network Intelligence
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('analytics_dashboard') }}">
+                                <i class="bi bi-graph-up me-1"></i>Progress Analytics
                             </a></li>
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-light" href="{{ url_for('goals') }}">
-                            <i class="bi bi-target me-1"></i>Goals
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-light" href="{{ url_for('contacts') }}">
-                            <i class="bi bi-person-lines-fill me-1"></i>Contacts
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-light" href="{{ url_for('import_contacts') }}">
-                            <i class="bi bi-upload me-1"></i>Import CSV
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-light" href="{{ url_for('email_settings') }}">
-                            <i class="bi bi-envelope-gear me-1"></i>Email Settings
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-light" href="{{ url_for('analytics_dashboard') }}">
-                            <i class="bi bi-graph-up me-1"></i>Analytics
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link text-light" href="{{ url_for('network_dashboard') }}">
-                            <i class="bi bi-diagram-3 me-1"></i>Network Map
+                            <i class="bi bi-diagram-3 me-1"></i>Map
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-light" href="{{ url_for('conference_mode') }}">
-                            <i class="bi bi-calendar-event me-1"></i>Conference Mode
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-gear me-1"></i>Settings
                         </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('email_settings') }}">
+                                <i class="bi bi-envelope-gear me-1"></i>Email Setup
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('conference_mode') }}">
+                                <i class="bi bi-calendar-event me-1"></i>Conference Mode
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="openGamificationSettings()">
+                                <i class="bi bi-sliders me-1"></i>Motivation Mode
+                            </a></li>
+                        </ul>
                     </li>
-
                 </ul>
             </div>
         </div>
