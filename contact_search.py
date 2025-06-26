@@ -14,7 +14,7 @@ class ContactSearchEngine:
     def __init__(self, db):
         self.db = db
     
-    def search_contacts(self, query: str, user_id: int, filters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+    def search_contacts(self, query: str, user_id: int, filters = None) -> List[Dict[str, Any]]:
         """
         Comprehensive contact search with multiple search strategies
         """
@@ -185,7 +185,7 @@ class ContactSearchEngine:
         
         return highlights
     
-    def _highlight_text(self, text: str, query: str) -> str:
+    def _highlight_text(self, text, query: str) -> str:
         """Add HTML highlighting to matching text"""
         if not text or not query:
             return text
@@ -318,13 +318,13 @@ class ContactSearchEngine:
         cursor = self.db.execute(sql, [user_id])
         return [dict(row) for row in cursor.fetchall()]
     
-    def save_search_history(self, user_id: int, query: str, filter_data: str = None):
+    def save_search_history(self, user_id: int, query: str, filter_data = None):
         """Save search history for analytics and suggestions"""
         sql = """
         INSERT INTO search_history (user_id, query, filters, search_date)
         VALUES (?, ?, ?, datetime('now'))
         """
-        self.db.execute(sql, [user_id, query, filter_data])
+        self.db.execute(sql, [user_id, query, filter_data or ""])
         self.db.commit()
     
     def get_popular_searches(self, user_id: int, limit: int = 5) -> List[str]:
