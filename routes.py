@@ -330,6 +330,14 @@ def landing():
     """Modern 2025 landing page"""
     return render_template('landing.html')
 
+@app.route('/login')
+def login():
+    """Login page with magic link authentication"""
+    # If user is already logged in, redirect to dashboard
+    if 'user_id' in session:
+        return redirect(url_for('index'))
+    return render_template('login.html')
+
 @app.route('/dashboard', methods=['GET', 'POST'])
 def index():
     """Enhanced single-page UI for goal-based contact matching"""

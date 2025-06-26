@@ -941,6 +941,25 @@
     </style>
 </head>
 <body>
+    <!-- Navigation Header -->
+    <nav class="navbar navbar-expand-lg fixed-top" style="background: rgba(10, 10, 15, 0.9); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); z-index: 1050;">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/" style="color: var(--text-primary); text-decoration: none;">
+                <img src="/static/images/ourhizome-logo.png" alt="OuRhizome" style="height: 32px; width: auto; margin-right: 12px;">
+                <span style="font-weight: 600; font-size: 20px;">OuRhizome</span>
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <a href="{{ url_for('signup') }}" class="btn btn-outline-light btn-sm me-2" style="border-color: rgba(255, 255, 255, 0.3); color: var(--text-primary);">
+                    <i class="bi bi-person-plus me-1"></i>Join
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm" style="background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); border: none;">
+                    <i class="bi bi-box-arrow-in-right me-1"></i>Login
+                </a>
+            </div>
+        </div>
+    </nav>
+
     <!-- Floating Background Orbs -->
     <div class="orb"></div>
     <div class="orb"></div>
