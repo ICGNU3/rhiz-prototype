@@ -1312,21 +1312,180 @@
                 });
             });
 
-            // Dynamic node interactions in network preview
-            const nodes = document.querySelectorAll('.node');
-            nodes.forEach(node => {
-                node.addEventListener('mouseenter', () => {
-                    nodes.forEach(otherNode => {
-                        if (otherNode !== node) {
-                            otherNode.style.opacity = '0.3';
+            // Enhanced Network Visualization Interactions
+            const nodeGroups = document.querySelectorAll('.node-group');
+            const infoPanel = document.querySelector('.info-panel');
+            const connections = document.querySelectorAll('.connection');
+            
+            nodeGroups.forEach(nodeGroup => {
+                const circle = nodeGroup.querySelector('.node');
+                const name = nodeGroup.getAttribute('data-name');
+                
+                nodeGroup.addEventListener('mouseenter', () => {
+                    // Highlight connected elements
+                    highlightNetworkConnections(name);
+                    
+                    // Show info panel for non-user nodes
+                    if (name !== 'You') {
+                        showNetworkInfoPanel(name, infoPanel);
+                    }
+                    
+                    // Add glow effect
+                    circle.style.filter = 'drop-shadow(0 0 15px currentColor)';
+                    circle.style.transform = 'scale(1.3)';
+                });
+                
+                nodeGroup.addEventListener('mouseleave', () => {
+                    // Reset all highlights
+                    resetNetworkHighlights();
+                    
+                    // Hide info panel
+                    if (infoPanel) infoPanel.style.opacity = '0';
+                    
+                    // Remove effects
+                    circle.style.filter = '';
+                    circle.style.transform = '';
+                });
+            });
+            
+            function highlightNetworkConnections(nodeName) {
+                // Dim all connections first
+                connections.forEach(conn => {
+                    conn.style.opacity = '0.2';
+                    conn.style.strokeWidth = '1';
+                });
+                
+                // Dim all other nodes
+                nodeGroups.forEach(group => {
+                    if (group.getAttribute('data-name') !== nodeName) {
+                        group.style.opacity = '0.4';
+                    }
+                });
+                
+                // Highlight specific connections based on node
+                const connectionHighlights = getConnectionsForNode(nodeName);
+                connectionHighlights.forEach(index => {
+                    if (connections[index]) {
+                        connections[index].style.opacity = '1';
+                        connections[index].style.strokeWidth = '4';
+                        connections[index].style.filter = 'drop-shadow(0 0 8px currentColor)';
+                    }
+                });
+            }
+            
+            function resetNetworkHighlights() {
+                connections.forEach(conn => {
+                    conn.style.opacity = '0.7';
+                    conn.style.strokeWidth = '';
+                    conn.style.filter = '';
+                });
+                
+                nodeGroups.forEach(group => {
+                    group.style.opacity = '1';
+                });
+            }
+            
+            function getConnectionsForNode(nodeName) {
+                // Map nodes to their connection indices in the SVG
+                const connectionMap = {
+                    'Sarah Chen': [0, 2, 3], // Connected to You, Alex Kim, Emma Wilson
+                    'Mike Rodriguez': [1, 4], // Connected to You, David Park
+                    'Alex Kim': [2, 5], // Connected to Sarah Chen, Lisa Zhang
+                    'Emma Wilson': [3, 6], // Connected to Sarah Chen, James Taylor
+                    'David Park': [4, 7], // Connected to Mike Rodriguez, Maria Garcia
+                    'Lisa Zhang': [5, 8], // Connected to Alex Kim, Tom Johnson
+                    'James Taylor': [6, 9], // Connected to Emma Wilson, Tom Johnson
+                    'Maria Garcia': [7], // Connected to David Park
+                    'Tom Johnson': [8, 9] // Connected to Lisa Zhang, James Taylor
+                };
+                
+                return connectionMap[nodeName] || [];
+            }
+            
+            function showNetworkInfoPanel(nodeName, panel) {
+                const nodeData = {
+                    'Sarah Chen': {
+                        title: 'Sarah Chen',
+                        role: 'CTO at TechCorp',
+                        connection: 'Strong connection',
+                        relevance: '94% match for hiring goal'
+                    },
+                    'Mike Rodriguez': {
+                        title: 'Mike Rodriguez',
+                        role: 'Engineering Manager',
+                        connection: 'Medium connection',
+                        relevance: '87% match for hiring goal'
+                    },
+                    'Lisa Zhang': {
+                        title: 'Lisa Zhang',
+                        role: 'Head of Talent',
+                        connection: 'Strong connection',
+                        relevance: '91% match for hiring goal'
+                    },
+                    'Emma Wilson': {
+                        title: 'Emma Wilson',
+                        role: 'VP Engineering',
+                        connection: 'Strong connection',
+                        relevance: '89% match for hiring goal'
+                    },
+                    'Tom Johnson': {
+                        title: 'Tom Johnson',
+                        role: 'CEO at StartupCo',
+                        connection: 'Strong connection',
+                        relevance: '85% match for hiring goal'
+                    }
+                };
+                
+                if (nodeData[nodeName] && panel) {
+                    const data = nodeData[nodeName];
+                    const infoTitle = panel.querySelector('.info-title');
+                    const infoRole = panel.querySelector('.info-role');
+                    const infoConnection = panel.querySelector('.info-connection');
+                    const infoRelevance = panel.querySelector('.info-relevance');
+                    
+                    if (infoTitle) infoTitle.textContent = data.title;
+                    if (infoRole) infoRole.textContent = data.role;
+                    if (infoConnection) infoConnection.textContent = data.connection;
+                    if (infoRelevance) infoRelevance.textContent = data.relevance;
+                    
+                    panel.style.opacity = '1';
+                }
+            }
+
+            // AI Matching Demo Animation
+            const matchCards = document.querySelectorAll('.match-card');
+            const aiDemo = document.querySelector('.ai-matching-demo');
+            
+            if (aiDemo) {
+                const aiObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            // Reset and restart match card animations
+                            matchCards.forEach(card => {
+                                card.style.animation = 'none';
+                                card.offsetHeight; // Trigger reflow
+                                card.style.animation = '';
+                            });
                         }
                     });
                 });
                 
-                node.addEventListener('mouseleave', () => {
-                    nodes.forEach(otherNode => {
-                        otherNode.style.opacity = '1';
-                    });
+                aiObserver.observe(aiDemo);
+            }
+
+            // Enhanced Insight Cards Interactions
+            const insightCards = document.querySelectorAll('.insight-card');
+            insightCards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.style.background = 'rgba(255, 255, 255, 0.15)';
+                    card.style.transform = 'translateY(-6px)';
+                    card.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.3)';
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    card.style.background = 'rgba(255, 255, 255, 0.05)';
+                    card.style.transform = 'translateY(0)';
+                    card.style.boxShadow = '';
                 });
             });
 
