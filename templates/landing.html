@@ -74,7 +74,7 @@
         }
         
         .hero-headline {
-            font-size: clamp(42px, 6vw, 72px);
+            font-size: clamp(48px, 6vw, 80px);
             font-weight: 800;
             line-height: 1.1;
             margin-bottom: 32px;
@@ -85,13 +85,13 @@
             letter-spacing: -0.02em;
         }
         
-        .hero-subhead {
-            font-size: 22px;
-            font-weight: 400;
-            color: var(--text-secondary);
-            line-height: 1.6;
+        .hero-tagline {
+            font-size: clamp(20px, 3vw, 28px);
+            font-weight: 500;
+            color: var(--text-accent);
+            line-height: 1.4;
             margin-bottom: 48px;
-            max-width: 640px;
+            max-width: 720px;
         }
         
         .cta-button {
@@ -959,12 +959,11 @@
                         Organize your connections.<br>
                         Take action.
                     </h1>
-                    <p class="hero-subhead">
-                        You already know what you're building. Now you need to move faster through the people you know and the ones you forgot.
-                        This is your relationship system, rebuilt around goals, powered by AI, and designed to help you act.
+                    <p class="hero-tagline">
+                        The relationship intelligence platform built for founders who need to move fast.
                     </p>
-                    <a href="{{ url_for('goals') }}" class="cta-button">
-                        Create Your First Goal
+                    <a href="{{ url_for('signup') }}" class="cta-button">
+                        Become a Root Member
                         <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>
@@ -1013,51 +1012,12 @@
         </div>
     </section>
 
-    <!-- How It Works -->
+    <!-- Product Overview -->
     <section style="padding: 100px 0;">
         <div class="container">
             <div class="text-center mb-5">
-                <h2 style="font-size: 36px; font-weight: 600; margin-bottom: 20px;">How It Works</h2>
-                <p style="font-size: 18px; color: var(--text-secondary); max-width: 600px; margin: 0 auto;">Three steps to turn your network into action</p>
-            </div>
-            <div class="row g-5">
-                <div class="col-md-4">
-                    <div class="step-card">
-                        <div class="step-number">1</div>
-                        <h3 class="step-title">Set a goal</h3>
-                        <p class="step-description">
-                            Fundraise, hire, launch, grow. Start with one clear direction.
-                        </p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="step-card">
-                        <div class="step-number">2</div>
-                        <h3 class="step-title">Find your people</h3>
-                        <p class="step-description">
-                            AI analyzes your network and suggests exactly who can help you reach that goal.
-                        </p>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="step-card">
-                        <div class="step-number">3</div>
-                        <h3 class="step-title">Take action</h3>
-                        <p class="step-description">
-                            Get personalized outreach messages and send them directly. No copy-paste needed.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features -->
-    <section style="padding: 100px 0; background: #F8FAFC;">
-        <div class="container">
-            <div class="text-center mb-5">
-                <h2 style="font-size: 36px; font-weight: 600; margin-bottom: 20px;">Built for Founders</h2>
-                <p style="font-size: 18px; color: var(--text-secondary); max-width: 600px; margin: 0 auto;">Everything you need to move faster through your network</p>
+                <h2 style="font-size: 48px; font-weight: 700; margin-bottom: 20px; background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-purple) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">What You Get</h2>
+                <p style="font-size: 22px; color: var(--text-secondary); max-width: 700px; margin: 0 auto;">Goal-based contact matching. AI outreach. Intelligent reminders. Network search. Everything you need to move faster through your relationships.</p>
             </div>
             <div class="row g-5">
                 <div class="col-md-6">
@@ -1076,7 +1036,18 @@
                         <div class="feature-icon">
                             <i class="bi bi-lightbulb text-white" style="font-size: 24px;"></i>
                         </div>
-                        <h3 class="feature-title">Smart Suggestions</h3>
+                        <h3 class="feature-title">AI Outreach</h3>
+                        <p class="feature-description">
+                            Generate personalized messages you can send directly from the platform. No templates, no generic pitches.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-bell text-white" style="font-size: 24px;"></i>
+                        </div>
+                        <h3 class="feature-title">Intelligent Reminders</h3>
                         <p class="feature-description">
                             The system watches your intent and recommends real people to reach out to today, not someday.
                         </p>
@@ -1085,22 +1056,11 @@
                 <div class="col-md-6">
                     <div class="feature-card">
                         <div class="feature-icon">
-                            <i class="bi bi-envelope text-white" style="font-size: 24px;"></i>
+                            <i class="bi bi-search text-white" style="font-size: 24px;"></i>
                         </div>
-                        <h3 class="feature-title">Instant Outreach</h3>
+                        <h3 class="feature-title">Network Search</h3>
                         <p class="feature-description">
-                            AI generates personalized messages you can send directly from the platform. No templates, no generic pitches.
-                        </p>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="bi bi-diagram-3 text-white" style="font-size: 24px;"></i>
-                        </div>
-                        <h3 class="feature-title">Network Intelligence</h3>
-                        <p class="feature-description">
-                            Visualize connections, find mutual contacts, and identify the shortest path to your target relationships.
+                            Find mutual contacts, identify the shortest path to your target relationships, and discover hidden connections.
                         </p>
                     </div>
                 </div>
@@ -1108,15 +1068,152 @@
         </div>
     </section>
 
-    <!-- Philosophy Strip -->
+    <!-- Who It's For -->
+    <section class="glass-section" style="padding: 100px 0;">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 style="font-size: 48px; font-weight: 700; margin-bottom: 20px; background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-blue) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Built for Early-Stage Founders</h2>
+                <p style="font-size: 22px; color: var(--text-secondary); max-width: 700px; margin: 0 auto;">Whether you're looking to fundraise, launch, grow, or deepen key relationships - this is your relationship intelligence system.</p>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="glass-card" style="padding: 60px; text-align: center;">
+                        <h3 style="font-size: 28px; font-weight: 600; margin-bottom: 30px; color: var(--text-primary);">Your Journey. Your Network. Your Success.</h3>
+                        <p style="font-size: 18px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 0;">
+                            You already know what you're building. You have the vision, the drive, and the determination. 
+                            What you need now is velocity through the people who can help you get there. This platform gives you 
+                            that velocity by organizing your relationships around your goals and making every connection count.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section style="padding: 100px 0;">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 style="font-size: 48px; font-weight: 700; margin-bottom: 20px; background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-emerald) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">How It Works</h2>
+                <p style="font-size: 22px; color: var(--text-secondary); max-width: 600px; margin: 0 auto;">A visual walkthrough: Goal → Network Match → AI Message → Momentum</p>
+            </div>
+            <div class="row g-5">
+                <div class="col-md-3">
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <h3 class="step-title">Goal</h3>
+                        <p class="step-description">
+                            Start with one clear direction: fundraise, hire, launch, grow.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <h3 class="step-title">Network Match</h3>
+                        <p class="step-description">
+                            AI analyzes your network and suggests exactly who can help.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <h3 class="step-title">AI Message</h3>
+                        <p class="step-description">
+                            Get personalized outreach messages ready to send.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="step-card">
+                        <div class="step-number">4</div>
+                        <h3 class="step-title">Momentum</h3>
+                        <p class="step-description">
+                            Take action and build the relationships that move you forward.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- What You Receive -->
+    <section style="padding: 100px 0;">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 style="font-size: 48px; font-weight: 700; margin-bottom: 20px; background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-pink) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">What You Receive</h2>
+                <p style="font-size: 22px; color: var(--text-secondary); max-width: 700px; margin: 0 auto;">Lifetime access. Founders Archive. AI tools. Future privileges.</p>
+            </div>
+            <div class="row g-5">
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-infinity text-white" style="font-size: 24px;"></i>
+                        </div>
+                        <h3 class="feature-title">Lifetime Access</h3>
+                        <p class="feature-description">
+                            Complete access to the platform, forever. No monthly fees, no renewal hassles. Your Root Membership never expires.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-archive text-white" style="font-size: 24px;"></i>
+                        </div>
+                        <h3 class="feature-title">Founders Archive</h3>
+                        <p class="feature-description">
+                            Exclusive access to a curated collection of founder stories, strategies, and network-building insights from the Root Members community.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-cpu text-white" style="font-size: 24px;"></i>
+                        </div>
+                        <h3 class="feature-title">Advanced AI Tools</h3>
+                        <p class="feature-description">
+                            Priority access to new AI features, unlimited relationship analysis, and sophisticated network intelligence capabilities.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-star text-white" style="font-size: 24px;"></i>
+                        </div>
+                        <h3 class="feature-title">Future Privileges</h3>
+                        <p class="feature-description">
+                            First access to new products, exclusive founder events, and special opportunities available only to Root Members.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Root Membership Invitation -->
     <section class="philosophy-strip">
         <div class="container">
             <div class="philosophy-quote">
-                Your goal isn't contacts. It's outcomes.
+                You are invited to be one of the One Hundred Root Members.
             </div>
             <p class="philosophy-supporting">
-                Your relationships are your most valuable asset. You should be deepening the right ones, guided by where you're headed, without getting overwhelmed by endless manual management.
+                This isn't about scale. It's about depth. We're building something lasting with a small group of founders who understand that relationships, not just products, create enduring value. Root Members join a community where mutual support, shared resources, and collective wisdom become the foundation for everyone's success. This is about solidarity in the work of building something meaningful.
             </p>
+            <div class="text-center mt-5">
+                <div class="founder-logos" style="display: flex; justify-content: center; align-items: center; gap: 40px; flex-wrap: wrap; margin-bottom: 40px; opacity: 0.7;">
+                    <div style="padding: 20px; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border);">YC Alumni</div>
+                    <div style="padding: 20px; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border);">Techstars</div>
+                    <div style="padding: 20px; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border);">500 Startups</div>
+                    <div style="padding: 20px; background: var(--glass-bg); border-radius: 12px; border: 1px solid var(--glass-border);">AngelList</div>
+                </div>
+                <p style="font-size: 18px; color: var(--text-secondary); margin-bottom: 0;">
+                    Join founders from the most respected accelerators and networks who are already building their future together.
+                </p>
+            </div>
         </div>
     </section>
 
