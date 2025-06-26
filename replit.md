@@ -82,6 +82,18 @@ The application follows an enhanced Flask MVC architecture with AI-powered conta
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
+- **June 26, 2025**: Monique CRM Renaming completed
+  - Successfully renamed all "monica" references to "monique" throughout the entire codebase
+  - Updated all route names, blueprint names, and URL references from monica_crm to monique_crm
+  - Renamed templates directory from templates/monica to templates/monique
+  - Updated all template files to use monique.* route names in url_for() calls
+  - Updated main.py to import monique_bp instead of monica_bp
+  - Updated navigation menu in base.html to use monique.* routes
+  - Maintained all existing CRM functionality (reminders, tasks, journal entries, file attachments)
+  - Completed comprehensive find-and-replace across Python files, templates, and configuration
+  - All CRM features remain accessible through Intelligence > CRM Tools dropdown menu
+  - System tested and verified working after renaming completion
+
 - **June 26, 2025**: Email Provider Migration from SendGrid to Resend completed
   - Successfully migrated all email infrastructure from SendGrid to Resend using official Python SDK
   - Created comprehensive email service at utils/email.py with proper error handling and logging

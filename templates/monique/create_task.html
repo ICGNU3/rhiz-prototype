@@ -13,7 +13,7 @@
                     </h4>
                 </div>
                 <div class="card-body">
-                    <form method="post" action="{{ url_for('monica.create_task') }}">
+                    <form method="post" action="{{ url_for('monique.create_task') }}">
                         <div class="mb-3">
                             <label for="title" class="form-label">Task Title *</label>
                             <input type="text" class="form-control" id="title" name="title" required 
@@ -56,7 +56,7 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a href="{{ url_for('monica.tasks') }}" class="btn btn-secondary">
+                            <a href="{{ url_for('monique.tasks') }}" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left me-1"></i>Back
                             </a>
                             <button type="submit" class="btn btn-primary">
