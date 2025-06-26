@@ -1,41 +1,45 @@
 """
 Simple email service for sending AI-generated messages.
-Supports both SMTP and SendGrid for reliable email delivery.
+Supports both SMTP and Resend for reliable email delivery.
 """
 
 import smtplib
 import os
 import logging
+import resend
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from typing import Optional, Dict, Any
 
 try:
-    from sendgrid import SendGridAPIClient
-    from sendgrid.helpers.mail import Mail
-    SENDGRID_AVAILABLE = True
+    resend_available = True
 except ImportError:
-    SENDGRID_AVAILABLE = False
+    resend_available = False
 
 class EmailService:
     def __init__(self, db):
         self.db = db
         
-        # SendGrid configuration (preferred)
-        self.sendgrid_api_key = os.environ.get('SENDGRID_API_KEY')
+        # Resend configuration (preferred)
+        self.resend_api_key = os.environ.get('RESEND_API_KEY')
+        self.from_email = os.environ.get('FROM_EMAIL', 'info@ourhizome.com')
         
         # SMTP fallback configuration
         self.smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
         self.smtp_port = int(os.environ.get('SMTP_PORT', '587'))
         self.email_address = os.environ.get('EMAIL_ADDRESS')
         self.email_password = os.environ.get('EMAIL_PASSWORD')
-        self.sender_name = os.environ.get('SENDER_NAME', 'Founder Network')
+        self.sender_name = os.environ.get('SENDER_NAME', 'OuRhizome')
+        
+        # Initialize Resend if API key is available
+        if self.resend_api_key:
+            resend.api_key = self.resend_api_key
         
     def get_available_methods(self) -> Dict[str, bool]:
         """Check which email methods are available"""
         return {
-            'sendgrid': bool(self.sendgrid_api_key and SENDGRID_AVAILABLE),
+            'resend': bool(self.resend_api_key and resend_available),
             'smtp': bool(self.email_address and self.email_password)
         }
     
@@ -46,13 +50,13 @@ class EmailService:
         
         methods = self.get_available_methods()
         
-        # Try SendGrid first
-        if methods['sendgrid']:
+        # Try Resend first
+        if methods['resend']:
             try:
-                return self._send_via_sendgrid(to_email, subject, message_body, 
-                                             contact_id, user_id, goal_title)
+                return self._send_via_resend(to_email, subject, message_body, 
+                                           contact_id, user_id, goal_title)
             except Exception as e:
-                logging.error(f"SendGrid failed: {e}")
+                logging.error(f"Resend failed: {e}")
                 # Fall back to SMTP if available
                 if methods['smtp']:
                     return self._send_via_smtp(to_email, subject, message_body, 
@@ -60,8 +64,8 @@ class EmailService:
                 else:
                     return {
                         'success': False,
-                        'error': f'SendGrid failed and no SMTP fallback: {e}',
-                        'method': 'sendgrid'
+                        'error': f'Resend failed and no SMTP fallback: {e}',
+                        'method': 'resend'
                     }
         
         # Try SMTP
@@ -73,52 +77,54 @@ class EmailService:
         else:
             return {
                 'success': False,
-                'error': 'No email configuration found. Please set up SendGrid API key or SMTP credentials.',
+                'error': 'No email configuration found. Please set up RESEND_API_KEY or SMTP credentials.',
                 'method': 'none'
             }
     
-    def _send_via_sendgrid(self, to_email: str, subject: str, message_body: str,
-                          contact_id: Optional[int], user_id: Optional[int], 
-                          goal_title: Optional[str]) -> Dict[str, Any]:
-        """Send email via SendGrid"""
+    def _send_via_resend(self, to_email: str, subject: str, message_body: str,
+                        contact_id: Optional[int], user_id: Optional[int], 
+                        goal_title: Optional[str]) -> Dict[str, Any]:
+        """Send email via Resend"""
         
-        sg = SendGridAPIClient(api_key=self.sendgrid_api_key)
-        
-        message = Mail(
-            from_email=self.email_address or 'noreply@foundernetwork.ai',
-            to_emails=to_email,
-            subject=subject,
-            html_content=f"""
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <div style="background: #f8f9fa; padding: 20px; text-align: center; border-bottom: 1px solid #dee2e6;">
-                    <h3 style="margin: 0; color: #495057;">Founder Network AI</h3>
-                </div>
-                <div style="padding: 30px; background: white;">
-                    {message_body.replace(chr(10), '<br>')}
-                </div>
-                <div style="background: #f8f9fa; padding: 15px; text-align: center; font-size: 12px; color: #6c757d;">
-                    Sent via Founder Network AI - Connecting founders with the right people
-                </div>
+        html_content = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: #f8f9fa; padding: 20px; text-align: center; border-bottom: 1px solid #dee2e6;">
+                <h3 style="margin: 0; color: #495057;">OuRhizome</h3>
             </div>
-            """
-        )
+            <div style="padding: 30px; background: white;">
+                {message_body.replace(chr(10), '<br>')}
+            </div>
+            <div style="background: #f8f9fa; padding: 15px; text-align: center; font-size: 12px; color: #6c757d;">
+                Sent via OuRhizome - Connecting founders with the right people
+            </div>
+        </div>
+        """
+        
+        email_data = {
+            "from": f"OuRhizome <{self.from_email}>",
+            "to": [to_email],
+            "subject": subject,
+            "html": html_content,
+            "text": message_body
+        }
         
         try:
-            response = sg.send(message)
+            response = resend.Emails.send(email_data)
             
             # Log the interaction
             self._log_email_interaction(contact_id, user_id, to_email, subject, 
-                                      message_body, goal_title, 'sendgrid', True)
+                                      message_body, goal_title or '', 'resend', True)
             
             return {
                 'success': True,
-                'message': 'Email sent successfully via SendGrid',
-                'method': 'sendgrid',
-                'status_code': response.status_code
+                'message': 'Email sent successfully via Resend',
+                'method': 'resend',
+                'email_id': response.get('id'),
+                'response': response
             }
             
         except Exception as e:
-            logging.error(f"SendGrid error: {e}")
+            logging.error(f"Resend error: {e}")
             raise e
     
     def _send_via_smtp(self, to_email: str, subject: str, message_body: str,

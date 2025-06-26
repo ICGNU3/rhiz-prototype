@@ -98,22 +98,22 @@ class ProductionEmailService:
             If you didn't request this email, you can safely ignore it.
             """
             
-            # Create and send email
-            message = Mail(
-                from_email=Email(self.from_email, "OuRhizome"),
-                to_emails=To(to_email),
-                subject=subject,
-                html_content=Content("text/html", html_content),
-                plain_text_content=Content("text/plain", text_content)
-            )
+            # Create and send email via Resend
+            email_data = {
+                "from": f"OuRhizome <{self.from_email}>",
+                "to": [to_email],
+                "subject": subject,
+                "html": html_content,
+                "text": text_content
+            }
             
-            response = self.sg.send(message)
+            response = resend.Emails.send(email_data)
             
-            if response.status_code in [200, 202]:
-                logger.info(f"Magic link email sent successfully to {to_email}")
+            if response and response.get('id'):
+                logger.info(f"Magic link email sent successfully to {to_email} via Resend - ID: {response.get('id')}")
                 return True
             else:
-                logger.error(f"Failed to send email: {response.status_code} {response.body}")
+                logger.error(f"Failed to send email via Resend: {response}")
                 return False
                 
         except Exception as e:
@@ -178,15 +178,15 @@ class ProductionEmailService:
             </html>
             """
             
-            message = Mail(
-                from_email=Email(self.from_email, "OuRhizome"),
-                to_emails=To(to_email),
-                subject=subject,
-                html_content=Content("text/html", html_content)
-            )
+            email_data = {
+                "from": f"OuRhizome <{self.from_email}>",
+                "to": [to_email],
+                "subject": subject,
+                "html": html_content
+            }
             
-            response = self.sg.send(message)
-            return response.status_code in [200, 202]
+            response = resend.Emails.send(email_data)
+            return response and response.get('id') is not None
             
         except Exception as e:
             logger.error(f"Error sending welcome email: {e}")
