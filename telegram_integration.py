@@ -93,7 +93,7 @@ Let's grow your network! 🚀"""
         
         await update.message.reply_text(welcome_message)
     
-    async def _help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def _help_command(self, update, context):
         """Handle /help command"""
         help_text = """🔧 **Founder Network AI Bot Commands**
 
@@ -119,7 +119,7 @@ Need help? Just ask me anything about your network!"""
         
         await update.message.reply_text(help_text, parse_mode='Markdown')
     
-    async def _stats_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def _stats_command(self, update, context):
         """Show networking statistics"""
         try:
             from analytics import NetworkingAnalytics

@@ -15,7 +15,7 @@ try:
     from telegram_integration import TelegramNetworkingBot
     TELEGRAM_INTEGRATION_AVAILABLE = True
 except ImportError:
-    TelegramNetworkingBot = None
+    from telegram_fallback import MockTelegramBot as TelegramNetworkingBot
     TELEGRAM_INTEGRATION_AVAILABLE = False
 
 # Configure logging
@@ -322,7 +322,17 @@ class AutomationEngine:
     def __init__(self, db: Database):
         self.db = db
         self.slack = SlackIntegration(db)
-        self.telegram = TelegramNetworkingBot(db)
+        
+        # Initialize Telegram bot if available
+        if TELEGRAM_INTEGRATION_AVAILABLE:
+            try:
+                self.telegram = TelegramNetworkingBot(db)
+            except Exception as e:
+                logger.warning(f"Failed to initialize Telegram bot: {e}")
+                self.telegram = None
+        else:
+            self.telegram = None
+            
         self.calendar = CalendarIntegration(db)
         self.crm_sync = CRMSync(db)
         self.social_monitor = SocialMediaMonitoring(db)
