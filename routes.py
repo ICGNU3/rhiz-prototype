@@ -11,6 +11,7 @@ from analytics import NetworkingAnalytics
 from network_visualization import NetworkMapper
 from integrations import AutomationEngine
 from ai_contact_matcher import AIContactMatcher
+from rhizomatic_intelligence import RhizomaticIntelligence
 from contact_search import ContactSearchEngine
 import logging
 
@@ -1156,3 +1157,73 @@ def ai_intelligence_dashboard():
     except Exception as e:
         flash(f'Error loading AI intelligence: {str(e)}', 'error')
         return redirect(url_for('crm_dashboard'))
+
+@app.route('/rhizome')
+def rhizome_dashboard():
+    """Rhizomatic Intelligence Layer - Living Network Visualization"""
+    return render_template('rhizome_dashboard.html')
+
+@app.route('/api/rhizome/insights')
+def get_rhizomatic_insights():
+    """API endpoint for rhizomatic intelligence insights"""
+    user_id = session.get('user_id', 1)
+    
+    try:
+        db = get_db()
+        rhizome = RhizomaticIntelligence(db)
+        insights = rhizome.generate_rhizomatic_insights(user_id)
+        return jsonify(insights)
+    
+    except Exception as e:
+        logging.error(f"Error generating rhizomatic insights: {e}")
+        return jsonify({
+            "error": str(e),
+            "status": "error",
+            "timestamp": datetime.now().isoformat()
+        }), 500
+
+@app.route('/api/rhizome/network-graph')
+def get_rhizomatic_network_graph():
+    """API endpoint for Neo4j-style network graph data"""
+    user_id = session.get('user_id', 1)
+    
+    try:
+        db = get_db()
+        rhizome = RhizomaticIntelligence(db)
+        insights = rhizome.generate_rhizomatic_insights(user_id)
+        
+        return jsonify({
+            "graph_data": insights.get("network_graph", {}),
+            "insights": insights.get("rhizomatic_insights", {}),
+            "status": "success"
+        })
+    
+    except Exception as e:
+        logging.error(f"Error generating network graph: {e}")
+        return jsonify({
+            "error": str(e),
+            "status": "error"
+        }), 500
+
+@app.route('/api/rhizome/history')
+def get_rhizomatic_history():
+    """API endpoint for historical rhizomatic insights"""
+    user_id = session.get('user_id', 1)
+    limit = request.args.get('limit', 10, type=int)
+    
+    try:
+        db = get_db()
+        rhizome = RhizomaticIntelligence(db)
+        history = rhizome.get_network_insights_history(user_id, limit)
+        
+        return jsonify({
+            "history": history,
+            "status": "success"
+        })
+    
+    except Exception as e:
+        logging.error(f"Error getting rhizomatic history: {e}")
+        return jsonify({
+            "error": str(e),
+            "status": "error"
+        }), 500

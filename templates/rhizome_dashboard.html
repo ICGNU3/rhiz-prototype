@@ -1,0 +1,591 @@
+{% extends "base.html" %}
+
+{% block title %}Rhizomatic Intelligence - Living Network{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">🌿 Rhizomatic Intelligence</h1>
+                <div class="d-flex gap-2">
+                    <button id="refreshNetworkBtn" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                    <button id="autoLayoutBtn" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-diagram-3"></i> Auto Layout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Network Visualization -->
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Living Network Graph</h5>
+                    <small class="text-muted">Non-hierarchical relationship mapping with bloom-style animations</small>
+                </div>
+                <div class="card-body p-0">
+                    <div id="networkContainer" style="height: 600px; width: 100%; background: #0a0a0a; position: relative;">
+                        <div id="loadingIndicator" class="position-absolute top-50 start-50 translate-middle text-light">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading network...</span>
+                            </div>
+                            <div class="mt-2">Mapping your rhizome...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insights Panel -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Today's Rhizomatic Suggestions</h5>
+                </div>
+                <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                    <div id="insightsContainer">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading insights...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Network Metrics -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-primary" id="nodeCount">0</h5>
+                    <p class="card-text">Network Nodes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-success" id="suggestedCount">0</h5>
+                    <p class="card-text">Suggested Contacts</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-warning" id="dormantCount">0</h5>
+                    <p class="card-text">Dormant Relationships</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-info" id="connectionCount">0</h5>
+                    <p class="card-text">Connections</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contact Detail Modal -->
+<div class="modal fade" id="contactModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contactModalTitle">Contact Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="contactModalBody">
+                <!-- Contact details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="sendMessageBtn">Send Message</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Neo4j Bloom-style animations and styling */
+.network-node {
+    transition: all 0.3s ease;
+}
+
+.network-node:hover {
+    transform: scale(1.1);
+    filter: brightness(1.2);
+}
+
+.network-edge {
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.network-edge:hover {
+    opacity: 1;
+}
+
+/* Bloom animation for new nodes */
+@keyframes bloom {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.bloom-animation {
+    animation: bloom 0.8s ease-out;
+}
+
+/* Pulse animation for suggested contacts */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 107, 107, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 107, 107, 0);
+    }
+}
+
+.pulse-animation {
+    animation: pulse 2s infinite;
+}
+
+/* Dark theme for network container */
+#networkContainer {
+    border: 1px solid #333;
+    border-radius: 8px;
+}
+
+/* Insight cards styling */
+.insight-card {
+    border-left: 4px solid;
+    margin-bottom: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.insight-card:hover {
+    transform: translateX(5px);
+}
+
+.insight-card.suggested {
+    border-left-color: #FF6B6B;
+}
+
+.insight-card.dormant {
+    border-left-color: #4ECDC4;
+}
+
+.insight-card.path {
+    border-left-color: #45B7D1;
+}
+</style>
+
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<script>
+class RhizomaticNetwork {
+    constructor() {
+        this.network = null;
+        this.nodes = new vis.DataSet([]);
+        this.edges = new vis.DataSet([]);
+        this.insights = null;
+        this.init();
+    }
+
+    init() {
+        this.initializeNetwork();
+        this.loadNetworkData();
+        this.setupEventListeners();
+    }
+
+    initializeNetwork() {
+        const container = document.getElementById('networkContainer');
+        const data = {
+            nodes: this.nodes,
+            edges: this.edges
+        };
+
+        const options = {
+            physics: {
+                enabled: true,
+                stabilization: {
+                    enabled: true,
+                    iterations: 100,
+                    updateInterval: 50
+                },
+                barnesHut: {
+                    gravitationalConstant: -2000,
+                    centralGravity: 0.3,
+                    springLength: 95,
+                    springConstant: 0.04,
+                    damping: 0.09,
+                    avoidOverlap: 0.1
+                }
+            },
+            interaction: {
+                hover: true,
+                selectConnectedEdges: false,
+                hoverConnectedEdges: true
+            },
+            nodes: {
+                borderWidth: 2,
+                borderWidthSelected: 4,
+                font: {
+                    color: '#ffffff',
+                    size: 12,
+                    face: 'arial'
+                },
+                shadow: {
+                    enabled: true,
+                    color: 'rgba(0,0,0,0.5)',
+                    size: 10,
+                    x: 2,
+                    y: 2
+                }
+            },
+            edges: {
+                width: 2,
+                color: {
+                    color: '#666666',
+                    highlight: '#ffffff',
+                    hover: '#cccccc'
+                },
+                smooth: {
+                    enabled: true,
+                    type: "continuous",
+                    roundness: 0.5
+                },
+                shadow: {
+                    enabled: true,
+                    color: 'rgba(0,0,0,0.3)',
+                    size: 5,
+                    x: 1,
+                    y: 1
+                }
+            }
+        };
+
+        this.network = new vis.Network(container, data, options);
+        
+        // Add event listeners
+        this.network.on('click', (params) => {
+            if (params.nodes.length > 0) {
+                this.handleNodeClick(params.nodes[0]);
+            }
+        });
+
+        this.network.on('hoverNode', (params) => {
+            this.handleNodeHover(params.node);
+        });
+    }
+
+    async loadNetworkData() {
+        try {
+            document.getElementById('loadingIndicator').style.display = 'block';
+            
+            const response = await fetch('/api/rhizome/network-graph');
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                this.updateNetwork(data.graph_data);
+                this.updateInsights(data.insights);
+                this.updateMetrics(data.graph_data.metadata);
+            } else {
+                console.error('Error loading network data:', data.error);
+                this.showError('Failed to load network data');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            this.showError('Network connection error');
+        } finally {
+            document.getElementById('loadingIndicator').style.display = 'none';
+        }
+    }
+
+    updateNetwork(graphData) {
+        if (!graphData.nodes || !graphData.edges) return;
+
+        // Add bloom animation to new nodes
+        const newNodes = graphData.nodes.map(node => ({
+            ...node,
+            font: { color: '#ffffff' },
+            borderWidth: node.type === 'suggested' ? 3 : 2,
+            shadow: { enabled: true }
+        }));
+
+        // Clear existing data
+        this.nodes.clear();
+        this.edges.clear();
+
+        // Add new data with animations
+        setTimeout(() => {
+            this.nodes.add(newNodes);
+            this.edges.add(graphData.edges);
+            
+            // Trigger bloom animation for suggested contacts
+            this.animateSuggestedContacts();
+        }, 100);
+    }
+
+    animateSuggestedContacts() {
+        const suggestedNodes = this.nodes.get({
+            filter: node => node.type === 'suggested'
+        });
+
+        suggestedNodes.forEach(node => {
+            // Add pulse effect to suggested contacts
+            setTimeout(() => {
+                this.network.updateCluster = false;
+                this.nodes.update({
+                    id: node.id,
+                    color: {
+                        background: '#FF6B6B',
+                        border: '#ffffff'
+                    }
+                });
+            }, Math.random() * 1000);
+        });
+    }
+
+    updateInsights(insights) {
+        this.insights = insights;
+        const container = document.getElementById('insightsContainer');
+        
+        if (!insights) {
+            container.innerHTML = '<p class="text-muted">No insights available</p>';
+            return;
+        }
+
+        let html = '';
+
+        // Primary goal
+        if (insights.primary_goal) {
+            html += `
+                <div class="insight-card card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title">🎯 Current Focus</h6>
+                        <p class="card-text">${insights.primary_goal}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Suggested contacts
+        if (insights.suggested_contacts && insights.suggested_contacts.length > 0) {
+            html += '<h6 class="mb-3">💫 Suggested Connections</h6>';
+            insights.suggested_contacts.forEach(contact => {
+                html += `
+                    <div class="insight-card suggested card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">${contact.name}</h6>
+                            <p class="card-text small">${contact.reason}</p>
+                            <div class="bg-light p-2 rounded mt-2">
+                                <small class="text-muted">"${contact.message}"</small>
+                            </div>
+                            <div class="mt-2">
+                                <span class="badge bg-${this.getToneBadgeColor(contact.tone)}">${contact.tone}</span>
+                                <span class="badge bg-${this.getUrgencyBadgeColor(contact.urgency)}">${contact.urgency} urgency</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Connection path
+        if (insights.connection_path) {
+            html += `
+                <div class="insight-card path card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title">🔗 Lateral Path</h6>
+                        <p class="card-text">${insights.connection_path}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Dormant contact
+        if (insights.dormant_contact) {
+            const dormant = insights.dormant_contact;
+            html += `
+                <div class="insight-card dormant card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title">💤 Quiet Connection</h6>
+                        <strong>${dormant.name}</strong>
+                        <p class="card-text small">${dormant.note}</p>
+                        <small class="text-muted">Last contact: ${dormant.last_contact}</small>
+                        ${dormant.message ? `
+                            <div class="bg-light p-2 rounded mt-2">
+                                <small class="text-muted">"${dormant.message}"</small>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Network insights
+        if (insights.network_insights && insights.network_insights.length > 0) {
+            html += '<h6 class="mb-3">🌿 Network Patterns</h6>';
+            insights.network_insights.forEach(insight => {
+                html += `
+                    <div class="alert alert-info py-2">
+                        <small>${insight}</small>
+                    </div>
+                `;
+            });
+        }
+
+        container.innerHTML = html;
+    }
+
+    updateMetrics(metadata) {
+        if (!metadata) return;
+        
+        document.getElementById('nodeCount').textContent = metadata.total_nodes || 0;
+        document.getElementById('suggestedCount').textContent = metadata.suggested_count || 0;
+        document.getElementById('dormantCount').textContent = metadata.dormant_count || 0;
+        document.getElementById('connectionCount').textContent = metadata.total_edges || 0;
+    }
+
+    getToneBadgeColor(tone) {
+        const colors = {
+            'warm': 'warning',
+            'direct': 'primary',
+            'subtle': 'secondary'
+        };
+        return colors[tone] || 'secondary';
+    }
+
+    getUrgencyBadgeColor(urgency) {
+        const colors = {
+            'high': 'danger',
+            'medium': 'warning',
+            'low': 'success'
+        };
+        return colors[urgency] || 'secondary';
+    }
+
+    handleNodeClick(nodeId) {
+        const node = this.nodes.get(nodeId);
+        if (node && node.type !== 'user') {
+            this.showContactDetails(node);
+        }
+    }
+
+    handleNodeHover(nodeId) {
+        // Add hover effects
+        const connectedNodes = this.network.getConnectedNodes(nodeId);
+        const connectedEdges = this.network.getConnectedEdges(nodeId);
+        
+        // Highlight connected elements
+        this.network.selectNodes([nodeId, ...connectedNodes]);
+    }
+
+    showContactDetails(node) {
+        const modal = new bootstrap.Modal(document.getElementById('contactModal'));
+        document.getElementById('contactModalTitle').textContent = node.label;
+        
+        let bodyHtml = `
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Company:</strong> ${node.company || 'Not specified'}
+                </div>
+                <div class="col-md-6">
+                    <strong>Title:</strong> ${node.title || 'Not specified'}
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-6">
+                    <strong>Tags:</strong> ${node.tags || 'None'}
+                </div>
+                <div class="col-md-6">
+                    <strong>Last Contact:</strong> ${node.last_interaction || 'Never'}
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-12">
+                    <strong>Node Type:</strong> 
+                    <span class="badge bg-${this.getNodeTypeBadgeColor(node.type)}">${node.type}</span>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('contactModalBody').innerHTML = bodyHtml;
+        modal.show();
+    }
+
+    getNodeTypeBadgeColor(type) {
+        const colors = {
+            'suggested': 'danger',
+            'dormant': 'info',
+            'normal': 'success',
+            'user': 'primary'
+        };
+        return colors[type] || 'secondary';
+    }
+
+    showError(message) {
+        const container = document.getElementById('insightsContainer');
+        container.innerHTML = `
+            <div class="alert alert-danger">
+                <h6>Error</h6>
+                <p>${message}</p>
+                <button class="btn btn-sm btn-outline-danger" onclick="rhizomaticNetwork.loadNetworkData()">
+                    Retry
+                </button>
+            </div>
+        `;
+    }
+
+    refresh() {
+        this.loadNetworkData();
+    }
+
+    autoLayout() {
+        if (this.network) {
+            this.network.fit();
+            this.network.stabilize();
+        }
+    }
+
+    setupEventListeners() {
+        document.getElementById('refreshNetworkBtn').addEventListener('click', () => {
+            this.refresh();
+        });
+
+        document.getElementById('autoLayoutBtn').addEventListener('click', () => {
+            this.autoLayout();
+        });
+    }
+}
+
+// Initialize the rhizomatic network when the page loads
+let rhizomaticNetwork;
+document.addEventListener('DOMContentLoaded', function() {
+    rhizomaticNetwork = new RhizomaticNetwork();
+});
+</script>
+{% endblock %}

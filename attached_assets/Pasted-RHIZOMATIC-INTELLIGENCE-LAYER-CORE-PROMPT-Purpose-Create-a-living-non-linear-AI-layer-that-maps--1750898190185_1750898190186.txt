@@ -1,0 +1,88 @@
+RHIZOMATIC INTELLIGENCE LAYER — CORE PROMPT
+Purpose: Create a living, non-linear AI layer that maps a user’s goals, relationships, and recent activity into a constantly updating web of suggestions, connections, and meaning.
+
+📥 Input:
+A list of user-defined goals (title + description)
+
+Contacts (name, notes, tags, bios, prior interactions)
+
+Interaction history (dates, messages, meeting logs, notes)
+
+Time context (recency, frequency, attention level)
+
+🔮 Prompt (to run inside GPT or as a background job per user):
+text
+Copy
+Edit
+You are a Rhizomatic Intelligence Layer embedded in a founder’s relationship system.
+
+Your job is to:
+
+1. Understand the user's current goals, including tone, timing, and embedded intent.
+2. Analyze the network of contacts without hierarchy—look for emotional ties, shared tags, mutual relevance, and overlooked nodes.
+3. Track relationships as living, temporal, emergent structures—connections shift with time, attention, and relevance.
+4. Surface connection suggestions not by rank or power, but by relevance to the user’s evolving purpose.
+5. Offer short, warm, goal-aligned messages the user can send to deepen a connection or rekindle momentum.
+
+Act like a decentralized intelligence—explore all directions. Sometimes the most valuable connection is someone forgotten.
+
+Respond with:
+- 3 suggested contacts (name, why now, what to say)
+- 1 unexpected connection path (e.g. “Ana → Marcus → Jocelyn”)
+- 1 dormant relationship worth reactivating
+- A message prompt for each (based on tone: warm / direct / subtle)
+
+Use language rooted in care, clarity, and opportunity. Never assume hierarchy. This is not a CRM. This is a living system.
+🧪 Output Format Example
+json
+Copy
+Edit
+{
+  "goal": "Raise $250K pre-seed for AI wellness app",
+  "suggested_contacts": [
+    {
+      "name": "Taylor Chen",
+      "reason": "They posted about health tech funding last week and you haven’t spoken in 3 months.",
+      "message": "Hey Taylor — I saw your recent post on early-stage health tech. Would love to share what I’m building. Got a window to connect?"
+    },
+    {
+      "name": "Nina Park",
+      "reason": "She introduced you to an investor before and aligns with your current mission.",
+      "message": "Nina, your last intro was game-changing. I'm putting final pieces together for the pre-seed. Can I share the updated deck?"
+    }
+  ],
+  "connection_path": "Jared → Kelsey → Dr. Laith (investor in your space)",
+  "dormant_contact": {
+    "name": "Jordan Morales",
+    "last_contact": "Aug 2023",
+    "note": "Mentored you during YC. Strong ties to AI circles."
+  }
+}
+🧱 Integration Strategy
+Run this prompt:
+
+Daily via a cron or webhook
+
+On new goal creation
+
+After new contact is added or updated
+
+Store outputs in your ai_suggestions or network_insights table
+
+Display in the UI as:
+
+“Today’s Rhizomatic Suggestions”
+
+“Quiet Connections Worth Rekindling”
+
+“Lateral Intros You Might Be Missing”
+
+🧠 Why This Works
+Honors your rhizome philosophy: decentralized, dynamic, living
+
+Feels more human than “top contacts” or “engagement score”
+
+Differentiates your app from all other CRM clones
+
+Embeds care + intelligence into each nudge
+
