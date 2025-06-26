@@ -406,6 +406,10 @@ def crm_log_interaction():
         if interaction_id:
             # Update contact last interaction
             contact_model.update_last_interaction(contact_id, interaction_type)
+            
+            # Award XP for logging interaction
+            gamification.award_xp(DEFAULT_USER_ID, 'follow_up')
+            
             flash('Interaction logged successfully', 'success')
         else:
             flash('Failed to log interaction', 'error')
@@ -657,6 +661,8 @@ def add_relationship():
         )
         
         if relationship_id:
+            # Award XP for creating relationship
+            gamification.award_xp(DEFAULT_USER_ID, 'relationship_created')
             flash('Relationship added successfully', 'success')
         else:
             flash('Failed to add relationship', 'error')
@@ -1213,6 +1219,42 @@ def get_rhizomatic_history():
         }), 500
 
 # Conference Mode Routes
+@app.route('/gamification')
+def gamification_dashboard():
+    """Gamified Contact Organization - XP, Quests, and Achievements Dashboard"""
+    try:
+        # Get user progress
+        user_progress = gamification.get_user_progress(DEFAULT_USER_ID)
+        
+        # Get daily quests
+        daily_quests = gamification.get_daily_quests(DEFAULT_USER_ID)
+        
+        return render_template('gamification_dashboard.html',
+                             user_progress=user_progress,
+                             daily_quests=daily_quests,
+                             page_title='Gamification Dashboard')
+    except Exception as e:
+        logging.error(f"Error in gamification dashboard: {e}")
+        flash('Error loading gamification dashboard', 'error')
+        return redirect(url_for('crm_dashboard'))
+
+@app.route('/complete_quest/<quest_id>', methods=['POST'])
+def complete_quest(quest_id):
+    """Mark a quest as completed"""
+    try:
+        result = gamification.complete_quest(DEFAULT_USER_ID, quest_id)
+        
+        if result['success']:
+            flash(f"Quest completed! Earned {result['xp_awarded']} XP", 'success')
+        else:
+            flash(result.get('error', 'Failed to complete quest'), 'error')
+            
+    except Exception as e:
+        logging.error(f"Error completing quest: {e}")
+        flash('Error completing quest', 'error')
+    
+    return redirect(url_for('gamification_dashboard'))
+
 @app.route('/conference')
 def conference_mode():
     """Conference Mode dashboard"""
