@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+
+{% block title %}Network Intelligence - OuRhizome{% endblock %}
+
+{% block extra_css %}
+<style>
+.intelligence-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.intelligence-card:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.health-score {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.health-excellent { color: #00f5a0; }
+.health-good { color: #00d4ff; }
+.health-fair { color: #ffb800; }
+.health-needs-attention { color: #ff6b6b; }
+
+.insight-pill {
+    background: rgba(0, 245, 160, 0.2);
+    border: 1px solid rgba(0, 245, 160, 0.3);
+    border-radius: 20px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    margin: 0.2rem;
+    display: inline-block;
+}
+
+.action-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 3px solid #00f5a0;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border-radius: 8px;
+}
+
+.priority-high { border-left-color: #ff6b6b; }
+.priority-medium { border-left-color: #ffb800; }
+.priority-low { border-left-color: #00d4ff; }
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #00f5a0;
+}
+
+.contact-health-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin: 0.5rem 0;
+}
+
+.loading-animation {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(0, 245, 160, 0.3);
+    border-radius: 50%;
+    border-top-color: #00f5a0;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.refresh-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="gradient-text mb-0">
+                    <i class="bi bi-graph-up me-2"></i>Network Intelligence
+                </h1>
+                <button class="refresh-btn" onclick="refreshIntelligence()">
+                    <i class="bi bi-arrow-clockwise me-2"></i>Refresh Analysis
+                </button>
+            </div>
+            <p class="text-muted mt-2">AI-powered insights into your relationship network health and opportunities</p>
+        </div>
+    </div>
+
+    <div id="loading-state" style="display: none;">
+        <div class="text-center py-5">
+            <div class="loading-animation mx-auto mb-3"></div>
+            <p class="text-muted">Analyzing your network intelligence...</p>
+        </div>
+    </div>
+
+    <div id="intelligence-dashboard">
+        <!-- Network Overview -->
+        <div class="row mb-4">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="intelligence-card text-center">
+                    <div class="metric-value" id="total-contacts">{{ network_data.network_analysis.total_contacts if network_data else 0 }}</div>
+                    <div class="text-muted">Total Contacts</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="intelligence-card text-center">
+                    <div class="metric-value" id="avg-health">
+                        {{ "%.1f"|format(network_data.avg_health_score if network_data and network_data.avg_health_score else 0) }}
+                    </div>
+                    <div class="text-muted">Avg Health Score</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="intelligence-card text-center">
+                    <div class="metric-value" id="active-relationships">
+                        {{ network_data.network_analysis.warmth_distribution.active + network_data.network_analysis.warmth_distribution.warm if network_data else 0 }}
+                    </div>
+                    <div class="text-muted">Active Relations</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="intelligence-card text-center">
+                    <div class="metric-value" id="companies">{{ network_data.network_analysis.company_diversity if network_data else 0 }}</div>
+                    <div class="text-muted">Companies</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Relationships -->
+        <div class="row mb-4">
+            <div class="col-lg-6 mb-4">
+                <div class="intelligence-card">
+                    <h4 class="mb-3">
+                        <i class="bi bi-star-fill text-warning me-2"></i>Top Relationships
+                    </h4>
+                    <div id="top-relationships">
+                        {% if network_data and network_data.top_relationships %}
+                            {% for contact in network_data.top_relationships %}
+                            <div class="contact-health-item">
+                                <div>
+                                    <strong>{{ contact.contact.name }}</strong>
+                                    <div class="text-muted small">{{ contact.contact.company }} • {{ contact.contact.title }}</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="health-score health-{{ contact.status }}">{{ "%.0f"|format(contact.health_score) }}</div>
+                                    <div class="text-muted small">{{ contact.status.replace('_', ' ').title() }}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-people display-4 d-block mb-3 opacity-50"></i>
+                                <p>Add contacts to see relationship insights</p>
+                                <a href="/contacts" class="btn btn-outline-primary">Add Contacts</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 mb-4">
+                <div class="intelligence-card">
+                    <h4 class="mb-3">
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Relationships at Risk
+                    </h4>
+                    <div id="at-risk-relationships">
+                        {% if network_data and network_data.at_risk_relationships %}
+                            {% for contact in network_data.at_risk_relationships %}
+                            <div class="contact-health-item">
+                                <div>
+                                    <strong>{{ contact.contact.name }}</strong>
+                                    <div class="text-muted small">{{ contact.contact.company }}</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="health-score health-{{ contact.status }}">{{ "%.0f"|format(contact.health_score) }}</div>
+                                    <div class="text-muted small">Needs attention</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-check-circle display-4 d-block mb-3 text-success opacity-50"></i>
+                                <p>All relationships are healthy!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Insights -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="intelligence-card">
+                    <h4 class="mb-3">
+                        <i class="bi bi-lightbulb-fill text-info me-2"></i>AI Network Insights
+                    </h4>
+                    <div id="network-insights">
+                        {% if network_data and network_data.network_insights %}
+                            {% for insight in network_data.network_insights %}
+                            <div class="insight-pill">{{ insight }}</div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">Building your network profile to generate personalized insights...</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommended Actions -->
+        <div class="row">
+            <div class="col-12">
+                <div class="intelligence-card">
+                    <h4 class="mb-3">
+                        <i class="bi bi-list-check text-success me-2"></i>Recommended Actions
+                    </h4>
+                    <div id="recommended-actions">
+                        {% if network_data and network_data.recommended_actions %}
+                            {% for action in network_data.recommended_actions %}
+                            <div class="action-item priority-{{ action.priority }}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <strong>{{ action.action }}</strong>
+                                        <div class="text-muted small mt-1">{{ action.impact }}</div>
+                                    </div>
+                                    <div class="text-end ms-3">
+                                        <span class="badge bg-{{ 'danger' if action.priority == 'high' else 'warning' if action.priority == 'medium' else 'info' }}">
+                                            {{ action.priority.title() }} Priority
+                                        </span>
+                                        <div class="text-muted small mt-1">{{ action.timeline }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-calendar-check display-4 d-block mb-3 opacity-50"></i>
+                                <p>Your network is well-maintained. Check back later for new recommendations.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function refreshIntelligence() {
+    const loadingState = document.getElementById('loading-state');
+    const dashboard = document.getElementById('intelligence-dashboard');
+    const refreshBtn = document.querySelector('.refresh-btn');
+    
+    // Show loading state
+    loadingState.style.display = 'block';
+    dashboard.style.opacity = '0.5';
+    refreshBtn.disabled = true;
+    refreshBtn.innerHTML = '<div class="loading-animation me-2"></div>Analyzing...';
+    
+    try {
+        const response = await fetch('/api/network-intelligence', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            updateDashboard(data);
+            
+            // Show success feedback
+            showToast('Network intelligence updated successfully', 'success');
+        } else {
+            throw new Error('Failed to refresh intelligence');
+        }
+    } catch (error) {
+        console.error('Error refreshing intelligence:', error);
+        showToast('Failed to refresh network intelligence', 'error');
+    } finally {
+        // Hide loading state
+        loadingState.style.display = 'none';
+        dashboard.style.opacity = '1';
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-2"></i>Refresh Analysis';
+    }
+}
+
+function updateDashboard(data) {
+    // Update metrics
+    document.getElementById('total-contacts').textContent = data.network_analysis.total_contacts;
+    document.getElementById('avg-health').textContent = data.avg_health_score?.toFixed(1) || '0.0';
+    document.getElementById('active-relationships').textContent = 
+        (data.network_analysis.warmth_distribution.active || 0) + 
+        (data.network_analysis.warmth_distribution.warm || 0);
+    document.getElementById('companies').textContent = data.network_analysis.company_diversity;
+    
+    // Update top relationships
+    updateContactList('top-relationships', data.top_relationships);
+    
+    // Update at-risk relationships
+    updateContactList('at-risk-relationships', data.at_risk_relationships);
+    
+    // Update insights
+    updateInsights(data.network_insights);
+    
+    // Update actions
+    updateActions(data.recommended_actions);
+}
+
+function updateContactList(containerId, contacts) {
+    const container = document.getElementById(containerId);
+    if (!contacts || contacts.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted py-4"><p>No contacts to display</p></div>';
+        return;
+    }
+    
+    container.innerHTML = contacts.map(contact => `
+        <div class="contact-health-item">
+            <div>
+                <strong>${contact.contact.name}</strong>
+                <div class="text-muted small">${contact.contact.company} • ${contact.contact.title}</div>
+            </div>
+            <div class="text-end">
+                <div class="health-score health-${contact.status}">${Math.round(contact.health_score)}</div>
+                <div class="text-muted small">${contact.status.replace('_', ' ')}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function updateInsights(insights) {
+    const container = document.getElementById('network-insights');
+    if (!insights || insights.length === 0) {
+        container.innerHTML = '<p class="text-muted">Building insights based on your network activity...</p>';
+        return;
+    }
+    
+    container.innerHTML = insights.map(insight => 
+        `<div class="insight-pill">${insight}</div>`
+    ).join('');
+}
+
+function updateActions(actions) {
+    const container = document.getElementById('recommended-actions');
+    if (!actions || actions.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted py-4"><p>No immediate actions needed</p></div>';
+        return;
+    }
+    
+    container.innerHTML = actions.map(action => `
+        <div class="action-item priority-${action.priority}">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                    <strong>${action.action}</strong>
+                    <div class="text-muted small mt-1">${action.impact}</div>
+                </div>
+                <div class="text-end ms-3">
+                    <span class="badge bg-${action.priority === 'high' ? 'danger' : action.priority === 'medium' ? 'warning' : 'info'}">
+                        ${action.priority} Priority
+                    </span>
+                    <div class="text-muted small mt-1">${action.timeline}</div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showToast(message, type = 'info') {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+
+// Auto-refresh every 5 minutes
+setInterval(() => {
+    if (document.visibilityState === 'visible') {
+        refreshIntelligence();
+    }
+}, 300000);
+</script>
+{% endblock %}

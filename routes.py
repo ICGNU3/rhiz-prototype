@@ -14,6 +14,7 @@ from integrations import AutomationEngine
 from email_service import EmailService
 from ai_contact_matcher import AIContactMatcher
 from rhizomatic_intelligence import RhizomaticIntelligence
+from smart_networking import SmartNetworkingEngine
 from contact_search import ContactSearchEngine
 from gamification import GamificationEngine
 from auth import AuthManager, SubscriptionManager, EmailService as AuthEmailService
