@@ -4,6 +4,10 @@ import os
 import logging
 from datetime import datetime
 
+# Import and register Monica CRM blueprint
+from monica_crm import monica_bp
+app.register_blueprint(monica_bp)
+
 @app.route('/health')
 def health_check():
     """Production health monitoring endpoint"""

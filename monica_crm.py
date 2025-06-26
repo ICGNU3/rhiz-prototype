@@ -9,8 +9,23 @@ from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session, send_file
 from werkzeug.utils import secure_filename
 from models import Database, Reminder, JournalEntry, Task, Attachment, Contact
-from auth import require_login
-from gamification import award_xp
+from functools import wraps
+
+def require_login(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def award_xp(user_id, action, points):
+    """Simple XP tracking function"""
+    try:
+        import gamification
+        gamification.award_xp(user_id, action, points)
+    except ImportError:
+        pass  # Skip XP if gamification module not available
 
 # Create blueprint
 monica_bp = Blueprint('monica', __name__, url_prefix='/crm')
@@ -75,7 +90,7 @@ def create_reminder():
             
             if reminder_id:
                 # Award XP for creating reminder
-                award_xp(user_id, 'reminder_created', points={
+                award_xp(user_id, 'reminder_created', {
                     'action': 'reminder_created',
                     'xp_awarded': 5,
                     'reminder_type': reminder_type
@@ -100,62 +115,13 @@ def complete_reminder(reminder_id):
     
     # Award XP for completing reminder
     user_id = session.get('user_id')
-    award_xp(user_id, 'reminder_completed', points={
+    award_xp(user_id, 'reminder_completed', {
         'action': 'reminder_completed',
         'xp_awarded': 3
     })
     
     flash('Reminder marked as completed!', 'success')
     return redirect(url_for('monica.reminders'))
-
-# Journal Entries Routes
-@monica_bp.route('/contact/<contact_id>/journal')
-@require_login
-def contact_journal(contact_id):
-    """Display journal entries for a contact"""
-    user_id = session.get('user_id')
-    contact = contact_model.get_by_id(contact_id)
-    
-    if not contact or contact['user_id'] != user_id:
-        flash('Contact not found.', 'error')
-        return redirect(url_for('dashboard'))
-    
-    entries = journal_model.get_by_contact(contact_id)
-    return render_template('monica/contact_journal.html', 
-                         contact=contact, entries=entries)
-
-@monica_bp.route('/contact/<contact_id>/journal/create', methods=['POST'])
-@require_login
-def create_journal_entry(contact_id):
-    """Create a new journal entry for a contact"""
-    user_id = session.get('user_id')
-    title = request.form.get('title', '')
-    content = request.form.get('content')
-    entry_type = request.form.get('entry_type', 'note')
-    
-    if content:
-        entry_id = journal_model.create(
-            user_id=user_id,
-            contact_id=contact_id,
-            content=content,
-            title=title,
-            entry_type=entry_type
-        )
-        
-        if entry_id:
-            # Award XP for creating journal entry
-            award_xp(user_id, 'journal_entry_created', points={
-                'action': 'journal_entry_created',
-                'xp_awarded': 3,
-                'entry_type': entry_type
-            })
-            flash('Journal entry created successfully!', 'success')
-        else:
-            flash('Failed to create journal entry.', 'error')
-    else:
-        flash('Please enter some content for the journal entry.', 'error')
-    
-    return redirect(url_for('monica.contact_journal', contact_id=contact_id))
 
 # Tasks Routes
 @monica_bp.route('/tasks')
@@ -202,7 +168,7 @@ def create_task():
             
             if task_id:
                 # Award XP for creating task
-                award_xp(user_id, 'task_created', points={
+                award_xp(user_id, 'task_created', {
                     'action': 'task_created',
                     'xp_awarded': 5,
                     'priority': priority
@@ -231,7 +197,7 @@ def update_task_status(task_id):
         # Award XP for completing task
         if new_status == 'done':
             user_id = session.get('user_id')
-            award_xp(user_id, 'task_completed', points={
+            award_xp(user_id, 'task_completed', {
                 'action': 'task_completed',
                 'xp_awarded': 8
             })
@@ -243,10 +209,11 @@ def update_task_status(task_id):
     
     return redirect(url_for('monica.tasks'))
 
-@monica_bp.route('/contact/<contact_id>/tasks')
+# Journal Entries Routes
+@monica_bp.route('/contact/<contact_id>/journal')
 @require_login
-def contact_tasks(contact_id):
-    """Display tasks for a specific contact"""
+def contact_journal(contact_id):
+    """Display journal entries for a contact"""
     user_id = session.get('user_id')
     contact = contact_model.get_by_id(contact_id)
     
@@ -254,9 +221,42 @@ def contact_tasks(contact_id):
         flash('Contact not found.', 'error')
         return redirect(url_for('dashboard'))
     
-    tasks = task_model.get_by_contact(contact_id)
-    return render_template('monica/contact_tasks.html', 
-                         contact=contact, tasks=tasks)
+    entries = journal_model.get_by_contact(contact_id)
+    return render_template('monica/contact_journal.html', 
+                         contact=contact, entries=entries)
+
+@monica_bp.route('/contact/<contact_id>/journal/create', methods=['POST'])
+@require_login
+def create_journal_entry(contact_id):
+    """Create a new journal entry for a contact"""
+    user_id = session.get('user_id')
+    title = request.form.get('title', '')
+    content = request.form.get('content')
+    entry_type = request.form.get('entry_type', 'note')
+    
+    if content:
+        entry_id = journal_model.create(
+            user_id=user_id,
+            contact_id=contact_id,
+            content=content,
+            title=title,
+            entry_type=entry_type
+        )
+        
+        if entry_id:
+            # Award XP for creating journal entry
+            award_xp(user_id, 'journal_entry_created', {
+                'action': 'journal_entry_created',
+                'xp_awarded': 3,
+                'entry_type': entry_type
+            })
+            flash('Journal entry created successfully!', 'success')
+        else:
+            flash('Failed to create journal entry.', 'error')
+    else:
+        flash('Please enter some content for the journal entry.', 'error')
+    
+    return redirect(url_for('monica.contact_journal', contact_id=contact_id))
 
 # File Attachments Routes
 @monica_bp.route('/contact/<contact_id>/attachments')
@@ -273,180 +273,6 @@ def contact_attachments(contact_id):
     attachments = attachment_model.get_by_contact(contact_id)
     return render_template('monica/contact_attachments.html', 
                          contact=contact, attachments=attachments)
-
-@monica_bp.route('/contact/<contact_id>/upload', methods=['POST'])
-@require_login
-def upload_file(contact_id):
-    """Upload a file attachment for a contact"""
-    user_id = session.get('user_id')
-    
-    # Check if contact belongs to user
-    contact = contact_model.get_by_id(contact_id)
-    if not contact or contact['user_id'] != user_id:
-        return jsonify({'error': 'Contact not found'}), 404
-    
-    if 'file' not in request.files:
-        flash('No file selected.', 'error')
-        return redirect(url_for('monica.contact_attachments', contact_id=contact_id))
-    
-    file = request.files['file']
-    description = request.form.get('description', '')
-    
-    if file.filename == '':
-        flash('No file selected.', 'error')
-        return redirect(url_for('monica.contact_attachments', contact_id=contact_id))
-    
-    if file and allowed_file(file.filename):
-        # Check file size
-        if len(file.read()) > MAX_FILE_SIZE:
-            flash('File too large. Maximum size is 16MB.', 'error')
-            return redirect(url_for('monica.contact_attachments', contact_id=contact_id))
-        
-        file.seek(0)  # Reset file pointer
-        
-        # Generate unique filename
-        original_filename = secure_filename(file.filename)
-        file_extension = original_filename.rsplit('.', 1)[1].lower()
-        unique_filename = f"{uuid.uuid4()}.{file_extension}"
-        file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
-        
-        try:
-            file.save(file_path)
-            
-            # Save to database
-            attachment_id = attachment_model.create(
-                user_id=user_id,
-                contact_id=contact_id,
-                filename=unique_filename,
-                original_filename=original_filename,
-                file_path=file_path,
-                file_size=os.path.getsize(file_path),
-                file_type=file_extension,
-                description=description
-            )
-            
-            if attachment_id:
-                # Award XP for uploading attachment
-                award_xp(user_id, 'attachment_uploaded', points={
-                    'action': 'attachment_uploaded',
-                    'xp_awarded': 3,
-                    'file_type': file_extension
-                })
-                flash('File uploaded successfully!', 'success')
-            else:
-                os.remove(file_path)  # Clean up file if database save failed
-                flash('Failed to save file information.', 'error')
-                
-        except Exception as e:
-            flash(f'Failed to upload file: {str(e)}', 'error')
-    else:
-        flash('Invalid file type.', 'error')
-    
-    return redirect(url_for('monica.contact_attachments', contact_id=contact_id))
-
-@monica_bp.route('/contact/<contact_id>/add-link', methods=['POST'])
-@require_login
-def add_link(contact_id):
-    """Add a URL link for a contact"""
-    user_id = session.get('user_id')
-    
-    # Check if contact belongs to user
-    contact = contact_model.get_by_id(contact_id)
-    if not contact or contact['user_id'] != user_id:
-        return jsonify({'error': 'Contact not found'}), 404
-    
-    url = request.form.get('url')
-    title = request.form.get('title', '')
-    description = request.form.get('description', '')
-    
-    if url:
-        # Create attachment record for URL
-        attachment_id = attachment_model.create(
-            user_id=user_id,
-            contact_id=contact_id,
-            filename=title or url,
-            original_filename=title or url,
-            file_url=url,
-            description=description,
-            is_link=True
-        )
-        
-        if attachment_id:
-            # Award XP for adding link
-            award_xp(user_id, 'link_added', points={
-                'action': 'link_added',
-                'xp_awarded': 2
-            })
-            flash('Link added successfully!', 'success')
-        else:
-            flash('Failed to save link.', 'error')
-    else:
-        flash('Please enter a valid URL.', 'error')
-    
-    return redirect(url_for('monica.contact_attachments', contact_id=contact_id))
-
-@monica_bp.route('/download/<attachment_id>')
-@require_login
-def download_file(attachment_id):
-    """Download a file attachment"""
-    user_id = session.get('user_id')
-    
-    # Get attachment and verify ownership
-    conn = db.get_connection()
-    try:
-        attachment = conn.execute(
-            "SELECT * FROM attachments WHERE id = ? AND user_id = ?",
-            (attachment_id, user_id)
-        ).fetchone()
-        
-        if not attachment:
-            flash('File not found.', 'error')
-            return redirect(url_for('dashboard'))
-        
-        if attachment['is_link']:
-            return redirect(attachment['file_url'])
-        
-        file_path = attachment['file_path']
-        if os.path.exists(file_path):
-            return send_file(file_path, as_attachment=True, 
-                           download_name=attachment['original_filename'])
-        else:
-            flash('File not found on server.', 'error')
-            return redirect(url_for('dashboard'))
-            
-    finally:
-        conn.close()
-
-@monica_bp.route('/delete-attachment/<attachment_id>', methods=['POST'])
-@require_login
-def delete_attachment(attachment_id):
-    """Delete a file attachment"""
-    user_id = session.get('user_id')
-    
-    # Verify ownership before deletion
-    conn = db.get_connection()
-    try:
-        attachment = conn.execute(
-            "SELECT * FROM attachments WHERE id = ? AND user_id = ?",
-            (attachment_id, user_id)
-        ).fetchone()
-        
-        if attachment:
-            contact_id = attachment['contact_id']
-            file_path = attachment_model.delete(attachment_id)
-            
-            # Remove physical file if it exists
-            if file_path and os.path.exists(file_path):
-                os.remove(file_path)
-            
-            flash('Attachment deleted successfully!', 'success')
-            return redirect(url_for('monica.contact_attachments', contact_id=contact_id))
-        else:
-            flash('Attachment not found.', 'error')
-            return redirect(url_for('dashboard'))
-            
-    finally:
-        conn.close()
 
 # API endpoints for AJAX updates
 @monica_bp.route('/api/due-reminders')
