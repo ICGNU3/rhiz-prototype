@@ -8,8 +8,22 @@ import logging
 import asyncio
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
+try:
+    from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+    from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
+    TELEGRAM_AVAILABLE = True
+except ImportError:
+    # Fallback for telegram import issues
+    Update = None
+    InlineKeyboardButton = None
+    InlineKeyboardMarkup = None
+    Application = None
+    CommandHandler = None
+    MessageHandler = None
+    CallbackQueryHandler = None
+    filters = None
+    ContextTypes = None
+    TELEGRAM_AVAILABLE = False
 from models import Database, Contact, ContactInteraction, Goal
 
 # Configure logging
@@ -57,7 +71,7 @@ class TelegramNetworkingBot:
         # Message handler for natural language queries
         self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self._handle_message))
     
-    async def _start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def _start_command(self, update, context):
         """Handle /start command"""
         welcome_message = """🤖 Welcome to Founder Network AI Bot!
 

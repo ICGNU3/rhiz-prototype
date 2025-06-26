@@ -10,6 +10,7 @@ from simple_email import SimpleEmailSender
 from analytics import NetworkingAnalytics
 from network_visualization import NetworkMapper
 from integrations import AutomationEngine
+from email_service import EmailService
 from ai_contact_matcher import AIContactMatcher
 from rhizomatic_intelligence import RhizomaticIntelligence
 from contact_search import ContactSearchEngine

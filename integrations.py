@@ -11,7 +11,12 @@ import json
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from models import Database, Contact, ContactInteraction
-from telegram_integration import TelegramNetworkingBot
+try:
+    from telegram_integration import TelegramNetworkingBot
+    TELEGRAM_INTEGRATION_AVAILABLE = True
+except ImportError:
+    TelegramNetworkingBot = None
+    TELEGRAM_INTEGRATION_AVAILABLE = False
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
