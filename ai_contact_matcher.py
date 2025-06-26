@@ -258,8 +258,12 @@ class AIContactMatcher:
     def _store_contact_embedding(self, contact_id: int, embedding: List[float]):
         """Store contact embedding in database"""
         sql = "UPDATE contacts SET bio_embedding = ? WHERE id = ?"
-        self.db.execute(sql, [json.dumps(embedding), contact_id])
-        self.db.commit()
+        conn = self.db.get_connection()
+        try:
+            conn.execute(sql, [json.dumps(embedding), contact_id])
+            conn.commit()
+        finally:
+            conn.close()
     
     def _get_all_contacts_with_embeddings(self, user_id: int) -> List[Dict[str, Any]]:
         """Get all contacts for user that have embeddings"""
@@ -267,8 +271,12 @@ class AIContactMatcher:
         SELECT * FROM contacts 
         WHERE user_id = ? AND bio_embedding IS NOT NULL
         """
-        cursor = self.db.execute(sql, [user_id])
-        return [dict(row) for row in cursor.fetchall()]
+        conn = self.db.get_connection()
+        try:
+            cursor = conn.execute(sql, [user_id])
+            return [dict(row) for row in cursor.fetchall()]
+        finally:
+            conn.close()
     
     def _cosine_similarity(self, vec1: List[float], vec2: List[float]) -> float:
         """Calculate cosine similarity between two vectors"""
@@ -309,14 +317,22 @@ class AIContactMatcher:
     def _get_user_contacts(self, user_id: int) -> List[Dict[str, Any]]:
         """Get all contacts for a user"""
         sql = "SELECT * FROM contacts WHERE user_id = ?"
-        cursor = self.db.execute(sql, [user_id])
-        return [dict(row) for row in cursor.fetchall()]
+        conn = self.db.get_connection()
+        try:
+            cursor = conn.execute(sql, [user_id])
+            return [dict(row) for row in cursor.fetchall()]
+        finally:
+            conn.close()
     
     def _get_user_goals(self, user_id: int) -> List[Dict[str, Any]]:
         """Get all goals for a user"""
         sql = "SELECT * FROM goals WHERE user_id = ?"
-        cursor = self.db.execute(sql, [user_id])
-        return [dict(row) for row in cursor.fetchall()]
+        conn = self.db.get_connection()
+        try:
+            cursor = conn.execute(sql, [user_id])
+            return [dict(row) for row in cursor.fetchall()]
+        finally:
+            conn.close()
     
     def _contacts_connected(self, contact1_id: int, contact2_id: int) -> bool:
         """Check if two contacts are already connected"""
@@ -325,9 +341,13 @@ class AIContactMatcher:
         WHERE (contact1_id = ? AND contact2_id = ?) 
            OR (contact1_id = ? AND contact2_id = ?)
         """
-        cursor = self.db.execute(sql, [contact1_id, contact2_id, contact2_id, contact1_id])
-        result = cursor.fetchone()
-        return result['count'] > 0 if result else False
+        conn = self.db.get_connection()
+        try:
+            cursor = conn.execute(sql, [contact1_id, contact2_id, contact2_id, contact1_id])
+            result = cursor.fetchone()
+            return result['count'] > 0 if result else False
+        finally:
+            conn.close()
     
     def _analyze_introduction_potential(self, contact1: Dict, contact2: Dict) -> Tuple[float, List[str]]:
         """Analyze potential for introducing two contacts"""
@@ -411,8 +431,12 @@ class AIContactMatcher:
         WHERE contact_id = ? 
         ORDER BY interaction_date DESC
         """
-        cursor = self.db.execute(sql, [contact_id])
-        return [dict(row) for row in cursor.fetchall()]
+        conn = self.db.get_connection()
+        try:
+            cursor = conn.execute(sql, [contact_id])
+            return [dict(row) for row in cursor.fetchall()]
+        finally:
+            conn.close()
     
     def _analyze_contact_profile(self, contact: Dict[str, Any]) -> Dict[str, Any]:
         """AI-powered analysis of contact profile"""
