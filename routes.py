@@ -535,20 +535,35 @@ def send_email():
         flash('Contact has no email address', 'error')
         return redirect(request.referrer or url_for('index'))
     
-    # Send email
-    result = email_sender.send_email(
-        to_email=contact['email'],
-        subject=subject,
-        message_body=message,
-        contact_id=contact_id,
-        user_id=DEFAULT_USER_ID,
-        goal_title=goal_title
-    )
-    
-    if result['success']:
-        flash(f"Email sent successfully to {contact['name']}", 'success')
-    else:
-        flash(f"Failed to send email: {result['error']}", 'error')
+    # Send email using the enhanced email service
+    try:
+        result = email_service.send_email(
+            to_email=contact['email'],
+            subject=subject,
+            message_body=message,
+            contact_id=int(contact_id),
+            user_id=DEFAULT_USER_ID,
+            goal_title=goal_title
+        )
+        
+        if result['success']:
+            flash(f"Email sent successfully to {contact['name']}", 'success')
+            # Award XP for sending email
+            gamification.award_xp(DEFAULT_USER_ID, 'email_sent')
+            
+            # Log interaction automatically
+            interaction_model.create(
+                contact_id=int(contact_id),
+                interaction_type='email_sent',
+                notes=f'Email sent: {subject}',
+                outcome='sent'
+            )
+        else:
+            flash(f"Failed to send email: {result['error']}", 'error')
+            
+    except Exception as e:
+        logging.error(f"Email sending error: {e}")
+        flash('Error sending email. Please check your email configuration.', 'error')
     
     return redirect(request.referrer or url_for('index'))
 
