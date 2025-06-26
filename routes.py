@@ -7,6 +7,7 @@ from openai_utils import OpenAIUtils
 from database_utils import seed_demo_data, match_contacts_to_goal
 from contact_intelligence import ContactNLP
 from csv_import import CSVContactImporter
+from linkedin_importer import LinkedInContactImporter
 from simple_email import SimpleEmailSender
 from analytics import NetworkingAnalytics
 from network_visualization import NetworkMapper
@@ -713,7 +714,9 @@ def copy_message():
 
 @app.route('/import_contacts', methods=['GET', 'POST'])
 def import_contacts():
-    """CSV import interface for bulk contact uploads"""
+    """Enhanced CSV import interface with LinkedIn support"""
+    user_id = session.get('user_id', 1)
+    
     if request.method == 'POST':
         # Handle CSV upload
         if 'csv_file' not in request.files:
@@ -727,32 +730,56 @@ def import_contacts():
         
         if file and file.filename and file.filename.lower().endswith('.csv'):
             try:
-                # Read CSV content
-                csv_content = file.read().decode('utf-8')
+                # Save uploaded file temporarily
+                import tempfile
+                import os
                 
-                # Import contacts
-                importer = CSVContactImporter(DEFAULT_USER_ID)
-                skip_duplicates = request.form.get('skip_duplicates') == 'on'
-                import_stats = importer.import_from_csv(csv_content, skip_duplicates)
+                with tempfile.NamedTemporaryFile(mode='w+b', suffix='.csv', delete=False) as temp_file:
+                    file.save(temp_file.name)
+                    temp_filename = temp_file.name
                 
-                # Generate summary
-                summary = importer.generate_import_summary()
+                # Detect import type
+                import_type = request.form.get('import_type', 'generic')
                 
-                # Flash results
-                if summary['successful'] > 0:
-                    flash(f"Successfully imported {summary['successful']} contacts!", 'success')
+                # Choose appropriate importer
+                if import_type == 'linkedin':
+                    importer = LinkedInContactImporter()
+                    import_result = importer.import_linkedin_csv(temp_filename, user_id)
+                else:
+                    importer = LinkedInContactImporter()
+                    import_result = importer.import_generic_csv(temp_filename, user_id)
                 
-                if summary['failed'] > 0:
-                    flash(f"{summary['failed']} contacts failed to import", 'warning')
+                # Clean up temp file
+                os.unlink(temp_filename)
                 
-                if summary['warnings'] > 0:
-                    flash(f"{summary['warnings']} warnings during import", 'info')
+                # Process results
+                if import_result['success']:
+                    if import_result['imported'] > 0:
+                        flash(f"Successfully imported {import_result['imported']} contacts!", 'success')
+                    
+                    if import_result['duplicates'] > 0:
+                        flash(f"Skipped {import_result['duplicates']} duplicate contacts", 'info')
+                    
+                    if import_result['skipped'] > 0:
+                        flash(f"{import_result['skipped']} contacts were skipped", 'warning')
+                    
+                    # Award XP for successful import
+                    if import_result['imported'] > 0:
+                        gamification_engine = GamificationEngine()
+                        xp_points = min(import_result['imported'] * 5, 100)  # 5 XP per contact, max 100
+                        gamification_engine.award_xp(user_id, xp_points, {
+                            'action': 'contact_import',
+                            'contacts_imported': import_result['imported'],
+                            'source': import_type
+                        })
+                else:
+                    flash(f"Import failed: {import_result['error']}", 'error')
                 
                 # Render results
-                return render_template('csv_import.html', 
-                                     import_stats=import_stats,
-                                     summary=summary,
-                                     show_results=True)
+                return render_template('import.html', 
+                                     import_result=import_result,
+                                     show_results=True,
+                                     import_type=import_type)
                 
             except Exception as e:
                 logging.error(f"CSV import failed: {e}")
@@ -761,11 +788,11 @@ def import_contacts():
             flash('Please upload a valid CSV file', 'error')
     
     # GET request - show import form
-    importer = CSVContactImporter(DEFAULT_USER_ID)
-    sample_csv = importer.get_sample_csv_format()
+    linkedin_importer = LinkedInContactImporter()
+    template_info = linkedin_importer.get_import_template()
     
-    return render_template('csv_import.html', 
-                         sample_csv=sample_csv,
+    return render_template('import.html', 
+                         template_info=template_info,
                          show_results=False)
 
 @app.route('/download_sample_csv')

@@ -16,5 +16,6 @@ dependencies = [
     "slack-sdk>=3.35.0",
     "stripe>=12.2.0",
     "telegram>=0.0.1",
+    "trafilatura>=2.0.0",
     "werkzeug>=3.1.3",
 ]
