@@ -2512,12 +2512,13 @@ def test_email():
             text_content=text_content
         )
         
-        # Log result
+        # Log result with detailed error info
         if result['success']:
-            logging.info(f"Test email sent successfully to {to_email} via Resend")
+            logging.info(f"✅ Test email sent successfully to {to_email} via Resend")
             logging.info(f"Email ID: {result.get('email_id', 'unknown')}")
         else:
-            logging.error(f"Test email failed: {result.get('error', 'unknown error')}")
+            logging.error(f"❌ Test email failed: {result.get('error', 'unknown error')}")
+            logging.error(f"Full result: {result}")
         
         return jsonify({
             'success': result['success'],

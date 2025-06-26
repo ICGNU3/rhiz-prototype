@@ -66,10 +66,18 @@ class ResendEmailService:
             }
             
         except Exception as e:
-            logger.error(f"Resend email error: {e}")
+            error_msg = str(e)
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_details = e.response.json()
+                    error_msg = f"HTTP {e.response.status_code}: {error_details.get('message', error_msg)}"
+                except:
+                    error_msg = f"HTTP {e.response.status_code}: {error_msg}"
+            
+            logger.error(f"Resend email error: {error_msg}")
             return {
                 'success': False,
-                'error': str(e),
+                'error': error_msg,
                 'method': 'resend'
             }
     
