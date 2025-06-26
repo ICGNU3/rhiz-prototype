@@ -24,6 +24,7 @@ from stripe_integration import StripePaymentManager, PricingHelper
 from collective_actions import CollectiveActionsManager
 from network_metrics import NetworkMetricsManager
 import logging
+import sqlite3
 from datetime import datetime
 from functools import wraps
 
