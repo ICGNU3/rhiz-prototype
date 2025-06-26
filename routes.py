@@ -23,6 +23,7 @@ from auth import AuthManager, SubscriptionManager, EmailService as AuthEmailServ
 from stripe_integration import StripePaymentManager, PricingHelper
 from collective_actions import CollectiveActionsManager
 from network_metrics import NetworkMetricsManager
+from shared_ai_assistant import SharedAIAssistant
 import logging
 import sqlite3
 from datetime import datetime
@@ -70,6 +71,7 @@ search_engine = ContactSearchEngine(db)
 gamification = GamificationEngine(db)
 collective_actions_manager = CollectiveActionsManager()
 network_metrics_manager = NetworkMetricsManager()
+shared_ai_assistant = SharedAIAssistant()
 
 # Initialize authentication and subscription managers
 auth_manager = AuthManager(db)
