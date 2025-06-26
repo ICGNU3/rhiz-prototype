@@ -22,6 +22,7 @@ from gamification import GamificationEngine
 from auth import AuthManager, SubscriptionManager, EmailService as AuthEmailService
 from stripe_integration import StripePaymentManager, PricingHelper
 from collective_actions import CollectiveActionsManager
+from network_metrics import NetworkMetricsManager
 import logging
 from datetime import datetime
 from functools import wraps
@@ -67,6 +68,7 @@ ai_matcher = AIContactMatcher(db)
 search_engine = ContactSearchEngine(db)
 gamification = GamificationEngine(db)
 collective_actions_manager = CollectiveActionsManager()
+network_metrics_manager = NetworkMetricsManager()
 
 # Initialize authentication and subscription managers
 auth_manager = AuthManager(db)
@@ -1889,7 +1891,7 @@ def get_conference_contacts_api(conference_id):
 # Network Visualization and Relationship Mapping Routes
 
 @app.route('/network')
-def network_dashboard():
+def network_visualization():
     """Network visualization dashboard"""
     return render_template('network_visualization.html')
 
@@ -2236,5 +2238,97 @@ def collective_actions_dashboard_api(user_id):
     try:
         dashboard_data = collective_actions_manager.get_user_dashboard_data(user_id)
         return jsonify(dashboard_data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/network-dashboard')
+def network_dashboard():
+    """Network Dashboard with aggregated community metrics"""
+    try:
+        # Initialize milestones and generate demo data
+        network_metrics_manager.initialize_milestones()
+        network_metrics_manager.generate_demo_activity()
+        
+        # Get network statistics
+        network_stats = network_metrics_manager.get_network_stats_summary()
+        
+        # Get ticker messages
+        ticker_messages = network_metrics_manager.get_ticker_messages(limit=15)
+        
+        # Check for recent milestones
+        recent_milestones = []
+        try:
+            with sqlite3.connect('db.sqlite3') as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT title, description, achieved_at FROM community_milestones 
+                    WHERE achieved_at IS NOT NULL 
+                    ORDER BY achieved_at DESC LIMIT 5
+                ''')
+                for row in cursor.fetchall():
+                    recent_milestones.append({
+                        'title': row[0],
+                        'description': row[1],
+                        'achieved_at': row[2]
+                    })
+        except Exception:
+            pass
+        
+        return render_template('network_dashboard.html',
+                             network_stats=network_stats,
+                             ticker_messages=ticker_messages,
+                             recent_milestones=recent_milestones)
+    except Exception as e:
+        logging.error(f"Network dashboard error: {e}")
+        return render_template('network_dashboard.html',
+                             network_stats={
+                                 'quarter': '2025-Q1',
+                                 'funding_raised': 0,
+                                 'intros_made': 0,
+                                 'projects_launched': 0,
+                                 'collective_okrs': 0,
+                                 'trends': {
+                                     'funding_raised': {'direction': 'stable', 'percentage': 0},
+                                     'intros_made': {'direction': 'stable', 'percentage': 0},
+                                     'projects_launched': {'direction': 'stable', 'percentage': 0},
+                                     'collective_okrs': {'direction': 'stable', 'percentage': 0}
+                                 },
+                                 'active_members': 0,
+                                 'total_connections': 0,
+                                 'avg_network_size': 0,
+                                 'network_density': 0,
+                                 'last_updated': datetime.now().isoformat()
+                             },
+                             ticker_messages=[],
+                             recent_milestones=[])
+
+
+@app.route('/api/network-metrics')
+def api_network_metrics():
+    """API endpoint for real-time network metrics"""
+    try:
+        network_stats = network_metrics_manager.get_network_stats_summary()
+        return jsonify(network_stats)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/network-milestones')
+def api_network_milestones():
+    """API endpoint for milestone achievements"""
+    try:
+        new_milestones = network_metrics_manager.check_milestone_achievements()
+        return jsonify({'new_milestones': new_milestones})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/ticker-messages')
+def api_ticker_messages():
+    """API endpoint for ticker messages"""
+    try:
+        messages = network_metrics_manager.get_ticker_messages(limit=10)
+        return jsonify({'messages': messages})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
