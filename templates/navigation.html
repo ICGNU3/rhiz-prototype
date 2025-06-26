@@ -1,47 +1,103 @@
-<!-- Navigation Bar for all pages -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+<!-- Mobile-first Navigation -->
+<nav class="navbar navbar-expand-md navbar-dark bg-dark sticky-top">
     <div class="container-fluid">
-        <a class="navbar-brand" href="{{ url_for('index') }}">
-            <i class="bi bi-diagram-3-fill me-2"></i>Founder Network AI
+        <a class="navbar-brand d-flex align-items-center" href="/">
+            <i class="bi bi-network-wired me-2"></i>
+            <span class="d-none d-sm-inline">Founder Network AI</span>
+            <span class="d-sm-none">NetworkAI</span>
         </a>
         
+        <!-- Mobile menu button -->
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         
+        <!-- Navigation links -->
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('index') }}">
-                        <i class="bi bi-bullseye"></i> Goal Matcher
+                    <a class="nav-link" href="/">
+                        <i class="bi bi-house me-1"></i>
+                        Dashboard
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('crm_dashboard') }}">
-                        <i class="bi bi-speedometer2"></i> CRM Dashboard
+                    <a class="nav-link" href="/contacts">
+                        <i class="bi bi-people me-1"></i>
+                        Contacts
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('analytics_dashboard') }}">
-                        <i class="bi bi-graph-up"></i> Analytics
+                    <a class="nav-link" href="/goals">
+                        <i class="bi bi-target me-1"></i>
+                        Goals
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('network_visualization') }}">
-                        <i class="bi bi-diagram-3"></i> Network Map
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-kanban me-1"></i>
+                        CRM
                     </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/crm/dashboard">
+                            <i class="bi bi-speedometer2 me-2"></i>Intelligence Dashboard
+                        </a></li>
+                        <li><a class="dropdown-item" href="/crm/pipeline">
+                            <i class="bi bi-kanban me-2"></i>Pipeline View
+                        </a></li>
+                        <li><a class="dropdown-item" href="/crm/timeline">
+                            <i class="bi bi-clock-history me-2"></i>Timeline
+                        </a></li>
+                        <li><a class="dropdown-item" href="/crm/suggestions">
+                            <i class="bi bi-lightbulb me-2"></i>AI Suggestions
+                        </a></li>
+                        <li><a class="dropdown-item" href="/crm/nlp">
+                            <i class="bi bi-chat-dots me-2"></i>Ask AI
+                        </a></li>
+                    </ul>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('import_contacts') }}">
-                        <i class="bi bi-upload"></i> Import Contacts
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-graph-up me-1"></i>
+                        Analytics
                     </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/analytics">
+                            <i class="bi bi-bar-chart me-2"></i>Performance Dashboard
+                        </a></li>
+                        <li><a class="dropdown-item" href="/network">
+                            <i class="bi bi-diagram-3 me-2"></i>Network Map
+                        </a></li>
+                    </ul>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('integrations_dashboard') }}">
-                        <i class="bi bi-gear-fill"></i> Integrations
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-gear me-1"></i>
+                        Tools
                     </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/import">
+                            <i class="bi bi-upload me-2"></i>Import Contacts
+                        </a></li>
+                        <li><a class="dropdown-item" href="/email/settings">
+                            <i class="bi bi-envelope-gear me-2"></i>Email Settings
+                        </a></li>
+                        <li><a class="dropdown-item" href="/integrations">
+                            <i class="bi bi-puzzle me-2"></i>Integrations
+                        </a></li>
+                    </ul>
                 </li>
             </ul>
+            
+            <!-- Mobile action buttons -->
+            <div class="d-flex gap-2 d-md-none mt-2">
+                <a href="/contacts/new" class="btn btn-primary btn-sm">
+                    <i class="bi bi-person-plus me-1"></i>Add Contact
+                </a>
+                <a href="/goals/new" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-target me-1"></i>Add Goal
+                </a>
+            </div>
         </div>
     </div>
 </nav>

@@ -1,0 +1,161 @@
+{% extends "mobile_base.html" %}
+
+{% block title %}Add Contact - Founder Network AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-3">
+                <button class="btn btn-link p-0 me-3" onclick="window.history.back()">
+                    <i class="bi bi-arrow-left" style="font-size: 1.5rem;"></i>
+                </button>
+                <h4 class="mb-0">Add New Contact</h4>
+            </div>
+            
+            <form method="POST" action="/create-contact" class="offline-support">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" required 
+                                   placeholder="Enter full name" autocomplete="name">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   placeholder="contact@company.com" autocomplete="email">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="company" class="form-label">Company</label>
+                            <input type="text" class="form-control" id="company" name="company" 
+                                   placeholder="Company name" autocomplete="organization">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   placeholder="Job title" autocomplete="organization-title">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   placeholder="+1 (555) 123-4567" autocomplete="tel">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="linkedin" class="form-label">LinkedIn</label>
+                            <input type="url" class="form-control" id="linkedin" name="linkedin" 
+                                   placeholder="https://linkedin.com/in/username">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="relationship_type" class="form-label">Relationship Type</label>
+                            <select class="form-select" id="relationship_type" name="relationship_type">
+                                <option value="">Select type</option>
+                                <option value="founder">Founder</option>
+                                <option value="investor">Investor</option>
+                                <option value="mentor">Mentor</option>
+                                <option value="advisor">Advisor</option>
+                                <option value="partner">Partner</option>
+                                <option value="customer">Customer</option>
+                                <option value="supplier">Supplier</option>
+                                <option value="employee">Employee</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="warmth" class="form-label">Relationship Warmth</label>
+                            <select class="form-select" id="warmth" name="warmth">
+                                <option value="cold">Cold - No prior interaction</option>
+                                <option value="aware">Aware - Basic introduction made</option>
+                                <option value="warm" selected>Warm - Some interaction history</option>
+                                <option value="active">Active - Regular communication</option>
+                                <option value="contributor">Contributor - Strong relationship</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">Tags</label>
+                            <input type="text" class="form-control" id="tags" name="tags" 
+                                   placeholder="AI, fintech, series-A (comma separated)">
+                            <div class="form-text">Add relevant tags to help with matching</div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="4" 
+                                      placeholder="Background, interests, how you met, mutual connections..."></textarea>
+                            <div class="form-text">Detailed notes help with AI-powered matching</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-person-plus me-2"></i>
+                        Add Contact
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="window.history.back()">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Quick action buttons -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1000;">
+    <button class="btn btn-secondary btn-floating me-2" onclick="fillSampleData()" title="Fill Sample Data">
+        <i class="bi bi-lightning"></i>
+    </button>
+</div>
+
+<script>
+function fillSampleData() {
+    document.getElementById('name').value = 'Sarah Chen';
+    document.getElementById('email').value = 'sarah@techstartup.com';
+    document.getElementById('company').value = 'TechStartup Inc';
+    document.getElementById('title').value = 'Co-founder & CEO';
+    document.getElementById('phone').value = '+1 (555) 123-4567';
+    document.getElementById('linkedin').value = 'https://linkedin.com/in/sarahchen';
+    document.getElementById('relationship_type').value = 'founder';
+    document.getElementById('warmth').value = 'warm';
+    document.getElementById('tags').value = 'AI, SaaS, series-A, female-founder';
+    document.getElementById('notes').value = 'Met at TechCrunch Disrupt. Building an AI-powered customer service platform. Recently raised Series A. Very interested in founder community and mentorship opportunities.';
+}
+
+// Auto-save form data to localStorage
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const inputs = form.querySelectorAll('input, textarea, select');
+    
+    // Load saved data
+    inputs.forEach(input => {
+        const saved = localStorage.getItem(`contact_form_${input.name}`);
+        if (saved && !input.value) {
+            input.value = saved;
+        }
+    });
+    
+    // Save data on change
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            localStorage.setItem(`contact_form_${input.name}`, input.value);
+        });
+    });
+    
+    // Clear saved data on successful submit
+    form.addEventListener('submit', function() {
+        inputs.forEach(input => {
+            localStorage.removeItem(`contact_form_${input.name}`);
+        });
+    });
+});
+</script>
+{% endblock %}
