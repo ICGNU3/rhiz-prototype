@@ -2,6 +2,7 @@ from flask import render_template, request, redirect, url_for, flash, jsonify, s
 from app import app
 import uuid
 import json
+from datetime import datetime
 from models import Database, User, Contact, Goal, AISuggestion, ContactInteraction, ContactIntelligence, OutreachSuggestion
 from openai_utils import OpenAIUtils
 from database_utils import seed_demo_data, match_contacts_to_goal

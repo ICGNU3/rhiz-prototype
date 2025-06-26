@@ -355,6 +355,85 @@ class ResendEmailService:
             
         except Exception as e:
             logger.error(f"Failed to log email interaction: {e}")
+    
+    def send_application_confirmation(self, to_email: str, first_name: str) -> bool:
+        """Send application confirmation email for Root Membership"""
+        try:
+            subject = "Root Membership Application Received - OuRhizome"
+            
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>{subject}</title>
+                <style>
+                    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 8px 8px 0 0; }}
+                    .content {{ background: #f8f9fa; padding: 30px; border-radius: 0 0 8px 8px; }}
+                    .footer {{ text-align: center; padding: 15px; font-size: 12px; color: #6c757d; border-top: 1px solid #dee2e6; margin-top: 30px; }}
+                    .highlight {{ background: rgba(102, 126, 234, 0.1); padding: 15px; border-radius: 6px; margin: 20px 0; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1 style="margin: 0; font-size: 24px;">Application Received</h1>
+                        <p style="margin: 10px 0 0 0; opacity: 0.9;">Welcome to the Root Member application process</p>
+                    </div>
+                    <div class="content">
+                        <p>Hello {first_name},</p>
+                        
+                        <p>Thank you for applying to become one of our One Hundred Root Members. Your application has been received and will be carefully reviewed by our founding team.</p>
+                        
+                        <div class="highlight">
+                            <h3 style="margin-top: 0;">What happens next:</h3>
+                            <ul style="margin-bottom: 0;">
+                                <li>Review within 48 hours</li>
+                                <li>If selected, you'll receive access instructions</li>
+                                <li>Lifetime access to the exclusive Root Member community</li>
+                                <li>Direct connection to other founding entrepreneurs</li>
+                            </ul>
+                        </div>
+                        
+                        <p>We're building something special together - a deep, connected community of ambitious founders who believe in collaboration over competition.</p>
+                        
+                        <p>Best,<br>The OuRhizome Team</p>
+                    </div>
+                    <div class="footer">
+                        OuRhizome - Connecting founders with the right people
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            
+            text_content = f"""
+            Hello {first_name},
+
+            Thank you for applying to become one of our One Hundred Root Members. Your application has been received and will be carefully reviewed by our founding team.
+
+            What happens next:
+            - Review within 48 hours
+            - If selected, you'll receive access instructions
+            - Lifetime access to the exclusive Root Member community
+            - Direct connection to other founding entrepreneurs
+
+            We're building something special together - a deep, connected community of ambitious founders who believe in collaboration over competition.
+
+            Best,
+            The OuRhizome Team
+
+            OuRhizome - Connecting founders with the right people
+            """
+            
+            result = self.send_email(to_email, subject, html_content, text_content)
+            return result.get('success', False)
+            
+        except Exception as e:
+            logging.error(f"Failed to send application confirmation email: {e}")
+            return False
 
 # Initialize global email service
 email_service = ResendEmailService()
