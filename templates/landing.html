@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Founder Network AI - Start with a goal. Organize your connections. Take action.</title>
+    
+    <!-- Modern 2025 Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --primary-bg: #FAFAFA;
+            --text-primary: #1A1A1A;
+            --text-secondary: #6B7280;
+            --accent-blue: #3B82F6;
+            --accent-hover: #2563EB;
+            --card-bg: #FFFFFF;
+            --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-glow: 0 0 40px rgba(59, 130, 246, 0.3);
+        }
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .hero-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #FAFAFA 0%, #F3F4F6 100%);
+        }
+        
+        .hero-headline {
+            font-size: 48px;
+            font-weight: 600;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            color: var(--text-primary);
+        }
+        
+        .hero-subhead {
+            font-size: 20px;
+            font-weight: 400;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 40px;
+            max-width: 600px;
+        }
+        
+        .cta-button {
+            background-color: var(--text-primary);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .cta-button:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+        
+        .section-spacing {
+            padding: 60px 0;
+        }
+        
+        .step-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: var(--shadow-soft);
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .step-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        .step-number {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-blue);
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        
+        .step-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        
+        .step-description {
+            font-size: 16px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        
+        .feature-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow-soft);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            height: 100%;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        }
+        
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-hover));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        
+        .feature-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .feature-description {
+            font-size: 16px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        
+        .philosophy-strip {
+            background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+            padding: 80px 0;
+        }
+        
+        .philosophy-quote {
+            font-size: 32px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+        
+        .philosophy-supporting {
+            font-size: 18px;
+            color: var(--text-secondary);
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .network-preview {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: var(--shadow-soft);
+            text-align: center;
+        }
+        
+        .network-visual {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .network-nodes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .node {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--accent-blue);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .node:nth-child(1) { top: 20%; left: 15%; animation-delay: 0s; }
+        .node:nth-child(2) { top: 30%; left: 40%; animation-delay: 0.3s; }
+        .node:nth-child(3) { top: 50%; left: 60%; animation-delay: 0.6s; }
+        .node:nth-child(4) { top: 70%; left: 25%; animation-delay: 0.9s; }
+        .node:nth-child(5) { top: 40%; left: 80%; animation-delay: 1.2s; }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.5); opacity: 1; }
+        }
+        
+        .final-cta {
+            background: linear-gradient(135deg, var(--text-primary) 0%, #374151 100%);
+            color: white;
+            padding: 80px 0;
+        }
+        
+        .final-cta h2 {
+            font-size: 36px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        
+        .final-cta-sub {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .cta-button-light {
+            background: white;
+            color: var(--text-primary);
+            padding: 16px 32px;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .cta-button-light:hover {
+            color: var(--text-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(255, 255, 255, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .hero-headline {
+                font-size: 36px;
+            }
+            
+            .hero-subhead {
+                font-size: 18px;
+            }
+            
+            .philosophy-quote {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="hero-headline">
+                        Start with a goal.<br>
+                        Organize your connections.<br>
+                        Take action.
+                    </h1>
+                    <p class="hero-subhead">
+                        You already know what you're building. Now you need to move faster—through the people you know and the ones you forgot.
+                        This is your relationship system, rebuilt around goals, powered by AI, and designed to help you act.
+                    </p>
+                    <a href="{{ url_for('goals') }}" class="cta-button">
+                        Create Your First Goal
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="col-lg-6">
+                    <div class="network-preview">
+                        <h3 style="margin-bottom: 0; font-weight: 600;">AI-Powered Goal Matching</h3>
+                        <div class="network-visual">
+                            <div class="network-nodes">
+                                <div class="node"></div>
+                                <div class="node"></div>
+                                <div class="node"></div>
+                                <div class="node"></div>
+                                <div class="node"></div>
+                            </div>
+                            <div style="z-index: 10; color: var(--text-secondary);">
+                                <i class="bi bi-robot" style="font-size: 48px; opacity: 0.3;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="section-spacing">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 style="font-size: 36px; font-weight: 600; margin-bottom: 16px;">How It Works</h2>
+                <p style="font-size: 18px; color: var(--text-secondary);">Three steps to turn your network into action</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <h3 class="step-title">Set a goal</h3>
+                        <p class="step-description">
+                            Fundraise, hire, launch, grow. Start with one clear direction.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <h3 class="step-title">Find your people</h3>
+                        <p class="step-description">
+                            AI analyzes your network and suggests exactly who can help you reach that goal.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <h3 class="step-title">Take action</h3>
+                        <p class="step-description">
+                            Get personalized outreach messages and send them directly—no copy-paste needed.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section-spacing" style="background: #F8FAFC;">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 style="font-size: 36px; font-weight: 600; margin-bottom: 16px;">Built for Founders</h2>
+                <p style="font-size: 18px; color: var(--text-secondary);">Everything you need to move faster through your network</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-bullseye text-white" style="font-size: 24px;"></i>
+                        </div>
+                        <h3 class="feature-title">Goal-Based Matching</h3>
+                        <p class="feature-description">
+                            Everything orients around what you're trying to do now. No more endless contact lists—just the right people for your current goal.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-lightbulb text-white" style="font-size: 24px;"></i>
+                        </div>
+                        <h3 class="feature-title">Smart Suggestions</h3>
+                        <p class="feature-description">
+                            The system watches your intent and recommends real people to reach out to—today, not someday.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-envelope text-white" style="font-size: 24px;"></i>
+                        </div>
+                        <h3 class="feature-title">Instant Outreach</h3>
+                        <p class="feature-description">
+                            AI generates personalized messages you can send directly from the platform. No templates, no generic pitches.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-diagram-3 text-white" style="font-size: 24px;"></i>
+                        </div>
+                        <h3 class="feature-title">Network Intelligence</h3>
+                        <p class="feature-description">
+                            Visualize connections, find mutual contacts, and identify the shortest path to your target relationships.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Philosophy Strip -->
+    <section class="philosophy-strip">
+        <div class="container">
+            <div class="philosophy-quote">
+                Your goal isn't contacts. It's outcomes.
+            </div>
+            <p class="philosophy-supporting">
+                Founders shouldn't waste time managing relationships. You should be deepening the right ones, guided by where you're headed.
+            </p>
+        </div>
+    </section>
+
+    <!-- Network Map Preview -->
+    <section class="section-spacing">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 style="font-size: 36px; font-weight: 600; margin-bottom: 16px;">Visualize your network. Move with precision.</h2>
+                <p style="font-size: 18px; color: var(--text-secondary);">See how your people connect. Find bridges, gaps, and clusters.</p>
+            </div>
+            <div class="network-preview">
+                <div class="network-visual">
+                    <div class="network-nodes">
+                        <div class="node"></div>
+                        <div class="node"></div>
+                        <div class="node"></div>
+                        <div class="node"></div>
+                        <div class="node"></div>
+                    </div>
+                    <div style="z-index: 10; color: var(--text-secondary);">
+                        <i class="bi bi-graph-up" style="font-size: 64px; opacity: 0.4;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="final-cta">
+        <div class="container text-center">
+            <h2>Start with your next move. Let the system handle the rest.</h2>
+            <p class="final-cta-sub">Free to try. No sign-up required.</p>
+            <a href="{{ url_for('goals') }}" class="cta-button-light">
+                Create Your First Goal
+                <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

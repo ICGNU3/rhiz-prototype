@@ -1,0 +1,112 @@
+
+🎯 1. Hero Section (Top of Fold)
+Structure:
+
+Full-width layout, centered
+
+Max width container: 1200px, padding: 40px
+
+Content:
+
+Headline (H1):
+Start with a goal. Organize your connections. Take action.
+Font: Inter / Geist / Söhne, weight: 600, size: 48px
+
+Subhead:
+You already know what you’re building. Now you need to move faster—through the people you know and the ones you forgot.
+This is your relationship system, rebuilt around goals, powered by AI, and designed to help you act.
+Font size: 20px, weight: 400
+
+CTA Button:
+Create Your First Goal →
+Rounded corners, large button (width: auto, padding: 16px 32px), dark background, hover glow
+
+Visual Element (right side if split screen):
+Either:
+
+Animated graph of contact suggestions popping up from a goal card
+
+Or a sample AI message generation preview
+
+Recommendation: Use a light background with soft drop shadows, rounded visual cards, slight motion blur for the AI effect.
+
+🧭 2. How It Works (Step Cards)
+Layout:
+
+Horizontal or vertical 3-step card layout
+
+Each card is visually numbered (1–3)
+
+Each Card Contains:
+
+Title: e.g., 1. Set a goal.
+Font: 24px, bold
+
+Description: e.g., Fundraise, hire, launch, grow. Start with one clear direction.
+Font: 16px, normal
+
+Optional micro-illustration icon (e.g., goal target, contacts, AI brain)
+
+🧠 3. Features Section
+Layout:
+
+Grid format (2x2) or vertical stacked features with icon to left
+
+Icons should be clean, not playful
+
+Each Feature Contains:
+
+Feature Title (18–20px, bold)
+
+Description (14–16px)
+
+Examples:
+
+Goal-Based Matching – Everything orients around what you’re trying to do now.
+
+Smart Suggestions – The system watches your intent and recommends real people to reach out to—today, not someday.
+
+Use subtle hover or fade animations for modern polish. Features can expand slightly on hover.
+
+🕸️ 4. Visual Network Map Preview (Optional Hero-Style Section)
+Full-width section
+
+Headline: Visualize your network. Move with precision.
+
+Subtext: See how your people connect. Find bridges, gaps, and clusters.
+
+Live or simulated SVG-style force map visual (interactive optional, animated ideal)
+
+🔐 5. Philosophy Strip (Optional)
+Background: Light gray or contrasting card strip
+Text centered or in left column:
+
+Quote-style bold line:
+Your goal isn’t contacts. It’s outcomes.
+
+Supporting text:
+Founders shouldn’t waste time managing relationships. You should be deepening the right ones, guided by where you're headed.
+
+✅ 6. Final CTA Section
+Reuse top button style
+
+Repeat core headline:
+Start with your next move. Let the system handle the rest.
+
+CTA: Create Your First Goal →
+Add alt text: “Free to try. No sign-up required.”
+
+🎨 Global Style Suggestions
+Font: Inter or Geist UI
+
+Color Palette:
+
+Background: Off-white or #FAFAFA
+
+Primary: Charcoal or rich black
+
+Accent: Electric blue or warm rose for CTA/hover
+
+Spacing: 60px top/bottom per section
+
+Button Style: Soft-glow on hover, 2xl rounded corners

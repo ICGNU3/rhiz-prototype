@@ -43,7 +43,12 @@ DEFAULT_USER_ID = user_model.get_or_create_default()
 # Initialize NLP processor
 contact_nlp = ContactNLP(DEFAULT_USER_ID)
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
+def landing():
+    """Modern 2025 landing page"""
+    return render_template('landing.html')
+
+@app.route('/dashboard', methods=['GET', 'POST'])
 def index():
     """Enhanced single-page UI for goal-based contact matching"""
     if request.method == 'POST':
