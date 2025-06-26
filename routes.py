@@ -21,6 +21,7 @@ from contact_search import ContactSearchEngine
 from gamification import GamificationEngine
 from auth import AuthManager, SubscriptionManager, EmailService as AuthEmailService
 from stripe_integration import StripePaymentManager, PricingHelper
+from collective_actions import CollectiveActionsManager
 import logging
 from datetime import datetime
 from functools import wraps
@@ -65,6 +66,7 @@ automation_engine = AutomationEngine(db)
 ai_matcher = AIContactMatcher(db)
 search_engine = ContactSearchEngine(db)
 gamification = GamificationEngine(db)
+collective_actions_manager = CollectiveActionsManager()
 
 # Initialize authentication and subscription managers
 auth_manager = AuthManager(db)
