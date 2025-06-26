@@ -598,6 +598,346 @@
             transition: transform 0.1s ease;
             transform: translate(-50%, -50%);
         }
+
+        /* AI Matching Demo Styles */
+        .ai-matching-demo {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-matching-demo::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .matching-visualization {
+            position: relative;
+            z-index: 1;
+        }
+
+        .goal-input-demo {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .goal-text {
+            font-size: 16px;
+            color: #e2e8f0;
+            font-style: italic;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .processing-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .ai-brain {
+            color: #3b82f6;
+            font-size: 24px;
+            animation: pulse 2s infinite;
+        }
+
+        .processing-dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        .processing-dots span {
+            width: 8px;
+            height: 8px;
+            background: #3b82f6;
+            border-radius: 50%;
+            animation: processing 1.5s infinite;
+        }
+
+        .processing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .processing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes processing {
+            0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+            40% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .matching-results {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .match-card {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            animation: slideIn 0.6s ease forwards;
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        .match-card.high-match {
+            animation-delay: 0.8s;
+            border-left: 3px solid #10b981;
+        }
+
+        .match-card.medium-match {
+            animation-delay: 1.0s;
+            border-left: 3px solid #f59e0b;
+        }
+
+        .match-card.low-match {
+            animation-delay: 1.2s;
+            border-left: 3px solid #6b7280;
+        }
+
+        .match-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .match-score {
+            font-size: 20px;
+            font-weight: 700;
+            margin-right: 15px;
+            min-width: 50px;
+        }
+
+        .high-match .match-score { color: #10b981; }
+        .medium-match .match-score { color: #f59e0b; }
+        .low-match .match-score { color: #6b7280; }
+
+        .contact-info {
+            flex: 1;
+        }
+
+        .contact-name {
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 4px;
+        }
+
+        .contact-title {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Network Map Demo Styles */
+        .network-map-demo {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .network-map-demo::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(16, 185, 129, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .network-canvas {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 30px;
+        }
+
+        .network-canvas svg {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* SVG Network Styles */
+        .connection {
+            stroke-width: 2;
+            opacity: 0.7;
+            animation: connectionPulse 3s ease-in-out infinite;
+        }
+
+        .connection.strong {
+            stroke: #10b981;
+            stroke-width: 3;
+        }
+
+        .connection.medium {
+            stroke: #3b82f6;
+            stroke-width: 2;
+        }
+
+        .connection.weak {
+            stroke: #6b7280;
+            stroke-width: 1;
+        }
+
+        @keyframes connectionPulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+
+        .node {
+            stroke-width: 2;
+            stroke: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .node.primary {
+            fill: #3b82f6;
+            stroke: #60a5fa;
+            animation: primaryPulse 2s ease-in-out infinite;
+        }
+
+        .node.high-value {
+            fill: #10b981;
+            stroke: #34d399;
+        }
+
+        .node.medium-value {
+            fill: #f59e0b;
+            stroke: #fbbf24;
+        }
+
+        .node.standard {
+            fill: #6b7280;
+            stroke: #9ca3af;
+        }
+
+        .node:hover {
+            transform: scale(1.2);
+            stroke-width: 3;
+        }
+
+        @keyframes primaryPulse {
+            0%, 100% { r: 12; opacity: 1; }
+            50% { r: 14; opacity: 0.8; }
+        }
+
+        .node-label {
+            fill: #e2e8f0;
+            font-size: 12px;
+            font-weight: 500;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+
+        .node-role {
+            fill: #94a3b8;
+            font-size: 10px;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+
+        .info-panel {
+            transition: opacity 0.3s ease;
+        }
+
+        .info-bg {
+            fill: rgba(0, 0, 0, 0.8);
+            stroke: rgba(255, 255, 255, 0.2);
+            stroke-width: 1;
+        }
+
+        .info-title {
+            fill: #e2e8f0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .info-role, .info-connection, .info-relevance {
+            fill: #94a3b8;
+            font-size: 12px;
+        }
+
+        /* Network Insights */
+        .network-insights {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .insight-card {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .insight-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .insight-icon {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-radius: 10px;
+            padding: 12px;
+            margin-right: 15px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .insight-content {
+            flex: 1;
+        }
+
+        .insight-title {
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .insight-text {
+            color: #94a3b8;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
@@ -629,18 +969,42 @@
                     </a>
                 </div>
                 <div class="col-lg-6">
-                    <div class="network-preview">
-                        <h3 style="margin-bottom: 0; font-weight: 600;">AI-Powered Goal Matching</h3>
-                        <div class="network-visual">
-                            <div class="network-nodes">
-                                <div class="node"></div>
-                                <div class="node"></div>
-                                <div class="node"></div>
-                                <div class="node"></div>
-                                <div class="node"></div>
+                    <div class="ai-matching-demo">
+                        <h3 style="margin-bottom: 20px; font-weight: 600; text-align: center;">AI-Powered Goal Matching</h3>
+                        <div class="matching-visualization">
+                            <div class="goal-input-demo">
+                                <div class="goal-text">"Need to hire a senior engineer"</div>
+                                <div class="processing-indicator">
+                                    <div class="ai-brain">
+                                        <i class="bi bi-cpu"></i>
+                                    </div>
+                                    <div class="processing-dots">
+                                        <span></span><span></span><span></span>
+                                    </div>
+                                </div>
                             </div>
-                            <div style="z-index: 10; color: var(--text-secondary);">
-                                <i class="bi bi-robot" style="font-size: 48px; opacity: 0.3;"></i>
+                            <div class="matching-results">
+                                <div class="match-card high-match">
+                                    <div class="match-score">94%</div>
+                                    <div class="contact-info">
+                                        <div class="contact-name">Sarah Chen</div>
+                                        <div class="contact-title">CTO, TechCorp</div>
+                                    </div>
+                                </div>
+                                <div class="match-card medium-match">
+                                    <div class="match-score">87%</div>
+                                    <div class="contact-info">
+                                        <div class="contact-name">Mike Rodriguez</div>
+                                        <div class="contact-title">Engineering Manager</div>
+                                    </div>
+                                </div>
+                                <div class="match-card low-match">
+                                    <div class="match-score">72%</div>
+                                    <div class="contact-info">
+                                        <div class="contact-name">Alex Kim</div>
+                                        <div class="contact-title">Tech Recruiter</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -763,17 +1127,113 @@
                 <h2 style="font-size: 36px; font-weight: 600; margin-bottom: 16px;">Visualize your network. Move with precision.</h2>
                 <p style="font-size: 18px; color: var(--text-secondary);">See how your people connect. Find bridges, gaps, and clusters.</p>
             </div>
-            <div class="network-preview">
-                <div class="network-visual">
-                    <div class="network-nodes">
-                        <div class="node"></div>
-                        <div class="node"></div>
-                        <div class="node"></div>
-                        <div class="node"></div>
-                        <div class="node"></div>
+            <div class="network-map-demo">
+                <div class="network-canvas">
+                    <svg width="100%" height="400" viewBox="0 0 800 400">
+                        <!-- Network connections -->
+                        <g class="connections">
+                            <line class="connection strong" x1="150" y1="120" x2="300" y2="80" />
+                            <line class="connection medium" x1="150" y1="120" x2="200" y2="200" />
+                            <line class="connection weak" x1="300" y1="80" x2="450" y2="100" />
+                            <line class="connection strong" x1="300" y1="80" x2="400" y2="180" />
+                            <line class="connection medium" x1="200" y1="200" x2="350" y2="250" />
+                            <line class="connection strong" x1="450" y1="100" x2="600" y2="120" />
+                            <line class="connection weak" x1="400" y1="180" x2="550" y2="200" />
+                            <line class="connection medium" x1="350" y1="250" x2="500" y2="280" />
+                            <line class="connection strong" x1="600" y1="120" x2="650" y2="220" />
+                            <line class="connection weak" x1="550" y1="200" x2="650" y2="220" />
+                        </g>
+                        
+                        <!-- Network nodes -->
+                        <g class="nodes">
+                            <g class="node-group" data-name="You">
+                                <circle class="node primary" cx="150" cy="120" r="12" />
+                                <text x="150" y="145" class="node-label">You</text>
+                            </g>
+                            <g class="node-group" data-name="Sarah Chen">
+                                <circle class="node high-value" cx="300" cy="80" r="10" />
+                                <text x="300" y="105" class="node-label">Sarah Chen</text>
+                                <text x="300" y="65" class="node-role">CTO</text>
+                            </g>
+                            <g class="node-group" data-name="Mike Rodriguez">
+                                <circle class="node medium-value" cx="200" cy="200" r="8" />
+                                <text x="200" y="225" class="node-label">Mike Rodriguez</text>
+                                <text x="200" y="185" class="node-role">Eng Manager</text>
+                            </g>
+                            <g class="node-group" data-name="Alex Kim">
+                                <circle class="node standard" cx="450" cy="100" r="8" />
+                                <text x="450" y="125" class="node-label">Alex Kim</text>
+                                <text x="450" y="85" class="node-role">Recruiter</text>
+                            </g>
+                            <g class="node-group" data-name="Emma Wilson">
+                                <circle class="node high-value" cx="400" cy="180" r="10" />
+                                <text x="400" y="205" class="node-label">Emma Wilson</text>
+                                <text x="400" y="165" class="node-role">VP Eng</text>
+                            </g>
+                            <g class="node-group" data-name="David Park">
+                                <circle class="node standard" cx="350" cy="250" r="8" />
+                                <text x="350" y="275" class="node-label">David Park</text>
+                                <text x="350" y="235" class="node-role">Designer</text>
+                            </g>
+                            <g class="node-group" data-name="Lisa Zhang">
+                                <circle class="node high-value" cx="600" cy="120" r="10" />
+                                <text x="600" y="145" class="node-label">Lisa Zhang</text>
+                                <text x="600" y="105" class="node-role">Head of Talent</text>
+                            </g>
+                            <g class="node-group" data-name="James Taylor">
+                                <circle class="node medium-value" cx="550" cy="200" r="8" />
+                                <text x="550" y="225" class="node-label">James Taylor</text>
+                                <text x="550" y="185" class="node-role">Tech Lead</text>
+                            </g>
+                            <g class="node-group" data-name="Maria Garcia">
+                                <circle class="node standard" cx="500" cy="280" r="8" />
+                                <text x="500" y="305" class="node-label">Maria Garcia</text>
+                                <text x="500" y="265" class="node-role">PM</text>
+                            </g>
+                            <g class="node-group" data-name="Tom Johnson">
+                                <circle class="node high-value" cx="650" cy="220" r="10" />
+                                <text x="650" y="245" class="node-label">Tom Johnson</text>
+                                <text x="650" y="205" class="node-role">CEO</text>
+                            </g>
+                        </g>
+                        
+                        <!-- Hover info panel -->
+                        <g class="info-panel" style="opacity: 0;">
+                            <rect x="20" y="20" width="200" height="80" rx="8" class="info-bg" />
+                            <text x="30" y="40" class="info-title">Sarah Chen</text>
+                            <text x="30" y="60" class="info-role">CTO at TechCorp</text>
+                            <text x="30" y="80" class="info-connection">Strong connection</text>
+                            <text x="30" y="95" class="info-relevance">94% match for hiring goal</text>
+                        </g>
+                    </svg>
+                </div>
+                <div class="network-insights">
+                    <div class="insight-card">
+                        <div class="insight-icon">
+                            <i class="bi bi-search"></i>
+                        </div>
+                        <div class="insight-content">
+                            <div class="insight-title">Shortest Path</div>
+                            <div class="insight-text">You → Sarah Chen → Lisa Zhang</div>
+                        </div>
                     </div>
-                    <div style="z-index: 10; color: var(--text-secondary);">
-                        <i class="bi bi-graph-up" style="font-size: 64px; opacity: 0.4;"></i>
+                    <div class="insight-card">
+                        <div class="insight-icon">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div class="insight-content">
+                            <div class="insight-title">Key Connector</div>
+                            <div class="insight-text">Sarah Chen (5 mutual connections)</div>
+                        </div>
+                    </div>
+                    <div class="insight-card">
+                        <div class="insight-icon">
+                            <i class="bi bi-target"></i>
+                        </div>
+                        <div class="insight-content">
+                            <div class="insight-title">Best Introduction</div>
+                            <div class="insight-text">Ask Sarah to intro you to Lisa</div>
+                        </div>
                     </div>
                 </div>
             </div>
