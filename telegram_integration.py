@@ -151,7 +151,7 @@ Keep up the great networking! 🚀"""
         except Exception as e:
             await update.message.reply_text(f"Error retrieving stats: {str(e)}")
     
-    async def _contacts_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def _contacts_command(self, update, context):
         """Show recent contacts"""
         try:
             contact_model = Contact(self.db)
@@ -199,7 +199,7 @@ Keep up the great networking! 🚀"""
         except Exception as e:
             await update.message.reply_text(f"Error retrieving contacts: {str(e)}")
     
-    async def _goals_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def _goals_command(self, update, context):
         """Show networking goals"""
         try:
             goal_model = Goal(self.db)
@@ -235,7 +235,7 @@ Keep up the great networking! 🚀"""
         except Exception as e:
             await update.message.reply_text(f"Error retrieving goals: {str(e)}")
     
-    async def _followups_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def _followups_command(self, update, context):
         """Show contacts needing follow-up"""
         try:
             contact_model = Contact(self.db)
@@ -275,7 +275,7 @@ Keep up the great networking! 🚀"""
         except Exception as e:
             await update.message.reply_text(f"Error retrieving follow-ups: {str(e)}")
     
-    async def _digest_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def _digest_command(self, update, context):
         """Send daily networking digest"""
         try:
             digest_message = await self._generate_daily_digest(1)  # Default user ID
@@ -284,7 +284,7 @@ Keep up the great networking! 🚀"""
         except Exception as e:
             await update.message.reply_text(f"Error generating digest: {str(e)}")
     
-    async def _export_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def _export_command(self, update, context):
         """Export contacts to CSV"""
         try:
             from integrations import CRMSync
@@ -308,7 +308,7 @@ Keep up the great networking! 🚀"""
         except Exception as e:
             await update.message.reply_text(f"Export failed: {str(e)}")
     
-    async def _handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def _handle_message(self, update, context):
         """Handle natural language messages"""
         try:
             user_message = update.message.text.lower()
@@ -342,7 +342,7 @@ Keep up the great networking! 🚀"""
             await update.message.reply_text(f"I had trouble understanding that. Try using /help for available commands.")
             logger.error(f"Message handling error: {str(e)}")
     
-    async def _button_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def _button_callback(self, update, context):
         """Handle inline button callbacks"""
         query = update.callback_query
         await query.answer()
@@ -363,7 +363,7 @@ Keep up the great networking! 🚀"""
         except Exception as e:
             await query.edit_message_text(f"Error: {str(e)}")
     
-    async def _show_warm_contacts(self, update: Update):
+    async def _show_warm_contacts(self, update):
         """Show warm/active contacts"""
         try:
             contact_model = Contact(self.db)
@@ -386,7 +386,7 @@ Keep up the great networking! 🚀"""
         except Exception as e:
             await update.message.reply_text(f"Error retrieving warm contacts: {str(e)}")
     
-    async def _show_recent_contacts(self, update: Update):
+    async def _show_recent_contacts(self, update):
         """Show recently added contacts"""
         await self._contacts_command(update, None)
     
