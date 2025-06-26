@@ -1337,15 +1337,74 @@
         </div>
     </section>
 
-    <!-- Final CTA -->
+    <!-- Apply / Join Section -->
     <section class="final-cta">
-        <div class="container text-center">
-            <h2>Start with your next move. Let the system handle the rest.</h2>
-            <p class="final-cta-sub">Free to try. No sign-up required.</p>
-            <a href="{{ url_for('goals') }}" class="cta-button-light">
-                Create Your First Goal
-                <i class="bi bi-arrow-right"></i>
-            </a>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="text-center mb-5">
+                        <h2 style="font-size: 48px; font-weight: 700; margin-bottom: 20px;">Apply for Root Membership</h2>
+                        <p class="final-cta-sub">
+                            Limited to One Hundred Members. Lifetime access. Join the founding community.
+                        </p>
+                    </div>
+                    
+                    <div class="glass-card" style="padding: 60px;">
+                        <form id="rootMembershipForm" action="{{ url_for('signup') }}" method="POST">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <label for="firstName" class="form-label" style="color: var(--text-primary); font-weight: 500;">First Name</label>
+                                    <input type="text" class="form-control" id="firstName" name="firstName" required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="lastName" class="form-label" style="color: var(--text-primary); font-weight: 500;">Last Name</label>
+                                    <input type="text" class="form-control" id="lastName" name="lastName" required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);">
+                                </div>
+                                <div class="col-12">
+                                    <label for="email" class="form-label" style="color: var(--text-primary); font-weight: 500;">Email Address</label>
+                                    <input type="email" class="form-control" id="email" name="email" required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);">
+                                </div>
+                                <div class="col-12">
+                                    <label for="company" class="form-label" style="color: var(--text-primary); font-weight: 500;">Company / Startup</label>
+                                    <input type="text" class="form-control" id="company" name="company" required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);">
+                                </div>
+                                <div class="col-12">
+                                    <label for="stage" class="form-label" style="color: var(--text-primary); font-weight: 500;">What stage are you at?</label>
+                                    <select class="form-select" id="stage" name="stage" required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);">
+                                        <option value="">Select stage</option>
+                                        <option value="idea">Idea stage</option>
+                                        <option value="mvp">Building MVP</option>
+                                        <option value="launch">Recently launched</option>
+                                        <option value="growth">Growing/scaling</option>
+                                        <option value="fundraising">Currently fundraising</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label for="goals" class="form-label" style="color: var(--text-primary); font-weight: 500;">What are your current networking goals?</label>
+                                    <textarea class="form-control" id="goals" name="goals" rows="4" required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);" placeholder="e.g., raising Series A, hiring senior engineers, finding co-founder, building advisor network..."></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="agreeTerms" name="agreeTerms" required style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+                                        <label class="form-check-label" for="agreeTerms" style="color: var(--text-secondary);">
+                                            I understand this is a limited membership program and agree to the community guidelines.
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-12 text-center">
+                                    <button type="submit" class="cta-button-light" style="width: 100%; max-width: 400px;">
+                                        Submit Application
+                                        <i class="bi bi-arrow-right"></i>
+                                    </button>
+                                    <p style="margin-top: 20px; font-size: 14px; color: var(--text-secondary);">
+                                        Applications are reviewed within 48 hours. You'll receive next steps via email.
+                                    </p>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
