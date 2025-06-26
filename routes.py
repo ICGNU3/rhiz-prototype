@@ -9,6 +9,7 @@ from contact_intelligence import ContactNLP
 from csv_import import CSVContactImporter
 from linkedin_importer import LinkedInContactImporter
 from simple_email import SimpleEmailSender
+from enhanced_email_integration import EnhancedEmailIntegration
 from analytics import NetworkingAnalytics
 from network_visualization import NetworkMapper
 from integrations import AutomationEngine
@@ -57,6 +58,7 @@ contact_intelligence = ContactIntelligence(db)
 openai_utils = OpenAIUtils()
 email_sender = SimpleEmailSender(db)
 email_service = EmailService(db)
+enhanced_email = EnhancedEmailIntegration(db)
 analytics = NetworkingAnalytics(db)
 network_mapper = NetworkMapper(db)
 automation_engine = AutomationEngine(db)
@@ -887,6 +889,107 @@ def send_email():
         flash('Error sending email. Please check your email configuration.', 'error')
     
     return redirect(request.referrer or url_for('index'))
+
+@app.route('/send_ai_message', methods=['POST'])
+def send_ai_message():
+    """Send AI-generated message directly from suggestions"""
+    user_id = get_effective_user_id()
+    
+    # Get form data
+    contact_id = request.form.get('contact_id')
+    ai_message = request.form.get('ai_message', '').strip()
+    subject = request.form.get('subject', '').strip()
+    goal_id = request.form.get('goal_id')
+    confidence_score = request.form.get('confidence_score', '0')
+    
+    if not all([contact_id, ai_message, subject]):
+        return jsonify({
+            'success': False,
+            'error': 'Missing required fields'
+        }), 400
+    
+    # Get contact and goal details
+    contact = contact_model.get_by_id(contact_id)
+    goal_data = goal_model.get_by_id(goal_id) if goal_id else None
+    
+    if not contact:
+        return jsonify({
+            'success': False,
+            'error': 'Contact not found'
+        }), 404
+    
+    if not contact.get('email'):
+        return jsonify({
+            'success': False,
+            'error': 'Contact has no email address'
+        }), 400
+    
+    try:
+        # Send email using enhanced integration
+        result = enhanced_email.send_ai_generated_message(
+            contact_data=contact,
+            message_data={
+                'subject': subject,
+                'message': ai_message
+            },
+            user_id=user_id,
+            goal_data=goal_data
+        )
+        
+        if result['success']:
+            # Award XP for AI-assisted outreach
+            try:
+                gamification_engine = GamificationEngine(db)
+                xp_bonus = int(float(confidence_score) * 10) if confidence_score else 10
+                gamification_engine.award_xp(user_id, 20 + xp_bonus, {
+                    'action': 'ai_outreach',
+                    'contact_name': contact['name'],
+                    'confidence_score': confidence_score,
+                    'goal_title': goal_data.get('title') if goal_data else 'networking'
+                })
+            except Exception as e:
+                logging.warning(f"XP award failed: {e}")
+            
+            return jsonify({
+                'success': True,
+                'message': f'Email sent successfully to {contact["name"]}',
+                'interaction_id': result.get('interaction_id'),
+                'xp_earned': 20 + (int(float(confidence_score) * 10) if confidence_score else 10)
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result['error']
+            }), 500
+            
+    except Exception as e:
+        logging.error(f"AI message send error: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Failed to send AI message'
+        }), 500
+
+@app.route('/email_setup')
+def email_setup():
+    """Email configuration setup page"""
+    config_status = enhanced_email.get_configuration_status()
+    templates = enhanced_email.get_email_templates()
+    
+    return render_template('email_setup.html', 
+                         config_status=config_status,
+                         templates=templates)
+
+@app.route('/test_email_connection', methods=['POST'])
+def test_email_connection():
+    """Test email configuration and connection"""
+    try:
+        result = enhanced_email.test_connection()
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Connection test failed: {str(e)}'
+        }), 500
 
 @app.route('/compose_email/<contact_id>')
 def compose_email(contact_id):
