@@ -594,26 +594,7 @@ def analytics_api(metric_type):
         logging.error(f"Analytics API error: {e}")
         return jsonify({'error': 'Failed to fetch analytics data'}), 500
 
-@app.route('/network')
-def network_visualization():
-    """Network visualization and relationship mapping interface"""
-    try:
-        # Get network data
-        network_graph = network_mapper.build_network_graph(DEFAULT_USER_ID)
-        network_metrics = network_mapper.get_network_metrics(DEFAULT_USER_ID)
-        clusters = network_mapper.get_network_clusters(DEFAULT_USER_ID)
-        intro_suggestions = network_mapper.suggest_introductions(DEFAULT_USER_ID, limit=5)
-        
-        return render_template('network_visualization.html',
-                             network_graph=network_graph,
-                             metrics=network_metrics,
-                             clusters=clusters,
-                             intro_suggestions=intro_suggestions)
-    
-    except Exception as e:
-        logging.error(f"Network visualization error: {e}")
-        flash('Error loading network visualization', 'error')
-        return redirect(url_for('index'))
+# Network route moved to enhanced version below
 
 @app.route('/network/api/graph')
 def network_graph_api():
