@@ -1207,6 +1207,195 @@ def get_rhizomatic_history():
             "status": "error"
         }), 500
 
+# Conference Mode Routes
+@app.route('/conference')
+def conference_mode():
+    """Conference Mode dashboard"""
+    from conference_mode import ConferenceMode
+    conference_manager = ConferenceMode(db)
+    
+    # Get active conference
+    active_conference = conference_manager.get_active_conference(DEFAULT_USER_ID)
+    
+    # Get daily follow-up summary
+    daily_summary = conference_manager.get_daily_follow_up_summary(DEFAULT_USER_ID)
+    
+    return render_template('conference_mode.html', 
+                         active_conference=active_conference,
+                         daily_summary=daily_summary)
+
+@app.route('/conference/activate', methods=['POST'])
+def activate_conference():
+    """Activate conference mode"""
+    from conference_mode import ConferenceMode
+    conference_manager = ConferenceMode(db)
+    
+    try:
+        conference_name = request.form.get('conference_name')
+        location = request.form.get('location', '')
+        start_date = request.form.get('start_date', '')
+        end_date = request.form.get('end_date', '')
+        
+        if not conference_name:
+            flash('Conference name is required', 'error')
+            return redirect(url_for('conference_mode'))
+        
+        conference_id = conference_manager.activate_conference_mode(
+            DEFAULT_USER_ID, conference_name, location, start_date, end_date
+        )
+        
+        flash(f'Conference mode activated for {conference_name}', 'success')
+        return redirect(url_for('conference_mode'))
+        
+    except Exception as e:
+        logging.error(f"Error activating conference mode: {e}")
+        flash('Error activating conference mode', 'error')
+        return redirect(url_for('conference_mode'))
+
+@app.route('/conference/deactivate', methods=['POST'])
+def deactivate_conference():
+    """Deactivate conference mode"""
+    from conference_mode import ConferenceMode
+    conference_manager = ConferenceMode(db)
+    
+    try:
+        conference_manager.deactivate_conference_mode(DEFAULT_USER_ID)
+        flash('Conference mode deactivated', 'success')
+        
+    except Exception as e:
+        logging.error(f"Error deactivating conference mode: {e}")
+        flash('Error deactivating conference mode', 'error')
+    
+    return redirect(url_for('conference_mode'))
+
+@app.route('/conference/capture', methods=['POST'])
+def capture_conference_contact():
+    """Capture a new contact during conference mode"""
+    from conference_mode import ConferenceMode
+    conference_manager = ConferenceMode(db)
+    
+    try:
+        # Get active conference
+        active_conference = conference_manager.get_active_conference(DEFAULT_USER_ID)
+        if not active_conference:
+            flash('No active conference. Please activate conference mode first.', 'error')
+            return redirect(url_for('conference_mode'))
+        
+        # Extract form data
+        name = request.form.get('name')
+        company = request.form.get('company', '')
+        title = request.form.get('title', '')
+        email = request.form.get('email', '')
+        linkedin = request.form.get('linkedin', '')
+        twitter = request.form.get('twitter', '')
+        conversation_notes = request.form.get('conversation_notes', '')
+        voice_memo = request.form.get('voice_memo', '')
+        
+        if not name:
+            flash('Contact name is required', 'error')
+            return redirect(url_for('conference_mode'))
+        
+        # Process voice memo if provided
+        voice_data = {}
+        if voice_memo:
+            voice_data = conference_manager.process_voice_memo(voice_memo)
+            # Auto-fill missing fields from voice memo
+            if not company and voice_data.get('company'):
+                company = voice_data['company']
+            if not title and voice_data.get('title'):
+                title = voice_data['title']
+            if not conversation_notes and voice_data.get('conversation_summary'):
+                conversation_notes = voice_data['conversation_summary']
+        
+        # Capture the contact
+        contact_id = conference_manager.capture_conference_contact(
+            user_id=DEFAULT_USER_ID,
+            conference_id=active_conference['id'],
+            name=name,
+            company=company,
+            title=title,
+            email=email,
+            linkedin=linkedin,
+            twitter=twitter,
+            conversation_notes=conversation_notes,
+            voice_memo=voice_memo
+        )
+        
+        flash(f'Contact {name} captured successfully', 'success')
+        return redirect(url_for('conference_mode'))
+        
+    except Exception as e:
+        logging.error(f"Error capturing conference contact: {e}")
+        flash('Error capturing contact', 'error')
+        return redirect(url_for('conference_mode'))
+
+@app.route('/conference/generate-followups', methods=['POST'])
+def generate_conference_followups():
+    """Generate AI follow-up suggestions for conference contacts"""
+    from conference_mode import ConferenceMode
+    conference_manager = ConferenceMode(db)
+    
+    try:
+        # Get active conference
+        active_conference = conference_manager.get_active_conference(DEFAULT_USER_ID)
+        if not active_conference:
+            flash('No active conference found', 'error')
+            return redirect(url_for('conference_mode'))
+        
+        # Generate follow-ups
+        suggestions = conference_manager.generate_conference_follow_ups(
+            DEFAULT_USER_ID, active_conference['id']
+        )
+        
+        if suggestions:
+            flash(f'Generated {len(suggestions)} follow-up suggestions', 'success')
+        else:
+            flash('No follow-up suggestions generated. Add some contacts first.', 'info')
+        
+        return redirect(url_for('conference_mode'))
+        
+    except Exception as e:
+        logging.error(f"Error generating follow-ups: {e}")
+        flash('Error generating follow-up suggestions', 'error')
+        return redirect(url_for('conference_mode'))
+
+@app.route('/conference/followup/complete', methods=['POST'])
+def complete_followup():
+    """Mark a follow-up as completed"""
+    from conference_mode import ConferenceMode
+    conference_manager = ConferenceMode(db)
+    
+    try:
+        contact_name = request.form.get('contact_name')
+        conference_id = request.form.get('conference_id')
+        
+        if contact_name and conference_id:
+            conference_manager.mark_follow_up_complete(DEFAULT_USER_ID, contact_name, conference_id)
+            flash(f'Follow-up with {contact_name} marked as complete', 'success')
+        else:
+            flash('Missing required information', 'error')
+        
+        return redirect(url_for('conference_mode'))
+        
+    except Exception as e:
+        logging.error(f"Error completing follow-up: {e}")
+        flash('Error updating follow-up status', 'error')
+        return redirect(url_for('conference_mode'))
+
+@app.route('/conference/api/contacts/<conference_id>')
+def get_conference_contacts_api(conference_id):
+    """API endpoint to get conference contacts"""
+    from conference_mode import ConferenceMode
+    conference_manager = ConferenceMode(db)
+    
+    try:
+        contacts = conference_manager.get_conference_contacts(conference_id)
+        return jsonify(contacts)
+        
+    except Exception as e:
+        logging.error(f"Error fetching conference contacts: {e}")
+        return jsonify({'error': 'Failed to fetch contacts'}), 500
+
 # Network Visualization and Relationship Mapping Routes
 
 @app.route('/network')

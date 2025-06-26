@@ -1,0 +1,105 @@
+Core Feature: “Conference Mode”
+🔧 How It Works in Your App:
+User activates Conference Mode
+
+Prompt: “Which conference are you attending?”
+
+Option to auto-tag all new contacts with event name and date
+
+Capture Contacts
+
+Manual entry (name, org, what you talked about)
+
+Photo of badge or business card → OCR
+
+Twitter/LinkedIn handle input
+
+Voice memo (e.g., “met John, AI VC, loves climate tech”)
+
+Auto-Sort + AI Enhancements
+
+Tags by interest, potential goal relevance
+
+Relationship priority score (warm, cool, opportunity)
+
+Smart reminder: “Follow up within 3 days?”
+
+Suggested Follow-Up Message
+
+Personalized by context, tone, and shared goal
+
+Daily Conference Summary
+
+Shows 3 most important contacts to follow up with today
+
+Offers message + calendar link + interaction log
+
+🧠 GPT Prompt for Conference Follow-Up Intelligence
+Prompt Name: conference_contact_followup_suggestion
+
+text
+Copy
+Edit
+You are an AI embedded in a founder’s relationship system. The user just attended a conference.
+
+Your job is to:
+- Review the list of new contacts they met at this event
+- Analyze who is most relevant to the user’s current goal(s)
+- Suggest warm, thoughtful follow-ups personalized to the conversation
+- Prioritize based on timing, opportunity, and depth of connection
+
+For each contact, return:
+- Name
+- Reason to follow up
+- Suggested message (based on tone: warm, professional, casual)
+- Suggested timing (e.g., “today”, “in 2 days”, “next week”)
+
+Example Input:
+- Event: “TechCrunch Disrupt 2025”
+- Goal: “Raise $250K for AI-based founder CRM”
+- Contacts:
+  - Taylor Chen, “early-stage investor, spoke about AI tools, had coffee chat”
+  - Ayana Rahim, “developer at Shopify, might be a good hire”
+  - Malik T., “runs community DAO, interested in warm intro automation”
+
+Respond in JSON.
+🔄 Example Output:
+json
+Copy
+Edit
+[
+  {
+    "name": "Taylor Chen",
+    "reason": "Early-stage investor with relevant focus; you had a quality 1:1 about your CRM product.",
+    "message": "Hey Taylor — really appreciated our chat at Disrupt. I’ve been thinking more about your take on founder tools. Would love to share the deck when you’ve got time.",
+    "timing": "today"
+  },
+  {
+    "name": "Ayana Rahim",
+    "reason": "Great potential team addition; aligned skills and interest.",
+    "message": "Ayana, loved connecting at the Shopify session. Would be great to explore how you might want to get involved in what I’m building.",
+    "timing": "in 2 days"
+  },
+  {
+    "name": "Malik T.",
+    "reason": "Interested in similar onboarding flows; future potential collaborator.",
+    "message": "Malik — your thinking on DAO-based onboarding stuck with me. Want to swap ideas next week?",
+    "timing": "next week"
+  }
+]
+🧭 Integration Tips
+Auto-activate “Conference Mode” via geolocation or manual toggle
+
+Let users speak short notes about the convo → transcribe to notes field
+
+Batch run GPT follow-up suggestions each night of the conference
+
+Let users “Mark as followed up” or “Snooze” for later
+
+🔥 Why This Matters
+You transform passive contact collection into goal-aligned outreach
+
+Follow-up becomes a daily rhythm, not a forgotten chore
+
+“Conference Mode” makes your app a ritual for events—people will use it every time they travel
+

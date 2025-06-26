@@ -141,3 +141,57 @@ CREATE INDEX IF NOT EXISTS idx_contact_relationships_user_id ON contact_relation
 CREATE INDEX IF NOT EXISTS idx_pipeline_history_contact_id ON contact_pipeline_history (contact_id);
 CREATE INDEX IF NOT EXISTS idx_outreach_suggestions_user_id ON outreach_suggestions (user_id);
 CREATE INDEX IF NOT EXISTS idx_outreach_suggestions_priority ON outreach_suggestions (priority_score DESC);
+
+-- Conference Mode Tables
+CREATE TABLE IF NOT EXISTS conferences (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    location TEXT,
+    start_date TEXT,
+    end_date TEXT,
+    is_active BOOLEAN DEFAULT FALSE,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+CREATE TABLE IF NOT EXISTS conference_contacts (
+    id TEXT PRIMARY KEY,
+    conference_id TEXT NOT NULL,
+    contact_id TEXT NOT NULL,
+    conversation_notes TEXT,
+    voice_memo TEXT,
+    badge_photo_text TEXT,
+    captured_at TEXT NOT NULL,
+    FOREIGN KEY (conference_id) REFERENCES conferences (id),
+    FOREIGN KEY (contact_id) REFERENCES contacts (id)
+);
+
+CREATE TABLE IF NOT EXISTS conference_ai_analysis (
+    id TEXT PRIMARY KEY,
+    contact_id TEXT NOT NULL,
+    analysis_data TEXT, -- JSON object with AI insights
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (contact_id) REFERENCES contacts (id)
+);
+
+CREATE TABLE IF NOT EXISTS conference_follow_ups (
+    id TEXT PRIMARY KEY,
+    conference_id TEXT NOT NULL,
+    contact_name TEXT NOT NULL,
+    reason TEXT,
+    message TEXT,
+    timing TEXT,
+    completed BOOLEAN DEFAULT FALSE,
+    completed_at TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (conference_id) REFERENCES conferences (id)
+);
+
+-- Conference Mode Indexes
+CREATE INDEX IF NOT EXISTS idx_conferences_user ON conferences(user_id);
+CREATE INDEX IF NOT EXISTS idx_conferences_active ON conferences(user_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_conference_contacts_conference ON conference_contacts(conference_id);
+CREATE INDEX IF NOT EXISTS idx_conference_contacts_contact ON conference_contacts(contact_id);
+CREATE INDEX IF NOT EXISTS idx_conference_follow_ups_conference ON conference_follow_ups(conference_id);
+CREATE INDEX IF NOT EXISTS idx_conference_follow_ups_timing ON conference_follow_ups(timing, completed);
