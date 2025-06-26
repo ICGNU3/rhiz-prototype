@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, session
 from app import app
 import uuid
 from models import Database, User, Contact, Goal, AISuggestion, ContactInteraction, ContactIntelligence, OutreachSuggestion
@@ -1131,7 +1131,7 @@ def ai_intelligence_dashboard():
         network_gaps = ai_matcher.analyze_network_gaps(user_id)
         
         # Get top contacts for analysis
-        contacts = contact_model.get_all_contacts(user_id)[:10]
+        contacts = contact_model.get_all(user_id)[:10]
         contact_insights = []
         
         for contact in contacts:

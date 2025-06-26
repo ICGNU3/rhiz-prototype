@@ -1,0 +1,481 @@
+{% extends "base.html" %}
+
+{% block title %}AI Contact Intelligence{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-brain"></i> AI Contact Intelligence</h2>
+                <div class="btn-group" role="group">
+                    <a href="{{ url_for('crm_dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to CRM
+                    </a>
+                    <button class="btn btn-primary" onclick="refreshAIInsights()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key AI Insights Row -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-gradient-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Introduction Opportunities</h6>
+                            <h3 class="mb-0">{{ introduction_opportunities|length }}</h3>
+                            <small>High-potential matches</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-people" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-gradient-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Network Gaps</h6>
+                            <h3 class="mb-0">{{ network_gaps.recommendations|length if network_gaps.recommendations else 0 }}</h3>
+                            <small>Expansion areas identified</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-graph-up" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-gradient-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Contact Insights</h6>
+                            <h3 class="mb-0">{{ contact_insights|length }}</h3>
+                            <small>Analyzed contacts</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="bi bi-lightbulb" style="font-size: 2rem; opacity: 0.7;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Introduction Opportunities -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-arrow-through-heart"></i> Smart Introductions</h5>
+                    <small class="text-muted">AI-powered connection opportunities</small>
+                </div>
+                <div class="card-body">
+                    {% if introduction_opportunities %}
+                        {% for opportunity in introduction_opportunities %}
+                        <div class="border rounded p-3 mb-3">
+                            <div class="row">
+                                <div class="col-5">
+                                    <h6 class="mb-1">{{ opportunity.contact1.name }}</h6>
+                                    <small class="text-muted">{{ opportunity.contact1.company or 'No company' }}</small><br>
+                                    <small class="badge bg-secondary">{{ opportunity.contact1.relationship_type or 'Contact' }}</small>
+                                </div>
+                                <div class="col-2 text-center align-self-center">
+                                    <i class="bi bi-arrow-left-right text-primary" style="font-size: 1.5rem;"></i>
+                                    <div class="small text-muted">
+                                        <strong>{{ "%.0f"|format(opportunity.score * 100) }}%</strong> match
+                                    </div>
+                                </div>
+                                <div class="col-5">
+                                    <h6 class="mb-1">{{ opportunity.contact2.name }}</h6>
+                                    <small class="text-muted">{{ opportunity.contact2.company or 'No company' }}</small><br>
+                                    <small class="badge bg-secondary">{{ opportunity.contact2.relationship_type or 'Contact' }}</small>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <p class="small mb-2"><strong>Why this makes sense:</strong></p>
+                                <ul class="small mb-2">
+                                    {% for reason in opportunity.reasons %}
+                                    <li>{{ reason }}</li>
+                                    {% endfor %}
+                                </ul>
+                                <button class="btn btn-sm btn-outline-primary" onclick="generateIntroMessage({{ opportunity.contact1.id }}, {{ opportunity.contact2.id }})">
+                                    <i class="bi bi-envelope"></i> Generate Intro
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-search" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <p class="mt-2">No introduction opportunities found yet.</p>
+                            <small>Add more contacts to discover connection possibilities.</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Analysis -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Network Insights</h5>
+                    <small class="text-muted">AI analysis of your network structure</small>
+                </div>
+                <div class="card-body">
+                    {% if network_gaps %}
+                        <!-- Network Coverage Analysis -->
+                        <div class="mb-4">
+                            <h6>Industry Coverage</h6>
+                            {% if network_gaps.industry_analysis %}
+                                <div class="row">
+                                    {% for industry, count in network_gaps.industry_analysis.items()[:3] %}
+                                    <div class="col-4">
+                                        <div class="text-center p-2 border rounded">
+                                            <div class="h5 mb-1 text-primary">{{ count }}</div>
+                                            <small class="text-muted">{{ industry or 'Other' }}</small>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Gap Analysis -->
+                        <div class="mb-4">
+                            <h6>Expansion Recommendations</h6>
+                            {% if network_gaps.recommendations %}
+                                <ul class="list-unstyled">
+                                    {% for rec in network_gaps.recommendations[:3] %}
+                                    <li class="mb-2">
+                                        <i class="bi bi-lightbulb text-warning me-2"></i>
+                                        <small>{{ rec }}</small>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+
+                        <!-- Action Items -->
+                        <div>
+                            <h6>Suggested Actions</h6>
+                            {% if network_gaps.action_items %}
+                                {% for action in network_gaps.action_items[:3] %}
+                                <div class="d-flex align-items-center mb-2">
+                                    <input type="checkbox" class="form-check-input me-2" id="action{{ loop.index }}">
+                                    <label class="form-check-label small" for="action{{ loop.index }}">
+                                        {{ action.action }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-graph-up" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <p class="mt-2">Network analysis will appear here.</p>
+                            <small>Add contacts to get AI-powered insights.</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Intelligence Grid -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-person-check"></i> Contact Intelligence</h5>
+                    <small class="text-muted">AI analysis of your key contacts</small>
+                </div>
+                <div class="card-body">
+                    {% if contact_insights %}
+                        <div class="row">
+                            {% for insight in contact_insights %}
+                            <div class="col-lg-6 col-xl-4 mb-4">
+                                <div class="card border">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <div>
+                                                <h6 class="mb-1">{{ insight.contact.name }}</h6>
+                                                <small class="text-muted">{{ insight.contact.company or 'No company' }}</small>
+                                            </div>
+                                            <span class="badge bg-{{ 'success' if insight.responsiveness.score >= 0.7 else 'warning' if insight.responsiveness.score >= 0.4 else 'secondary' }}">
+                                                {{ "%.0f"|format(insight.responsiveness.score * 100) }}% responsive
+                                            </span>
+                                        </div>
+
+                                        <!-- Responsiveness Prediction -->
+                                        <div class="mb-3">
+                                            <small class="text-muted d-block">Response Likelihood</small>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-{{ 'success' if insight.responsiveness.score >= 0.7 else 'warning' if insight.responsiveness.score >= 0.4 else 'secondary' }}" 
+                                                     style="width: {{ insight.responsiveness.score * 100 }}%"></div>
+                                            </div>
+                                            <small class="text-muted">{{ insight.responsiveness.best_approach or 'Standard approach' }}</small>
+                                        </div>
+
+                                        <!-- Similar Contacts -->
+                                        {% if insight.similar_contacts %}
+                                        <div class="mb-3">
+                                            <small class="text-muted d-block">Similar to:</small>
+                                            {% for similar in insight.similar_contacts[:2] %}
+                                            <span class="badge bg-light text-dark me-1">{{ similar.contact.name }}</span>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+
+                                        <!-- Quick Actions -->
+                                        <div class="btn-group w-100" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" onclick="generateOutreach({{ insight.contact.id }})">
+                                                <i class="bi bi-chat-dots"></i> Outreach
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary" onclick="viewSimilar({{ insight.contact.id }})">
+                                                <i class="bi bi-people"></i> Similar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-person-gear" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <p class="mt-2">Contact intelligence will appear here.</p>
+                            <small>AI analysis requires contact interaction history.</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Message Modal -->
+<div class="modal fade" id="aiMessageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">AI-Generated Message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="aiMessageContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Generating...</span>
+                        </div>
+                        <p class="mt-2">AI is crafting your message...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="copyAIMessage" style="display: none;">
+                    <i class="bi bi-clipboard"></i> Copy Message
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function refreshAIInsights() {
+    location.reload();
+}
+
+function generateIntroMessage(contact1Id, contact2Id) {
+    const modal = new bootstrap.Modal(document.getElementById('aiMessageModal'));
+    modal.show();
+    
+    // Reset modal content
+    document.getElementById('aiMessageContent').innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Generating...</span>
+            </div>
+            <p class="mt-2">AI is crafting your introduction message...</p>
+        </div>
+    `;
+    document.getElementById('copyAIMessage').style.display = 'none';
+    
+    // Generate introduction message via AI
+    fetch(`/ai/introductions`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Find the specific opportunity
+                const opportunity = data.opportunities.find(opp => 
+                    (opp.contact1.id === contact1Id && opp.contact2.id === contact2Id) ||
+                    (opp.contact1.id === contact2Id && opp.contact2.id === contact1Id)
+                );
+                
+                if (opportunity && opportunity.introduction_message) {
+                    document.getElementById('aiMessageContent').innerHTML = `
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Introduction: ${opportunity.contact1.name} ↔ ${opportunity.contact2.name}</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Subject</label>
+                                    <input type="text" class="form-control" id="introSubject" value="Introduction: ${opportunity.contact1.name} and ${opportunity.contact2.name}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Message</label>
+                                    <textarea class="form-control" id="introMessage" rows="8">${opportunity.introduction_message}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('copyAIMessage').style.display = 'block';
+                } else {
+                    document.getElementById('aiMessageContent').innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Unable to generate introduction message. Please try again.
+                        </div>
+                    `;
+                }
+            }
+        })
+        .catch(error => {
+            document.getElementById('aiMessageContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-circle"></i>
+                    Error generating introduction: ${error.message}
+                </div>
+            `;
+        });
+}
+
+function generateOutreach(contactId) {
+    const modal = new bootstrap.Modal(document.getElementById('aiMessageModal'));
+    modal.show();
+    
+    // Reset modal content
+    document.getElementById('aiMessageContent').innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Generating...</span>
+            </div>
+            <p class="mt-2">AI is creating personalized outreach...</p>
+        </div>
+    `;
+    document.getElementById('copyAIMessage').style.display = 'none';
+    
+    fetch(`/ai/outreach/${contactId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.outreach_data.messages) {
+                const messages = data.outreach_data.messages;
+                const bestMessage = messages.email || messages.linkedin || messages.warm;
+                
+                if (bestMessage) {
+                    document.getElementById('aiMessageContent').innerHTML = `
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Personalized Outreach</h6>
+                                <small class="text-muted">Success probability: ${Math.round(data.outreach_data.success_probability * 100)}%</small>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Subject</label>
+                                    <input type="text" class="form-control" id="outreachSubject" value="${bestMessage.subject || 'Follow up'}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Message</label>
+                                    <textarea class="form-control" id="outreachMessage" rows="6">${bestMessage.body}</textarea>
+                                </div>
+                                ${data.outreach_data.timing ? `
+                                <div class="alert alert-info">
+                                    <small><strong>Best timing:</strong> ${data.outreach_data.timing.suggestion}</small>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('copyAIMessage').style.display = 'block';
+                }
+            } else {
+                document.getElementById('aiMessageContent').innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Unable to generate outreach message. Please try again.
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            document.getElementById('aiMessageContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-circle"></i>
+                    Error generating outreach: ${error.message}
+                </div>
+            `;
+        });
+}
+
+function viewSimilar(contactId) {
+    fetch(`/ai/contact/${contactId}/similar`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const modal = new bootstrap.Modal(document.getElementById('aiMessageModal'));
+                modal.show();
+                
+                document.getElementById('aiMessageContent').innerHTML = `
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Similar Contacts</h6>
+                        </div>
+                        <div class="card-body">
+                            ${data.similar_contacts.map(contact => `
+                                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                    <div>
+                                        <h6 class="mb-0">${contact.contact.name}</h6>
+                                        <small class="text-muted">${contact.contact.company || 'No company'}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="badge bg-primary">${Math.round(contact.similarity * 100)}% similar</small>
+                                        <br><small class="text-muted">${contact.reasons.join(', ')}</small>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        });
+}
+
+document.getElementById('copyAIMessage').addEventListener('click', function() {
+    const subject = document.getElementById('introSubject') || document.getElementById('outreachSubject');
+    const message = document.getElementById('introMessage') || document.getElementById('outreachMessage');
+    
+    if (subject && message) {
+        const fullMessage = `Subject: ${subject.value}\n\n${message.value}`;
+        navigator.clipboard.writeText(fullMessage).then(() => {
+            this.innerHTML = '<i class="bi bi-check"></i> Copied!';
+            setTimeout(() => {
+                this.innerHTML = '<i class="bi bi-clipboard"></i> Copy Message';
+            }, 2000);
+        });
+    }
+});
+</script>
+{% endblock %}

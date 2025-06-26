@@ -201,9 +201,13 @@ class AIContactMatcher:
         WHERE c.id = ?
         GROUP BY c.id
         """
-        cursor = self.db.execute(sql, [contact_id])
-        row = cursor.fetchone()
-        return dict(row) if row else None
+        conn = self.db.get_connection()
+        try:
+            cursor = conn.execute(sql, [contact_id])
+            row = cursor.fetchone()
+            return dict(row) if row else None
+        finally:
+            conn.close()
     
     def _get_contact_embedding(self, contact: Dict[str, Any]) -> List[float]:
         """Get or generate embedding for contact"""
