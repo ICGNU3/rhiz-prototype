@@ -253,6 +253,101 @@ CREATE TABLE IF NOT EXISTS subscription_history (
   FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
+-- Monica-Inspired CRM Features
+
+-- 1. Automatic Reminders & Notifications
+CREATE TABLE IF NOT EXISTS reminders (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  contact_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  reminder_type TEXT NOT NULL, -- birthday, anniversary, follow_up, custom
+  due_date TIMESTAMP NOT NULL,
+  is_recurring BOOLEAN DEFAULT FALSE,
+  recurrence_pattern TEXT, -- weekly, monthly, yearly
+  is_completed BOOLEAN DEFAULT FALSE,
+  notification_sent BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  completed_at TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users (id),
+  FOREIGN KEY (contact_id) REFERENCES contacts (id)
+);
+
+-- 2. Relationship Labels + History Tracking (enhancing existing interaction_logs)
+-- Adding birthday and anniversary fields to contacts
+ALTER TABLE contacts ADD COLUMN birthday TEXT;
+ALTER TABLE contacts ADD COLUMN anniversary TEXT;
+ALTER TABLE contacts ADD COLUMN relationship_labels TEXT; -- JSON array of labels like ["investor", "advisor", "collaborator"]
+
+-- 3. Private Journal Entries
+CREATE TABLE IF NOT EXISTS journal_entries (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  contact_id TEXT NOT NULL,
+  title TEXT,
+  content TEXT NOT NULL,
+  entry_type TEXT DEFAULT 'note', -- note, observation, meeting_notes, personal
+  is_private BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users (id),
+  FOREIGN KEY (contact_id) REFERENCES contacts (id)
+);
+
+-- 4. Task Management / To-Dos per Contact
+CREATE TABLE IF NOT EXISTS tasks (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  contact_id TEXT,
+  title TEXT NOT NULL,
+  description TEXT,
+  status TEXT DEFAULT 'todo', -- todo, in_progress, done
+  priority TEXT DEFAULT 'medium', -- low, medium, high
+  due_date TIMESTAMP,
+  completed_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users (id),
+  FOREIGN KEY (contact_id) REFERENCES contacts (id)
+);
+
+-- 5. File Attachments or Document Links per Contact
+CREATE TABLE IF NOT EXISTS attachments (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  contact_id TEXT NOT NULL,
+  filename TEXT NOT NULL,
+  original_filename TEXT NOT NULL,
+  file_path TEXT,
+  file_url TEXT, -- For links instead of uploads
+  file_size INTEGER,
+  file_type TEXT,
+  description TEXT,
+  is_link BOOLEAN DEFAULT FALSE, -- TRUE for URLs, FALSE for uploads
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users (id),
+  FOREIGN KEY (contact_id) REFERENCES contacts (id)
+);
+
+-- Indexes for Monica-inspired features
+CREATE INDEX IF NOT EXISTS idx_reminders_user_id ON reminders (user_id);
+CREATE INDEX IF NOT EXISTS idx_reminders_contact_id ON reminders (contact_id);
+CREATE INDEX IF NOT EXISTS idx_reminders_due_date ON reminders (due_date);
+CREATE INDEX IF NOT EXISTS idx_reminders_is_completed ON reminders (is_completed);
+
+CREATE INDEX IF NOT EXISTS idx_journal_entries_user_id ON journal_entries (user_id);
+CREATE INDEX IF NOT EXISTS idx_journal_entries_contact_id ON journal_entries (contact_id);
+CREATE INDEX IF NOT EXISTS idx_journal_entries_created_at ON journal_entries (created_at);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks (user_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_contact_id ON tasks (contact_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks (status);
+CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks (due_date);
+
+CREATE INDEX IF NOT EXISTS idx_attachments_user_id ON attachments (user_id);
+CREATE INDEX IF NOT EXISTS idx_attachments_contact_id ON attachments (contact_id);
+
 -- Additional indexes for authentication and billing
 CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
 CREATE INDEX IF NOT EXISTS idx_users_google_id ON users (google_id);

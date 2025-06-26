@@ -393,6 +393,244 @@ class OutreachSuggestion:
         finally:
             conn.close()
 
+# Monica-Inspired CRM Features
+
+class Reminder:
+    def __init__(self, db):
+        self.db = db
+    
+    def create(self, user_id, contact_id, title, description=None, reminder_type='follow_up', 
+               due_date=None, is_recurring=False, recurrence_pattern=None):
+        reminder_id = str(uuid.uuid4())
+        conn = self.db.get_connection()
+        try:
+            conn.execute(
+                """INSERT INTO reminders 
+                   (id, user_id, contact_id, title, description, reminder_type, due_date, 
+                    is_recurring, recurrence_pattern) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (reminder_id, user_id, contact_id, title, description, reminder_type, 
+                 due_date, is_recurring, recurrence_pattern)
+            )
+            conn.commit()
+            return reminder_id
+        finally:
+            conn.close()
+    
+    def get_due_reminders(self, user_id, days_ahead=7):
+        """Get reminders due in the next N days"""
+        conn = self.db.get_connection()
+        try:
+            reminders = conn.execute(
+                """SELECT r.*, c.name as contact_name 
+                   FROM reminders r 
+                   JOIN contacts c ON r.contact_id = c.id 
+                   WHERE r.user_id = ? AND r.is_completed = FALSE 
+                   AND r.due_date <= datetime('now', '+' || ? || ' days')
+                   ORDER BY r.due_date ASC""",
+                (user_id, days_ahead)
+            ).fetchall()
+            return [dict(reminder) for reminder in reminders]
+        finally:
+            conn.close()
+    
+    def mark_completed(self, reminder_id):
+        conn = self.db.get_connection()
+        try:
+            conn.execute(
+                "UPDATE reminders SET is_completed = TRUE, completed_at = datetime('now') WHERE id = ?",
+                (reminder_id,)
+            )
+            conn.commit()
+        finally:
+            conn.close()
+    
+    def get_all(self, user_id):
+        conn = self.db.get_connection()
+        try:
+            reminders = conn.execute(
+                """SELECT r.*, c.name as contact_name 
+                   FROM reminders r 
+                   JOIN contacts c ON r.contact_id = c.id 
+                   WHERE r.user_id = ? 
+                   ORDER BY r.due_date ASC""",
+                (user_id,)
+            ).fetchall()
+            return [dict(reminder) for reminder in reminders]
+        finally:
+            conn.close()
+
+class JournalEntry:
+    def __init__(self, db):
+        self.db = db
+    
+    def create(self, user_id, contact_id, content, title=None, entry_type='note'):
+        entry_id = str(uuid.uuid4())
+        conn = self.db.get_connection()
+        try:
+            conn.execute(
+                """INSERT INTO journal_entries 
+                   (id, user_id, contact_id, title, content, entry_type) 
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (entry_id, user_id, contact_id, title, content, entry_type)
+            )
+            conn.commit()
+            return entry_id
+        finally:
+            conn.close()
+    
+    def get_by_contact(self, contact_id):
+        conn = self.db.get_connection()
+        try:
+            entries = conn.execute(
+                "SELECT * FROM journal_entries WHERE contact_id = ? ORDER BY created_at DESC",
+                (contact_id,)
+            ).fetchall()
+            return [dict(entry) for entry in entries]
+        finally:
+            conn.close()
+    
+    def update(self, entry_id, title=None, content=None):
+        conn = self.db.get_connection()
+        try:
+            if title and content:
+                conn.execute(
+                    "UPDATE journal_entries SET title = ?, content = ?, updated_at = datetime('now') WHERE id = ?",
+                    (title, content, entry_id)
+                )
+            elif content:
+                conn.execute(
+                    "UPDATE journal_entries SET content = ?, updated_at = datetime('now') WHERE id = ?",
+                    (content, entry_id)
+                )
+            conn.commit()
+        finally:
+            conn.close()
+
+class Task:
+    def __init__(self, db):
+        self.db = db
+    
+    def create(self, user_id, title, description=None, contact_id=None, status='todo', 
+               priority='medium', due_date=None):
+        task_id = str(uuid.uuid4())
+        conn = self.db.get_connection()
+        try:
+            conn.execute(
+                """INSERT INTO tasks 
+                   (id, user_id, contact_id, title, description, status, priority, due_date) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (task_id, user_id, contact_id, title, description, status, priority, due_date)
+            )
+            conn.commit()
+            return task_id
+        finally:
+            conn.close()
+    
+    def get_by_contact(self, contact_id):
+        conn = self.db.get_connection()
+        try:
+            tasks = conn.execute(
+                "SELECT * FROM tasks WHERE contact_id = ? ORDER BY created_at DESC",
+                (contact_id,)
+            ).fetchall()
+            return [dict(task) for task in tasks]
+        finally:
+            conn.close()
+    
+    def get_all(self, user_id, status=None):
+        conn = self.db.get_connection()
+        try:
+            if status:
+                tasks = conn.execute(
+                    """SELECT t.*, c.name as contact_name 
+                       FROM tasks t 
+                       LEFT JOIN contacts c ON t.contact_id = c.id 
+                       WHERE t.user_id = ? AND t.status = ? 
+                       ORDER BY t.due_date ASC""",
+                    (user_id, status)
+                ).fetchall()
+            else:
+                tasks = conn.execute(
+                    """SELECT t.*, c.name as contact_name 
+                       FROM tasks t 
+                       LEFT JOIN contacts c ON t.contact_id = c.id 
+                       WHERE t.user_id = ? 
+                       ORDER BY t.due_date ASC""",
+                    (user_id,)
+                ).fetchall()
+            return [dict(task) for task in tasks]
+        finally:
+            conn.close()
+    
+    def update_status(self, task_id, status):
+        conn = self.db.get_connection()
+        try:
+            if status == 'done':
+                conn.execute(
+                    "UPDATE tasks SET status = ?, completed_at = datetime('now'), updated_at = datetime('now') WHERE id = ?",
+                    (status, task_id)
+                )
+            else:
+                conn.execute(
+                    "UPDATE tasks SET status = ?, updated_at = datetime('now') WHERE id = ?",
+                    (status, task_id)
+                )
+            conn.commit()
+        finally:
+            conn.close()
+
+class Attachment:
+    def __init__(self, db):
+        self.db = db
+    
+    def create(self, user_id, contact_id, filename, original_filename, file_path=None, 
+               file_url=None, file_size=None, file_type=None, description=None, is_link=False):
+        attachment_id = str(uuid.uuid4())
+        conn = self.db.get_connection()
+        try:
+            conn.execute(
+                """INSERT INTO attachments 
+                   (id, user_id, contact_id, filename, original_filename, file_path, 
+                    file_url, file_size, file_type, description, is_link) 
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (attachment_id, user_id, contact_id, filename, original_filename, file_path,
+                 file_url, file_size, file_type, description, is_link)
+            )
+            conn.commit()
+            return attachment_id
+        finally:
+            conn.close()
+    
+    def get_by_contact(self, contact_id):
+        conn = self.db.get_connection()
+        try:
+            attachments = conn.execute(
+                "SELECT * FROM attachments WHERE contact_id = ? ORDER BY created_at DESC",
+                (contact_id,)
+            ).fetchall()
+            return [dict(attachment) for attachment in attachments]
+        finally:
+            conn.close()
+    
+    def delete(self, attachment_id):
+        conn = self.db.get_connection()
+        try:
+            # Get file path for cleanup
+            attachment = conn.execute(
+                "SELECT file_path FROM attachments WHERE id = ?",
+                (attachment_id,)
+            ).fetchone()
+            
+            # Delete database record
+            conn.execute("DELETE FROM attachments WHERE id = ?", (attachment_id,))
+            conn.commit()
+            
+            # Return file path for cleanup
+            return attachment['file_path'] if attachment else None
+        finally:
+            conn.close()
+
 class ContactIntelligence:
     """Main class for contact intelligence and natural language processing"""
     
@@ -402,6 +640,11 @@ class ContactIntelligence:
         self.interaction_model = ContactInteraction(db)
         self.relationship_model = ContactRelationship(db)
         self.suggestion_model = OutreachSuggestion(db)
+        # Monica-inspired features
+        self.reminder_model = Reminder(db)
+        self.journal_model = JournalEntry(db)
+        self.task_model = Task(db)
+        self.attachment_model = Attachment(db)
     
     def generate_daily_suggestions(self, user_id):
         """Generate daily outreach suggestions based on contact data"""
