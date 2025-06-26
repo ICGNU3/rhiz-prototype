@@ -23,6 +23,27 @@ import logging
 from datetime import datetime
 from functools import wraps
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('signup'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Mock current_user for compatibility
+class MockUser:
+    def __init__(self, user_id):
+        self.id = user_id
+
+def get_current_user():
+    user_id = session.get('user_id')
+    if user_id:
+        return MockUser(user_id)
+    return None
+
+current_user = type('CurrentUser', (), {'id': lambda: session.get('user_id')})()
+
 # Initialize database and models
 db = Database()
 user_model = User(db)
@@ -1839,3 +1860,59 @@ def network_api_introductions():
             "status": "error",
             "error": str(e)
         }), 500
+
+# Network Intelligence Routes - Advanced relationship health analysis
+
+@app.route('/network-intelligence')
+def network_intelligence():
+    """Network Intelligence dashboard with AI-powered relationship insights"""
+    user_id = session.get('user_id', 1)  # Default to demo user
+    
+    try:
+        smart_engine = SmartNetworkingEngine()
+        network_data = smart_engine.get_network_intelligence_dashboard(user_id)
+        
+        # Calculate average health score for display
+        if network_data.get('top_relationships'):
+            avg_health = sum(c['health_score'] for c in network_data['top_relationships']) / len(network_data['top_relationships'])
+            network_data['avg_health_score'] = avg_health
+        else:
+            network_data['avg_health_score'] = 0
+        
+        return render_template('network_intelligence.html', network_data=network_data)
+    except Exception as e:
+        logging.error(f"Network intelligence error: {e}")
+        return render_template('network_intelligence.html', network_data=None)
+
+@app.route('/api/network-intelligence')
+def api_network_intelligence():
+    """API endpoint for real-time network intelligence data"""
+    user_id = session.get('user_id', 1)
+    
+    try:
+        smart_engine = SmartNetworkingEngine()
+        network_data = smart_engine.get_network_intelligence_dashboard(user_id)
+        
+        if network_data.get('top_relationships'):
+            avg_health = sum(c['health_score'] for c in network_data['top_relationships']) / len(network_data['top_relationships'])
+            network_data['avg_health_score'] = avg_health
+        else:
+            network_data['avg_health_score'] = 0
+        
+        return jsonify(network_data)
+    except Exception as e:
+        logging.error(f"Network intelligence API error: {e}")
+        return jsonify({"error": "Failed to load network intelligence"}), 500
+
+@app.route('/api/relationship-health/<int:contact_id>')
+def api_relationship_health(contact_id):
+    """Individual relationship health analysis with AI insights"""
+    user_id = session.get('user_id', 1)
+    
+    try:
+        smart_engine = SmartNetworkingEngine()
+        health_data = smart_engine.get_relationship_health_score(user_id, contact_id)
+        return jsonify(health_data)
+    except Exception as e:
+        logging.error(f"Relationship health error for contact {contact_id}: {e}")
+        return jsonify({"error": "Failed to analyze relationship health"}), 500
