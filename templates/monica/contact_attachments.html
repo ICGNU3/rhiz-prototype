@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}{{ contact.name }} - Attachments - OuRhizome{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Contact Info Sidebar -->
+        <div class="col-lg-4 mb-4">
+            <div class="card glass-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-person me-2"></i>{{ contact.name }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if contact.company %}
+                    <p class="mb-2">
+                        <i class="bi bi-building me-2"></i>{{ contact.company }}
+                    </p>
+                    {% endif %}
+                    {% if contact.title %}
+                    <p class="mb-2">
+                        <i class="bi bi-briefcase me-2"></i>{{ contact.title }}
+                    </p>
+                    {% endif %}
+                    {% if contact.email %}
+                    <p class="mb-2">
+                        <i class="bi bi-envelope me-2"></i>{{ contact.email }}
+                    </p>
+                    {% endif %}
+                    <hr>
+                    <div class="text-center">
+                        <span class="badge bg-{{ 'success' if contact.warmth == 'warm' else 'warning' if contact.warmth == 'neutral' else 'secondary' }}">
+                            {{ contact.warmth|title }}
+                        </span>
+                    </div>
+                    <hr>
+                    <div class="d-grid">
+                        <a href="{{ url_for('monica.contact_journal', contact_id=contact.id) }}" class="btn btn-outline-primary mb-2">
+                            <i class="bi bi-journal-text me-1"></i>Journal
+                        </a>
+                        <a href="{{ url_for('monica.contact_attachments', contact_id=contact.id) }}" class="btn btn-primary">
+                            <i class="bi bi-paperclip me-1"></i>Attachments
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attachments -->
+        <div class="col-lg-8">
+            <div class="card glass-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-paperclip me-2"></i>Attachments
+                    </h5>
+                    <span class="badge bg-info">{{ attachments|length }} files</span>
+                </div>
+                <div class="card-body">
+                    <!-- Upload Form -->
+                    <div class="card border-primary mb-4">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Upload New File</h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" enctype="multipart/form-data" action="{{ url_for('monica.upload_attachment', contact_id=contact.id) }}">
+                                <div class="mb-3">
+                                    <label for="file" class="form-label">Choose File</label>
+                                    <input type="file" class="form-control" id="file" name="file" required>
+                                    <div class="form-text">
+                                        Supported formats: PDF, DOC, XLS, PPT, images (JPG, PNG, GIF), TXT
+                                        <br>Maximum file size: 16MB
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description (optional)</label>
+                                    <input type="text" class="form-control" id="description" name="description" 
+                                           placeholder="Brief description of this file...">
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-cloud-upload me-1"></i>Upload File
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Attachments List -->
+                    {% if attachments %}
+                    <div class="row">
+                        {% for attachment in attachments %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start">
+                                        <div class="me-3">
+                                            {% set file_ext = attachment.filename.split('.')[-1].lower() %}
+                                            {% if file_ext in ['jpg', 'jpeg', 'png', 'gif'] %}
+                                                <i class="bi bi-file-earmark-image text-success" style="font-size: 2rem;"></i>
+                                            {% elif file_ext == 'pdf' %}
+                                                <i class="bi bi-file-earmark-pdf text-danger" style="font-size: 2rem;"></i>
+                                            {% elif file_ext in ['doc', 'docx'] %}
+                                                <i class="bi bi-file-earmark-word text-primary" style="font-size: 2rem;"></i>
+                                            {% elif file_ext in ['xls', 'xlsx'] %}
+                                                <i class="bi bi-file-earmark-excel text-success" style="font-size: 2rem;"></i>
+                                            {% elif file_ext in ['ppt', 'pptx'] %}
+                                                <i class="bi bi-file-earmark-ppt text-warning" style="font-size: 2rem;"></i>
+                                            {% else %}
+                                                <i class="bi bi-file-earmark text-muted" style="font-size: 2rem;"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="card-title mb-1">{{ attachment.filename }}</h6>
+                                            {% if attachment.description %}
+                                            <p class="card-text text-muted small mb-2">{{ attachment.description }}</p>
+                                            {% endif %}
+                                            <small class="text-muted">
+                                                <i class="bi bi-calendar me-1"></i>{{ attachment.uploaded_at[:16] }}
+                                                <br>
+                                                <i class="bi bi-hdd me-1"></i>{{ "%.1f"|format(attachment.file_size / 1024) }} KB
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 d-flex justify-content-between">
+                                        <a href="{{ url_for('monica.download_attachment', attachment_id=attachment.id) }}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-download me-1"></i>Download
+                                        </a>
+                                        <form method="post" action="{{ url_for('monica.delete_attachment', attachment_id=attachment.id) }}" 
+                                              class="d-inline" onsubmit="return confirm('Delete this file?')">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                <i class="bi bi-trash me-1"></i>Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-paperclip display-4 text-muted"></i>
+                        <h5 class="mt-3 text-muted">No attachments yet</h5>
+                        <p class="text-muted">Upload files related to {{ contact.name }} above.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

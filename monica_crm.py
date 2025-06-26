@@ -274,6 +274,121 @@ def contact_attachments(contact_id):
     return render_template('monica/contact_attachments.html', 
                          contact=contact, attachments=attachments)
 
+@monica_bp.route('/contact/<contact_id>/attachments/upload', methods=['POST'])
+@require_login
+def upload_attachment(contact_id):
+    """Upload a file attachment for a contact"""
+    user_id = session.get('user_id')
+    contact = contact_model.get_by_id(contact_id)
+    
+    if not contact or contact['user_id'] != user_id:
+        flash('Contact not found.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    if 'file' not in request.files:
+        flash('No file selected.', 'error')
+        return redirect(url_for('monica.contact_attachments', contact_id=contact_id))
+    
+    file = request.files['file']
+    if file.filename == '':
+        flash('No file selected.', 'error')
+        return redirect(url_for('monica.contact_attachments', contact_id=contact_id))
+    
+    if file and allowed_file(file.filename):
+        # Check file size
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)
+        
+        if file_size > MAX_FILE_SIZE:
+            flash('File size too large. Maximum 16MB allowed.', 'error')
+            return redirect(url_for('monica.contact_attachments', contact_id=contact_id))
+        
+        # Generate unique filename
+        filename = secure_filename(file.filename)
+        unique_filename = f"{uuid.uuid4()}_{filename}"
+        file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
+        
+        try:
+            file.save(file_path)
+            
+            # Save to database
+            description = request.form.get('description', '')
+            attachment_id = attachment_model.create(
+                user_id=user_id,
+                contact_id=contact_id,
+                filename=filename,
+                file_path=file_path,
+                file_size=file_size,
+                description=description
+            )
+            
+            if attachment_id:
+                # Award XP for uploading attachment
+                award_xp(user_id, 'attachment_uploaded', {
+                    'action': 'attachment_uploaded',
+                    'xp_awarded': 5,
+                    'file_type': filename.split('.')[-1].lower()
+                })
+                flash('File uploaded successfully!', 'success')
+            else:
+                os.remove(file_path)  # Clean up file if database save failed
+                flash('Failed to save file information.', 'error')
+                
+        except Exception as e:
+            flash(f'Failed to upload file: {str(e)}', 'error')
+    else:
+        flash('Invalid file type. Please check allowed formats.', 'error')
+    
+    return redirect(url_for('monica.contact_attachments', contact_id=contact_id))
+
+@monica_bp.route('/attachment/<attachment_id>/download')
+@require_login
+def download_attachment(attachment_id):
+    """Download an attachment file"""
+    user_id = session.get('user_id')
+    attachment = attachment_model.get_by_id(attachment_id)
+    
+    if not attachment or attachment['user_id'] != user_id:
+        flash('Attachment not found.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    if os.path.exists(attachment['file_path']):
+        return send_file(attachment['file_path'], as_attachment=True, 
+                        download_name=attachment['filename'])
+    else:
+        flash('File not found on server.', 'error')
+        return redirect(url_for('monica.contact_attachments', 
+                              contact_id=attachment['contact_id']))
+
+@monica_bp.route('/attachment/<attachment_id>/delete', methods=['POST'])
+@require_login
+def delete_attachment(attachment_id):
+    """Delete an attachment"""
+    user_id = session.get('user_id')
+    attachment = attachment_model.get_by_id(attachment_id)
+    
+    if not attachment or attachment['user_id'] != user_id:
+        flash('Attachment not found.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    contact_id = attachment['contact_id']
+    
+    # Delete file from filesystem
+    if os.path.exists(attachment['file_path']):
+        try:
+            os.remove(attachment['file_path'])
+        except Exception as e:
+            print(f"Failed to delete file: {e}")
+    
+    # Delete from database
+    if attachment_model.delete(attachment_id):
+        flash('Attachment deleted successfully.', 'success')
+    else:
+        flash('Failed to delete attachment.', 'error')
+    
+    return redirect(url_for('monica.contact_attachments', contact_id=contact_id))
+
 # API endpoints for AJAX updates
 @monica_bp.route('/api/due-reminders')
 @require_login
