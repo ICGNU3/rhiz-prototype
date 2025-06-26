@@ -877,6 +877,162 @@ def new_goal_form():
     """Mobile-optimized new goal form"""
     return render_template('mobile_goal_form.html')
 
+# Advanced Contact Search and Filtering Routes
+@app.route('/api/contacts/search')
+def search_contacts_api():
+    """Advanced contact search API with filtering"""
+    try:
+        from contact_search import ContactSearchEngine
+        search_engine = ContactSearchEngine(db)
+        
+        query = request.args.get('q', '').strip()
+        user_id = DEFAULT_USER_ID
+        
+        # Parse filters from query parameters
+        filters = {}
+        if request.args.get('company'):
+            filters['company'] = request.args.get('company')
+        if request.args.get('relationship_type'):
+            filters['relationship_type'] = request.args.get('relationship_type')
+        if request.args.get('warmth'):
+            warmth_levels = request.args.getlist('warmth')
+            filters['warmth'] = warmth_levels if warmth_levels else request.args.get('warmth')
+        if request.args.get('tags'):
+            filters['tags'] = request.args.get('tags')
+        if request.args.get('location'):
+            filters['location'] = request.args.get('location')
+        if request.args.get('last_interaction_days'):
+            filters['last_interaction_days'] = request.args.get('last_interaction_days')
+            filters['user_id'] = user_id
+        if request.args.get('follow_up_due'):
+            filters['follow_up_due'] = True
+            filters['user_id'] = user_id
+        
+        # Perform search
+        results = search_engine.search_contacts(query, user_id, filters)
+        
+        # Save search history
+        if query:
+            import json
+            filter_json = json.dumps(filters) if filters else None
+            search_engine.save_search_history(user_id, query, filter_json)
+        
+        return jsonify({
+            'success': True,
+            'results': results,
+            'total_count': len(results),
+            'query': query,
+            'filters': filters
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/contacts/search/suggestions')
+def search_suggestions_api():
+    """Get search suggestions for autocomplete"""
+    try:
+        from contact_search import ContactSearchEngine
+        search_engine = ContactSearchEngine(db)
+        
+        partial_query = request.args.get('q', '').strip()
+        user_id = DEFAULT_USER_ID
+        
+        if len(partial_query) < 2:
+            return jsonify({'suggestions': {}})
+        
+        suggestions = search_engine.get_search_suggestions(partial_query, user_id)
+        
+        return jsonify({
+            'success': True,
+            'suggestions': suggestions
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/contacts/filter-options')
+def filter_options_api():
+    """Get available filter options from existing data"""
+    try:
+        from contact_search import ContactSearchEngine
+        search_engine = ContactSearchEngine(db)
+        
+        user_id = DEFAULT_USER_ID
+        options = search_engine.get_filter_options(user_id)
+        
+        return jsonify({
+            'success': True,
+            'options': options
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/contacts/search/history')
+def search_history_api():
+    """Get popular search queries for the user"""
+    try:
+        from contact_search import ContactSearchEngine
+        search_engine = ContactSearchEngine(db)
+        
+        user_id = DEFAULT_USER_ID
+        limit = int(request.args.get('limit', 5))
+        
+        popular_searches = search_engine.get_popular_searches(user_id, limit)
+        
+        return jsonify({
+            'success': True,
+            'popular_searches': popular_searches
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/contacts/search')
+def advanced_contacts_search():
+    """Advanced contact search and filtering interface"""
+    try:
+        from contact_search import ContactSearchEngine
+        search_engine = ContactSearchEngine(db)
+        
+        user_id = DEFAULT_USER_ID
+        
+        # Get filter options for the interface
+        filter_options = search_engine.get_filter_options(user_id)
+        
+        # Get popular searches
+        popular_searches = search_engine.get_popular_searches(user_id, 5)
+        
+        # If there's a search query, perform the search
+        query = request.args.get('q', '').strip()
+        results = []
+        
+        if query or any(request.args.get(key) for key in ['company', 'relationship_type', 'warmth', 'tags']):
+            filters = {}
+            for key in ['company', 'relationship_type', 'warmth', 'tags', 'location']:
+                if request.args.get(key):
+                    filters[key] = request.args.get(key)
+            
+            results = search_engine.search_contacts(query, user_id, filters)
+            
+            # Save search history
+            if query:
+                import json
+                filter_json = json.dumps(filters) if filters else None
+                search_engine.save_search_history(user_id, query, filter_json)
+        
+        return render_template('contacts_search.html', 
+                             results=results,
+                             query=query,
+                             filter_options=filter_options,
+                             popular_searches=popular_searches,
+                             current_filters=request.args.to_dict())
+        
+    except Exception as e:
+        flash(f'Search error: {str(e)}', 'error')
+        return redirect('/contacts')
+
 @app.errorhandler(404)
 def not_found(error):
     return render_template('base.html'), 404
