@@ -162,7 +162,7 @@ class ContactSearchEngine:
             FROM contact_interactions 
             WHERE user_id = ? AND follow_up_date <= ? AND follow_up_date IS NOT NULL
             """
-            cursor = self.db.connection.execute(sql, [filters.get('user_id', 1), today])
+            cursor = self.db.execute(sql, [filters.get('user_id', 1), today])
             due_contact_ids = {row[0] for row in cursor.fetchall()}
             
             filtered_contacts = [
@@ -234,7 +234,7 @@ class ContactSearchEngine:
         ORDER BY company
         LIMIT 5
         """
-        cursor = self.db.connection.execute(sql, [user_id, f"{query_lower}%"])
+        cursor = self.db.execute(sql, [user_id, f"{query_lower}%"])
         suggestions['companies'] = [row[0] for row in cursor.fetchall() if row[0]]
         
         # Get title suggestions
@@ -245,7 +245,7 @@ class ContactSearchEngine:
         ORDER BY title
         LIMIT 5
         """
-        cursor = self.db.connection.execute(sql, [user_id, f"{query_lower}%"])
+        cursor = self.db.execute(sql, [user_id, f"{query_lower}%"])
         suggestions['titles'] = [row[0] for row in cursor.fetchall() if row[0]]
         
         # Get name suggestions
@@ -256,7 +256,7 @@ class ContactSearchEngine:
         ORDER BY name
         LIMIT 5
         """
-        cursor = self.db.connection.execute(sql, [user_id, f"{query_lower}%"])
+        cursor = self.db.execute(sql, [user_id, f"{query_lower}%"])
         suggestions['names'] = [row[0] for row in cursor.fetchall()]
         
         # Get tag suggestions
@@ -265,7 +265,7 @@ class ContactSearchEngine:
         FROM contacts 
         WHERE user_id = ? AND tags IS NOT NULL AND tags != ''
         """
-        cursor = self.db.connection.execute(sql, [user_id])
+        cursor = self.db.execute(sql, [user_id])
         all_tags = []
         for row in cursor.fetchall():
             if row[0]:
@@ -287,22 +287,22 @@ class ContactSearchEngine:
         
         # Get unique companies
         sql = "SELECT DISTINCT company FROM contacts WHERE user_id = ? AND company IS NOT NULL ORDER BY company"
-        cursor = self.db.connection.execute(sql, [user_id])
+        cursor = self.db.execute(sql, [user_id])
         options['companies'] = [row[0] for row in cursor.fetchall() if row[0]]
         
         # Get unique relationship types
         sql = "SELECT DISTINCT relationship_type FROM contacts WHERE user_id = ? AND relationship_type IS NOT NULL ORDER BY relationship_type"
-        cursor = self.db.connection.execute(sql, [user_id])
+        cursor = self.db.execute(sql, [user_id])
         options['relationship_types'] = [row[0] for row in cursor.fetchall() if row[0]]
         
         # Get unique warmth levels
         sql = "SELECT DISTINCT warmth FROM contacts WHERE user_id = ? AND warmth IS NOT NULL ORDER BY warmth"
-        cursor = self.db.connection.execute(sql, [user_id])
+        cursor = self.db.execute(sql, [user_id])
         options['warmth_levels'] = [row[0] for row in cursor.fetchall() if row[0]]
         
         # Get all unique tags
         sql = "SELECT DISTINCT tags FROM contacts WHERE user_id = ? AND tags IS NOT NULL AND tags != ''"
-        cursor = self.db.connection.execute(sql, [user_id])
+        cursor = self.db.execute(sql, [user_id])
         all_tags = []
         for row in cursor.fetchall():
             if row[0]:
@@ -315,7 +315,7 @@ class ContactSearchEngine:
     def get_all_contacts(self, user_id: int) -> List[Dict[str, Any]]:
         """Get all contacts for a user"""
         sql = "SELECT * FROM contacts WHERE user_id = ? ORDER BY name"
-        cursor = self.db.connection.execute(sql, [user_id])
+        cursor = self.db.execute(sql, [user_id])
         return [dict(row) for row in cursor.fetchall()]
     
     def save_search_history(self, user_id: int, query: str, filter_data: str = None):
@@ -324,8 +324,8 @@ class ContactSearchEngine:
         INSERT INTO search_history (user_id, query, filters, search_date)
         VALUES (?, ?, ?, datetime('now'))
         """
-        self.db.connection.execute(sql, [user_id, query, filter_data])
-        self.db.connection.commit()
+        self.db.execute(sql, [user_id, query, filter_data])
+        self.db.commit()
     
     def get_popular_searches(self, user_id: int, limit: int = 5) -> List[str]:
         """Get popular search queries for the user"""
@@ -337,7 +337,7 @@ class ContactSearchEngine:
         ORDER BY frequency DESC, search_date DESC
         LIMIT ?
         """
-        cursor = self.db.connection.execute(sql, [user_id, limit])
+        cursor = self.db.execute(sql, [user_id, limit])
         return [row[0] for row in cursor.fetchall()]
     
     def _get_date_cutoff(self, days: int) -> str:
