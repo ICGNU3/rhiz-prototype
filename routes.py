@@ -10,6 +10,8 @@ from simple_email import SimpleEmailSender
 from analytics import NetworkingAnalytics
 from network_visualization import NetworkMapper
 from integrations import AutomationEngine
+from ai_contact_matcher import AIContactMatcher
+from contact_search import ContactSearchEngine
 import logging
 
 # Initialize database and models
@@ -26,6 +28,8 @@ email_sender = SimpleEmailSender(db)
 analytics = NetworkingAnalytics(db)
 network_mapper = NetworkMapper(db)
 automation_engine = AutomationEngine(db)
+ai_matcher = AIContactMatcher(db)
+search_engine = ContactSearchEngine(db)
 
 # Get or create default user
 DEFAULT_USER_ID = user_model.get_or_create_default()
@@ -1040,3 +1044,115 @@ def not_found(error):
 @app.errorhandler(500)
 def internal_error(error):
     return render_template('base.html'), 500
+
+# AI-Powered Contact Intelligence Routes
+
+@app.route('/ai/contact/<int:contact_id>/similar')
+def ai_similar_contacts(contact_id):
+    """Find contacts similar to the given contact using AI"""
+    try:
+        similar_contacts = ai_matcher.find_similar_contacts(contact_id, limit=5)
+        
+        return jsonify({
+            'success': True,
+            'similar_contacts': similar_contacts,
+            'count': len(similar_contacts)
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/ai/introductions')
+def ai_introduction_suggestions():
+    """Get AI-powered introduction suggestions"""
+    user_id = int(session.get('user_id', 1))
+    
+    try:
+        introduction_opportunities = ai_matcher.suggest_introduction_opportunities(user_id)
+        
+        return jsonify({
+            'success': True,
+            'opportunities': introduction_opportunities,
+            'count': len(introduction_opportunities)
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/ai/outreach/<int:contact_id>')
+def ai_personalized_outreach(contact_id):
+    """Generate personalized outreach recommendations"""
+    goal_description = request.args.get('goal', '')
+    
+    try:
+        outreach_data = ai_matcher.generate_personalized_outreach(contact_id, goal_description)
+        
+        return jsonify({
+            'success': True,
+            'outreach_data': outreach_data
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/ai/network-gaps')
+def ai_network_gaps():
+    """Analyze network gaps and suggest expansion areas"""
+    user_id = int(session.get('user_id', 1))
+    
+    try:
+        gap_analysis = ai_matcher.analyze_network_gaps(user_id)
+        
+        return jsonify({
+            'success': True,
+            'analysis': gap_analysis
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/ai/responsiveness/<int:contact_id>')
+def ai_predict_responsiveness(contact_id):
+    """Predict contact responsiveness using AI"""
+    try:
+        prediction = ai_matcher.predict_contact_responsiveness(contact_id)
+        
+        return jsonify({
+            'success': True,
+            'prediction': prediction
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/ai/intelligence')
+def ai_intelligence_dashboard():
+    """AI-powered contact intelligence dashboard"""
+    user_id = int(session.get('user_id', 1))
+    
+    try:
+        # Get various AI insights
+        introduction_opportunities = ai_matcher.suggest_introduction_opportunities(user_id)
+        network_gaps = ai_matcher.analyze_network_gaps(user_id)
+        
+        # Get top contacts for analysis
+        contacts = contact_model.get_all_contacts(user_id)[:10]
+        contact_insights = []
+        
+        for contact in contacts:
+            try:
+                responsiveness = ai_matcher.predict_contact_responsiveness(contact['id'])
+                similar = ai_matcher.find_similar_contacts(contact['id'], limit=3)
+                
+                contact_insights.append({
+                    'contact': contact,
+                    'responsiveness': responsiveness,
+                    'similar_contacts': similar
+                })
+            except Exception as e:
+                # Skip contacts that cause errors
+                continue
+        
+        return render_template('ai_intelligence.html',
+                             introduction_opportunities=introduction_opportunities[:5],
+                             network_gaps=network_gaps,
+                             contact_insights=contact_insights[:5])
+    
+    except Exception as e:
+        flash(f'Error loading AI intelligence: {str(e)}', 'error')
+        return redirect(url_for('crm_dashboard'))
