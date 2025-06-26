@@ -1188,7 +1188,6 @@ def get_rhizomatic_network_graph():
     user_id = session.get('user_id', 1)
     
     try:
-        db = get_db()
         rhizome = RhizomaticIntelligence(db)
         insights = rhizome.generate_rhizomatic_insights(user_id)
         
@@ -1212,7 +1211,6 @@ def get_rhizomatic_history():
     limit = request.args.get('limit', 10, type=int)
     
     try:
-        db = get_db()
         rhizome = RhizomaticIntelligence(db)
         history = rhizome.get_network_insights_history(user_id, limit)
         
