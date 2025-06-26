@@ -1225,3 +1225,118 @@ def get_rhizomatic_history():
             "error": str(e),
             "status": "error"
         }), 500
+
+# Network Visualization and Relationship Mapping Routes
+
+@app.route('/network')
+def network_dashboard():
+    """Network visualization dashboard"""
+    return render_template('network_visualization.html')
+
+@app.route('/network/api/graph')
+def network_api_graph():
+    """API endpoint for network graph data"""
+    user_id = session.get('user_id', 1)
+    
+    try:
+        from network_visualization import NetworkMapper
+        mapper = NetworkMapper(db)
+        graph_data = mapper.build_network_graph(user_id)
+        
+        return jsonify({
+            "status": "success",
+            "data": graph_data
+        })
+    
+    except Exception as e:
+        logging.error(f"Error building network graph: {e}")
+        return jsonify({
+            "status": "error",
+            "error": str(e)
+        }), 500
+
+@app.route('/network/api/metrics')
+def network_api_metrics():
+    """API endpoint for network metrics"""
+    user_id = session.get('user_id', 1)
+    
+    try:
+        from network_visualization import NetworkMapper
+        mapper = NetworkMapper(db)
+        metrics = mapper.get_network_metrics(user_id)
+        
+        return jsonify({
+            "status": "success",
+            "data": metrics
+        })
+    
+    except Exception as e:
+        logging.error(f"Error getting network metrics: {e}")
+        return jsonify({
+            "status": "error",
+            "error": str(e)
+        }), 500
+
+@app.route('/network/relationships', methods=['GET', 'POST'])
+def manage_relationships():
+    """Manage contact relationships"""
+    user_id = session.get('user_id', 1)
+    
+    if request.method == 'POST':
+        try:
+            data = request.get_json()
+            
+            # Create new relationship
+            from network_visualization import ContactRelationshipModel
+            rel_model = ContactRelationshipModel(db)
+            
+            relationship_id = rel_model.create(
+                user_id=user_id,
+                contact_a_id=data['contact_a_id'],
+                contact_b_id=data['contact_b_id'],
+                relationship_type=data.get('relationship_type', 'knows'),
+                strength=data.get('strength', 1),
+                notes=data.get('notes')
+            )
+            
+            return jsonify({
+                "status": "success",
+                "relationship_id": relationship_id,
+                "message": "Relationship created successfully"
+            })
+            
+        except Exception as e:
+            logging.error(f"Error creating relationship: {e}")
+            return jsonify({
+                "status": "error",
+                "error": str(e)
+            }), 500
+    
+    # GET request - return relationship management interface
+    contact_model = Contact(db)
+    contacts = contact_model.get_all(user_id)
+    
+    return render_template('manage_relationships.html', contacts=contacts)
+
+@app.route('/network/api/introductions')
+def network_api_introductions():
+    """API endpoint for introduction suggestions"""
+    user_id = session.get('user_id', 1)
+    limit = request.args.get('limit', 10, type=int)
+    
+    try:
+        from network_visualization import NetworkMapper
+        mapper = NetworkMapper(db)
+        suggestions = mapper.suggest_introductions(user_id, limit)
+        
+        return jsonify({
+            "status": "success",
+            "data": suggestions
+        })
+    
+    except Exception as e:
+        logging.error(f"Error getting introduction suggestions: {e}")
+        return jsonify({
+            "status": "error",
+            "error": str(e)
+        }), 500

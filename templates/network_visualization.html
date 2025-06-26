@@ -1,414 +1,492 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Visualization - Founder Network AI</title>
-    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
-    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-    <style>
-        #network-graph {
-            width: 100%;
-            height: 600px;
-            border: 1px solid var(--bs-border-color);
-            border-radius: 0.375rem;
-            background: var(--bs-body-bg);
-        }
-        .metric-card {
-            background: var(--bs-body-bg);
-            border: 1px solid var(--bs-border-color);
-            border-radius: 0.375rem;
-            padding: 1rem;
-            text-align: center;
-        }
-        .metric-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--bs-primary);
-        }
-        .legend-item {
-            display: inline-flex;
-            align-items: center;
-            margin-right: 1rem;
-            margin-bottom: 0.5rem;
-        }
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            margin-right: 0.5rem;
-        }
-        .cluster-item {
-            background: var(--bs-secondary-bg);
-            border-radius: 0.375rem;
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-        }
-        .intro-suggestion {
-            background: var(--bs-info-bg-subtle);
-            border-left: 4px solid var(--bs-info);
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-        }
-    </style>
-</head>
-<body>
-    {% include 'navigation.html' %}
-    <div class="container-fluid">
-        <!-- Header -->
-        <div class="row mb-4">
-            <div class="col">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1><i class="bi bi-diagram-3"></i> Network Visualization</h1>
-                        <p class="text-muted">Interactive mapping of your founder network relationships</p>
-                    </div>
-                    <div>
-                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-2">
-                            <i class="bi bi-house"></i> Home
-                        </a>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRelationshipModal">
-                            <i class="bi bi-plus-lg"></i> Add Relationship
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+{% extends "base.html" %}
 
-        <!-- Network Metrics -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="metric-card">
-                    <div class="metric-value">{{ metrics.total_contacts }}</div>
-                    <div class="text-muted">Total Contacts</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="metric-card">
-                    <div class="metric-value">{{ metrics.total_relationships }}</div>
-                    <div class="text-muted">Relationships</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="metric-card">
-                    <div class="metric-value">{{ metrics.network_density }}%</div>
-                    <div class="text-muted">Network Density</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="metric-card">
-                    <div class="metric-value">{{ metrics.avg_connections_per_contact }}</div>
-                    <div class="text-muted">Avg Connections</div>
-                </div>
-            </div>
-        </div>
+{% block title %}Network Visualization - Founder Network AI{% endblock %}
 
-        <div class="row">
-            <!-- Network Graph -->
-            <div class="col-lg-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="bi bi-graph-up"></i> Interactive Network Graph</h5>
-                        <small class="text-muted">Click and drag to explore. Node size = interaction count, colors = warmth level</small>
-                    </div>
-                    <div class="card-body p-0">
-                        <div id="network-graph"></div>
-                    </div>
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-diagram-3 me-2"></i>Network Visualization</h2>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-light" onclick="refreshNetwork()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                    </button>
+                    <button type="button" class="btn btn-outline-light" onclick="exportNetwork()">
+                        <i class="bi bi-download me-1"></i>Export
+                    </button>
+                    <button type="button" class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#addRelationshipModal">
+                        <i class="bi bi-plus-circle me-1"></i>Add Relationship
+                    </button>
                 </div>
-
-                <!-- Legend -->
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h6>Legend</h6>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <strong>Warmth Levels:</strong><br>
-                                <div class="legend-item">
-                                    <div class="legend-color" style="background-color: #6c757d;"></div>
-                                    Cold
-                                </div>
-                                <div class="legend-item">
-                                    <div class="legend-color" style="background-color: #ffc107;"></div>
-                                    Aware
-                                </div>
-                                <div class="legend-item">
-                                    <div class="legend-color" style="background-color: #fd7e14;"></div>
-                                    Warm
-                                </div>
-                                <div class="legend-item">
-                                    <div class="legend-color" style="background-color: #20c997;"></div>
-                                    Active
-                                </div>
-                                <div class="legend-item">
-                                    <div class="legend-color" style="background-color: #198754;"></div>
-                                    Contributor
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <strong>Node Size:</strong> Based on interaction count<br>
-                                <strong>Edge Width:</strong> Relationship strength (1-5)
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sidebar -->
-            <div class="col-lg-4">
-                <!-- Network Clusters -->
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <h5><i class="bi bi-collection"></i> Network Clusters</h5>
-                    </div>
-                    <div class="card-body">
-                        {% if clusters %}
-                            {% for cluster in clusters[:5] %}
-                            <div class="cluster-item">
-                                <strong>{{ cluster.name }}</strong>
-                                <span class="badge bg-secondary ms-2">{{ cluster.count }} contacts</span>
-                                <div class="mt-1">
-                                    <small class="text-muted">{{ cluster.type|title }} cluster</small>
-                                </div>
-                                <div class="mt-1">
-                                    {% for warmth, count in cluster.warmth_distribution.items() %}
-                                        <span class="badge bg-info me-1">{{ warmth }}: {{ count }}</span>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <p class="text-muted">No significant clusters detected. Add more relationships to see network patterns.</p>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Introduction Suggestions -->
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <h5><i class="bi bi-people"></i> Introduction Suggestions</h5>
-                    </div>
-                    <div class="card-body">
-                        {% if intro_suggestions %}
-                            {% for suggestion in intro_suggestions[:3] %}
-                            <div class="intro-suggestion">
-                                <strong>{{ suggestion.contact_a }} ↔ {{ suggestion.contact_b }}</strong>
-                                <div class="mt-1">
-                                    <small>{{ suggestion.reason }}</small>
-                                </div>
-                                <div class="mt-1">
-                                    <span class="badge bg-success">Score: {{ suggestion.score }}</span>
-                                    {% if suggestion.mutual_connections %}
-                                        <small class="text-muted ms-2">Via: {{ suggestion.mutual_connections|join(', ') }}</small>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <p class="text-muted">Add more relationships to get introduction suggestions.</p>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Most Connected Contact -->
-                {% if metrics.most_connected_contact %}
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="bi bi-star"></i> Network Hub</h5>
-                    </div>
-                    <div class="card-body">
-                        <strong>{{ metrics.most_connected_contact.label }}</strong>
-                        <div class="mt-1">
-                            <span class="badge bg-primary">{{ metrics.connection_counts[metrics.most_connected_contact.id] }} connections</span>
-                            <span class="badge bg-{{ 'success' if metrics.most_connected_contact.warmth == 'Contributor' else 'warning' if metrics.most_connected_contact.warmth == 'Active' else 'secondary' }}">
-                                {{ metrics.most_connected_contact.warmth }}
-                            </span>
-                        </div>
-                        <div class="mt-2">
-                            <small class="text-muted">{{ metrics.most_connected_contact.company }}</small>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Add Relationship Modal -->
-    <div class="modal fade" id="addRelationshipModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add Relationship</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <!-- Network Metrics Row -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary">
+                <div class="card-body text-center">
+                    <h3 class="text-info mb-1" id="totalContacts">0</h3>
+                    <small class="text-muted">Total Contacts</small>
                 </div>
-                <form method="POST" action="{{ url_for('add_relationship') }}">
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="contact_a_id" class="form-label">First Contact</label>
-                            <select class="form-select" id="contact_a_id" name="contact_a_id" required>
-                                <option value="">Select contact...</option>
-                                {% for node in network_graph.nodes %}
-                                <option value="{{ node.id }}">{{ node.label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="contact_b_id" class="form-label">Second Contact</label>
-                            <select class="form-select" id="contact_b_id" name="contact_b_id" required>
-                                <option value="">Select contact...</option>
-                                {% for node in network_graph.nodes %}
-                                <option value="{{ node.id }}">{{ node.label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="relationship_type" class="form-label">Relationship Type</label>
-                            <select class="form-select" id="relationship_type" name="relationship_type">
-                                <option value="knows">Knows</option>
-                                <option value="worked_with">Worked With</option>
-                                <option value="introduced_by">Introduced By</option>
-                                <option value="business_partners">Business Partners</option>
-                                <option value="mentor_mentee">Mentor/Mentee</option>
-                                <option value="investor_founder">Investor/Founder</option>
-                                <option value="colleagues">Colleagues</option>
-                                <option value="friends">Friends</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="strength" class="form-label">Relationship Strength</label>
-                            <select class="form-select" id="strength" name="strength">
-                                <option value="1">1 - Weak</option>
-                                <option value="2">2 - Moderate</option>
-                                <option value="3" selected>3 - Strong</option>
-                                <option value="4">4 - Very Strong</option>
-                                <option value="5">5 - Extremely Strong</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="notes" class="form-label">Notes (Optional)</label>
-                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Additional context about this relationship..."></textarea>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary">
+                <div class="card-body text-center">
+                    <h3 class="text-success mb-1" id="totalRelationships">0</h3>
+                    <small class="text-muted">Relationships</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary">
+                <div class="card-body text-center">
+                    <h3 class="text-warning mb-1" id="networkDensity">0%</h3>
+                    <small class="text-muted">Network Density</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary">
+                <div class="card-body text-center">
+                    <h3 class="text-primary mb-1" id="avgConnections">0</h3>
+                    <small class="text-muted">Avg Connections</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Network Visualization -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card bg-dark border-secondary">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-diagram-2 me-2"></i>Network Graph</h5>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <input type="radio" class="btn-check" name="layoutOptions" id="hierarchical" autocomplete="off">
+                        <label class="btn btn-outline-light" for="hierarchical">Hierarchical</label>
+                        
+                        <input type="radio" class="btn-check" name="layoutOptions" id="force" autocomplete="off" checked>
+                        <label class="btn btn-outline-light" for="force">Force</label>
+                        
+                        <input type="radio" class="btn-check" name="layoutOptions" id="circular" autocomplete="off">
+                        <label class="btn btn-outline-light" for="circular">Circular</label>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div id="networkGraph" style="height: 500px; background: #1a1a1a;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Introduction Suggestions -->
+            <div class="card bg-dark border-secondary mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-people me-2"></i>Introduction Suggestions</h5>
+                </div>
+                <div class="card-body">
+                    <div id="introductionSuggestions">
+                        <div class="text-center text-muted">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            Loading suggestions...
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add Relationship</button>
+                </div>
+            </div>
+
+            <!-- Network Legend -->
+            <div class="card bg-dark border-secondary">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Legend</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">Warmth Levels:</h6>
+                    <div class="mb-2">
+                        <span class="badge" style="background-color: #6c757d;">Cold</span>
+                        <span class="badge" style="background-color: #ffc107;">Aware</span>
+                        <span class="badge" style="background-color: #fd7e14;">Warm</span>
+                        <span class="badge" style="background-color: #20c997;">Active</span>
+                        <span class="badge" style="background-color: #198754;">Contributor</span>
+                    </div>
+                    
+                    <h6 class="text-muted mb-2 mt-3">Relationship Strength:</h6>
+                    <div class="mb-2">
+                        <div style="width: 20px; height: 1px; background: #dee2e6; display: inline-block;"></div> Weak (1)
+                    </div>
+                    <div class="mb-2">
+                        <div style="width: 20px; height: 2px; background: #adb5bd; display: inline-block;"></div> Moderate (2-3)
+                    </div>
+                    <div class="mb-2">
+                        <div style="width: 20px; height: 3px; background: #495057; display: inline-block;"></div> Strong (4-5)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Relationship Modal -->
+<div class="modal fade" id="addRelationshipModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Add Relationship</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="relationshipForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="contactA" class="form-label">Contact A</label>
+                            <select class="form-select bg-dark text-light border-secondary" id="contactA" required>
+                                <option value="">Select contact...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="contactB" class="form-label">Contact B</label>
+                            <select class="form-select bg-dark text-light border-secondary" id="contactB" required>
+                                <option value="">Select contact...</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="relationshipType" class="form-label">Relationship Type</label>
+                            <select class="form-select bg-dark text-light border-secondary" id="relationshipType">
+                                <option value="knows">Knows</option>
+                                <option value="worked_with">Worked With</option>
+                                <option value="invested_in">Invested In</option>
+                                <option value="mentors">Mentors</option>
+                                <option value="collaborated">Collaborated</option>
+                                <option value="friends">Friends</option>
+                                <option value="business_partners">Business Partners</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="strength" class="form-label">Strength (1-5)</label>
+                            <select class="form-select bg-dark text-light border-secondary" id="strength">
+                                <option value="1">1 - Weak</option>
+                                <option value="2">2 - Casual</option>
+                                <option value="3" selected>3 - Moderate</option>
+                                <option value="4">4 - Strong</option>
+                                <option value="5">5 - Very Strong</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control bg-dark text-light border-secondary" id="notes" rows="3" placeholder="Additional context about this relationship..."></textarea>
                     </div>
                 </form>
             </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addRelationship()">Add Relationship</button>
+            </div>
         </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Network visualization data
-        const networkData = {{ network_graph | tojson }};
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<script>
+let network;
+let nodes, edges;
+let allContacts = [];
+
+// Initialize the page
+document.addEventListener('DOMContentLoaded', function() {
+    loadNetworkData();
+    loadContacts();
+    loadIntroductionSuggestions();
+});
+
+async function loadNetworkData() {
+    try {
+        const [graphResponse, metricsResponse] = await Promise.all([
+            fetch('/network/api/graph'),
+            fetch('/network/api/metrics')
+        ]);
         
-        // Create network graph
-        const container = document.getElementById('network-graph');
+        const graphData = await graphResponse.json();
+        const metricsData = await metricsResponse.json();
         
-        const data = {
-            nodes: new vis.DataSet(networkData.nodes.map(node => ({
-                id: node.id,
-                label: node.label,
-                title: node.title,
-                color: {
-                    background: node.color,
-                    border: '#000000'
-                },
-                size: node.size,
-                font: {
-                    color: '#ffffff',
-                    size: 12
-                }
-            }))),
-            edges: new vis.DataSet(networkData.edges.map(edge => ({
-                from: edge.from,
-                to: edge.to,
-                label: edge.label,
-                title: edge.title,
-                color: edge.color,
-                width: edge.width,
-                font: {
-                    color: '#ffffff',
-                    size: 10
-                }
-            })))
-        };
+        if (graphData.status === 'success') {
+            renderNetwork(graphData.data);
+        }
         
-        const options = {
-            layout: {
-                improvedLayout: true,
-                clusterThreshold: 150
+        if (metricsData.status === 'success') {
+            updateMetrics(metricsData.data);
+        }
+        
+    } catch (error) {
+        console.error('Error loading network data:', error);
+        showAlert('Error loading network data', 'danger');
+    }
+}
+
+function renderNetwork(data) {
+    const container = document.getElementById('networkGraph');
+    
+    nodes = new vis.DataSet(data.nodes);
+    edges = new vis.DataSet(data.edges);
+    
+    const networkData = { nodes: nodes, edges: edges };
+    
+    const options = {
+        layout: {
+            improvedLayout: true
+        },
+        physics: {
+            enabled: true,
+            stabilization: { iterations: 100 }
+        },
+        nodes: {
+            shape: 'dot',
+            font: { 
+                color: '#ffffff',
+                size: 12
             },
-            physics: {
-                enabled: true,
-                stabilization: {
-                    enabled: true,
-                    iterations: 100
-                },
-                barnesHut: {
-                    gravitationalConstant: -2000,
-                    centralGravity: 0.3,
-                    springLength: 95,
-                    springConstant: 0.04,
-                    damping: 0.09
-                }
+            borderWidth: 2,
+            shadow: true
+        },
+        edges: {
+            font: { 
+                color: '#ffffff',
+                size: 10,
+                align: 'middle'
             },
-            interaction: {
-                hover: true,
-                tooltipDelay: 200
+            arrows: {
+                to: { enabled: false }
             },
-            nodes: {
-                shape: 'dot',
-                borderWidth: 2,
-                borderWidthSelected: 4,
-                chosen: true
-            },
-            edges: {
-                width: 1,
-                color: {
-                    color: '#848484',
-                    highlight: '#ffffff',
-                    hover: '#ffffff'
-                },
-                smooth: {
-                    enabled: true,
-                    type: 'continuous'
-                }
+            smooth: {
+                type: 'continuous'
             }
-        };
-        
-        const network = new vis.Network(container, data, options);
-        
-        // Handle node selection
-        network.on('selectNode', function(params) {
-            if (params.nodes.length > 0) {
-                const nodeId = params.nodes[0];
-                const node = networkData.nodes.find(n => n.id === nodeId);
-                if (node) {
-                    // Could show contact details in a modal or sidebar
-                    console.log('Selected contact:', node.label);
+        },
+        interaction: {
+            hover: true,
+            tooltipDelay: 200
+        }
+    };
+    
+    network = new vis.Network(container, networkData, options);
+    
+    // Event listeners
+    network.on('click', function(params) {
+        if (params.nodes.length > 0) {
+            const nodeId = params.nodes[0];
+            const node = nodes.get(nodeId);
+            showContactDetails(node);
+        }
+    });
+    
+    // Layout change handlers
+    document.querySelectorAll('input[name="layoutOptions"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            updateLayout(this.id);
+        });
+    });
+}
+
+function updateLayout(layoutType) {
+    let layoutOptions = {};
+    
+    switch(layoutType) {
+        case 'hierarchical':
+            layoutOptions = {
+                layout: {
+                    hierarchical: {
+                        direction: 'UD',
+                        sortMethod: 'directed'
+                    }
                 }
-            }
+            };
+            break;
+        case 'circular':
+            layoutOptions = {
+                layout: {
+                    randomSeed: 2
+                }
+            };
+            break;
+        default: // force
+            layoutOptions = {
+                layout: {
+                    improvedLayout: true
+                }
+            };
+    }
+    
+    network.setOptions(layoutOptions);
+}
+
+function updateMetrics(metrics) {
+    document.getElementById('totalContacts').textContent = metrics.total_contacts;
+    document.getElementById('totalRelationships').textContent = metrics.total_relationships;
+    document.getElementById('networkDensity').textContent = metrics.network_density + '%';
+    document.getElementById('avgConnections').textContent = metrics.avg_connections_per_contact;
+}
+
+async function loadContacts() {
+    try {
+        const response = await fetch('/api/contacts');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            allContacts = data.contacts;
+            populateContactSelects();
+        }
+    } catch (error) {
+        console.error('Error loading contacts:', error);
+    }
+}
+
+function populateContactSelects() {
+    const contactASelect = document.getElementById('contactA');
+    const contactBSelect = document.getElementById('contactB');
+    
+    // Clear existing options
+    contactASelect.innerHTML = '<option value="">Select contact...</option>';
+    contactBSelect.innerHTML = '<option value="">Select contact...</option>';
+    
+    // Add contacts
+    allContacts.forEach(contact => {
+        const option = `<option value="${contact.id}">${contact.name} (${contact.company || 'No company'})</option>`;
+        contactASelect.innerHTML += option;
+        contactBSelect.innerHTML += option;
+    });
+}
+
+async function loadIntroductionSuggestions() {
+    try {
+        const response = await fetch('/network/api/introductions?limit=5');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            renderIntroductionSuggestions(data.data);
+        }
+    } catch (error) {
+        console.error('Error loading introduction suggestions:', error);
+        document.getElementById('introductionSuggestions').innerHTML = 
+            '<div class="text-muted">No suggestions available</div>';
+    }
+}
+
+function renderIntroductionSuggestions(suggestions) {
+    const container = document.getElementById('introductionSuggestions');
+    
+    if (suggestions.length === 0) {
+        container.innerHTML = '<div class="text-muted">No introduction opportunities found</div>';
+        return;
+    }
+    
+    let html = '';
+    suggestions.forEach(suggestion => {
+        html += `
+            <div class="mb-3 p-2 border border-secondary rounded">
+                <div class="fw-bold text-light mb-1">
+                    ${suggestion.contact_a} ↔ ${suggestion.contact_b}
+                </div>
+                <div class="small text-muted mb-1">
+                    Score: ${suggestion.score} | Via: ${suggestion.mutual_connections.join(', ')}
+                </div>
+                <div class="small text-info">
+                    ${suggestion.reason}
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+async function addRelationship() {
+    const form = document.getElementById('relationshipForm');
+    
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const contactA = document.getElementById('contactA').value;
+    const contactB = document.getElementById('contactB').value;
+    const relationshipType = document.getElementById('relationshipType').value;
+    const strength = parseInt(document.getElementById('strength').value);
+    const notes = document.getElementById('notes').value;
+    
+    if (contactA === contactB) {
+        showAlert('Please select different contacts', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/network/relationships', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contact_a_id: contactA,
+                contact_b_id: contactB,
+                relationship_type: relationshipType,
+                strength: strength,
+                notes: notes
+            })
         });
         
-        // Network stabilization
-        network.on('stabilizationIterationsDone', function() {
-            network.setOptions({physics: false});
-        });
+        const data = await response.json();
         
-        // Auto-refresh network data every 30 seconds
-        setInterval(function() {
-            fetch('/network/api/graph')
-                .then(response => response.json())
-                .then(data => {
-                    // Update nodes and edges if data changed
-                    // This is a simple implementation - could be more sophisticated
-                    console.log('Network data refreshed');
-                })
-                .catch(error => console.log('Network refresh failed:', error));
-        }, 30000);
-    </script>
-</body>
-</html>
+        if (data.status === 'success') {
+            showAlert('Relationship added successfully', 'success');
+            document.getElementById('addRelationshipModal').querySelector('.btn-close').click();
+            form.reset();
+            refreshNetwork();
+        } else {
+            showAlert('Error adding relationship: ' + data.error, 'danger');
+        }
+        
+    } catch (error) {
+        console.error('Error adding relationship:', error);
+        showAlert('Error adding relationship', 'danger');
+    }
+}
+
+function refreshNetwork() {
+    loadNetworkData();
+    loadIntroductionSuggestions();
+}
+
+function exportNetwork() {
+    window.open('/network/export?format=json', '_blank');
+}
+
+function showContactDetails(node) {
+    alert(`Contact: ${node.label}\nCompany: ${node.company}\nWarmth: ${node.warmth}\nConnections: ${node.interactions}`);
+}
+
+function showAlert(message, type) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    const container = document.querySelector('.container');
+    container.insertAdjacentHTML('afterbegin', alertHtml);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        const alert = container.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}
