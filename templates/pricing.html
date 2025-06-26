@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing - Founder Network AI</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --accent-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background: radial-gradient(ellipse at top, #1a1b3a 0%, #0f0f1e 70%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .pricing-hero {
+            text-align: center;
+            padding: 5rem 0 3rem;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .hero-subtitle {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .billing-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .toggle-container {
+            position: relative;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            padding: 4px;
+            backdrop-filter: blur(20px);
+        }
+
+        .toggle-option {
+            padding: 12px 24px;
+            border-radius: 50px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .toggle-option.active {
+            color: white;
+            background: var(--primary-gradient);
+        }
+
+        .savings-badge {
+            background: var(--accent-gradient);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .pricing-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .pricing-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem 2rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .pricing-card.featured {
+            border: 2px solid #667eea;
+            position: relative;
+        }
+
+        .featured-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-gradient);
+            color: white;
+            padding: 8px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .plan-name {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-tagline {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 2rem;
+            font-size: 16px;
+        }
+
+        .price-container {
+            margin-bottom: 2rem;
+        }
+
+        .price {
+            font-size: 48px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .price-period {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-left: 8px;
+        }
+
+        .yearly-price {
+            display: none;
+        }
+
+        .yearly-savings {
+            color: #22c55e;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .features-list {
+            list-style: none;
+            padding: 0;
+            margin: 2rem 0;
+        }
+
+        .features-list li {
+            padding: 12px 0;
+            display: flex;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .feature-icon {
+            color: #22c55e;
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .feature-icon.limited {
+            color: #f59e0b;
+        }
+
+        .cta-button {
+            width: 100%;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .cta-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .cta-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .cta-secondary {
+            background: transparent;
+            color: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .cta-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .faq-section {
+            max-width: 800px;
+            margin: 5rem auto 3rem;
+            padding: 0 1rem;
+        }
+
+        .faq-title {
+            text-align: center;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            color: white;
+        }
+
+        .faq-item {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            width: 100%;
+            padding: 1.5rem;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .faq-answer {
+            padding: 0 1.5rem 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            display: none;
+        }
+
+        .faq-answer.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 36px;
+            }
+            
+            .pricing-cards {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+            }
+            
+            .price {
+                font-size: 36px;
+            }
+        }
+
+        .body.yearly-mode .monthly-price {
+            display: none;
+        }
+
+        .body.yearly-mode .yearly-price {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">Founder Network AI</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">Home</a>
+                <a class="nav-link" href="/signup">Sign Up</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="pricing-hero">
+        <h1 class="hero-title">Simple, transparent pricing</h1>
+        <p class="hero-subtitle">Start free, upgrade when you're ready to supercharge your networking</p>
+        
+        <div class="billing-toggle">
+            <span style="color: rgba(255, 255, 255, 0.7);">Monthly</span>
+            <div class="toggle-container">
+                <button class="toggle-option active" onclick="toggleBilling('monthly')">Monthly</button>
+                <button class="toggle-option" onclick="toggleBilling('yearly')">
+                    Yearly
+                    <span class="savings-badge">Save $48</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="pricing-cards">
+            <!-- Explorer Plan -->
+            <div class="pricing-card">
+                <h2 class="plan-name">Explorer</h2>
+                <p class="plan-tagline">Perfect for getting started</p>
+                
+                <div class="price-container">
+                    <div class="monthly-price">
+                        <span class="price">$0</span>
+                        <span class="price-period">/month</span>
+                    </div>
+                    <div class="yearly-price" style="display: none;">
+                        <span class="price">$0</span>
+                        <span class="price-period">/year</span>
+                    </div>
+                </div>
+
+                <ul class="features-list">
+                    <li>
+                        <i class="bi bi-check-circle feature-icon limited"></i>
+                        Up to 1 goal
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle feature-icon limited"></i>
+                        Up to 50 contacts
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle feature-icon limited"></i>
+                        3 AI suggestions
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle feature-icon"></i>
+                        Basic goal matching
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle feature-icon"></i>
+                        Contact management
+                    </li>
+                    <li>
+                        <i class="bi bi-x-circle feature-icon" style="color: #ef4444;"></i>
+                        No email integration
+                    </li>
+                    <li>
+                        <i class="bi bi-x-circle feature-icon" style="color: #ef4444;"></i>
+                        No network visualization
+                    </li>
+                </ul>
+
+                <a href="/signup" class="cta-button cta-secondary">Get Started Free</a>
+            </div>
+
+            <!-- Founder+ Plan -->
+            <div class="pricing-card featured">
+                <div class="featured-badge">Most Popular</div>
+                <h2 class="plan-name">Founder+</h2>
+                <p class="plan-tagline">Everything you need to build your network</p>
+                
+                <div class="price-container">
+                    <div class="monthly-price">
+                        <span class="price">$19</span>
+                        <span class="price-period">/month</span>
+                    </div>
+                    <div class="yearly-price" style="display: none;">
+                        <span class="price">$180</span>
+                        <span class="price-period">/year</span>
+                        <div class="yearly-savings">Save $48 per year</div>
+                    </div>
+                </div>
+
+                <ul class="features-list">
+                    <li>
+                        <i class="bi bi-check-circle feature-icon"></i>
+                        Unlimited goals
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle feature-icon"></i>
+                        Up to 1,000 contacts
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle feature-icon"></i>
+                        Unlimited AI outreach
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle feature-icon"></i>
+                        Email & calendar integration
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle feature-icon"></i>
+                        Network visualization
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle feature-icon"></i>
+                        Conference mode
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle feature-icon"></i>
+                        Analytics dashboard
+                    </li>
+                    <li>
+                        <i class="bi bi-check-circle feature-icon"></i>
+                        Priority support
+                    </li>
+                </ul>
+
+                <button class="cta-button cta-primary" onclick="upgradeToFounderPlus()">
+                    Upgrade to Founder+
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="faq-section">
+        <h2 class="faq-title">Frequently Asked Questions</h2>
+        
+        <div class="faq-item">
+            <button class="faq-question" onclick="toggleFAQ(this)">
+                Can I start with the free plan and upgrade later?
+                <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="faq-answer">
+                Absolutely! You can start with the Explorer plan and upgrade to Founder+ at any time. All your data will be preserved, and you'll immediately get access to all premium features.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question" onclick="toggleFAQ(this)">
+                What happens if I exceed my contact limit?
+                <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="faq-answer">
+                On the Explorer plan, you'll be prompted to upgrade when you reach 50 contacts. Your existing contacts will remain safe, but you won't be able to add new ones until you upgrade to Founder+.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question" onclick="toggleFAQ(this)">
+                Can I cancel my subscription anytime?
+                <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="faq-answer">
+                Yes, you can cancel your Founder+ subscription at any time. You'll continue to have access to premium features until the end of your billing period, then automatically switch to the Explorer plan.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question" onclick="toggleFAQ(this)">
+                Do you offer refunds?
+                <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="faq-answer">
+                We offer a 30-day money-back guarantee. If you're not satisfied with Founder+ within the first 30 days, contact support for a full refund.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question" onclick="toggleFAQ(this)">
+                What payment methods do you accept?
+                <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="faq-answer">
+                We accept all major credit cards (Visa, MasterCard, American Express) and debit cards through Stripe, our secure payment processor.
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentBilling = 'monthly';
+
+        function toggleBilling(type) {
+            currentBilling = type;
+            const monthlyOptions = document.querySelectorAll('.toggle-option')[0];
+            const yearlyOptions = document.querySelectorAll('.toggle-option')[1];
+            
+            if (type === 'monthly') {
+                monthlyOptions.classList.add('active');
+                yearlyOptions.classList.remove('active');
+                document.querySelectorAll('.monthly-price').forEach(el => el.style.display = 'block');
+                document.querySelectorAll('.yearly-price').forEach(el => el.style.display = 'none');
+            } else {
+                monthlyOptions.classList.remove('active');
+                yearlyOptions.classList.add('active');
+                document.querySelectorAll('.monthly-price').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.yearly-price').forEach(el => el.style.display = 'block');
+            }
+        }
+
+        function upgradeToFounderPlus() {
+            const plan = currentBilling === 'monthly' ? 'founder_plus_monthly' : 'founder_plus_yearly';
+            
+            // Check if user is logged in
+            fetch('/auth/check-session')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.authenticated) {
+                        // User is logged in, proceed to checkout
+                        window.location.href = `/upgrade?plan=${plan}`;
+                    } else {
+                        // User not logged in, redirect to signup first
+                        sessionStorage.setItem('intended_plan', plan);
+                        window.location.href = '/signup';
+                    }
+                })
+                .catch(() => {
+                    // Fallback to signup
+                    sessionStorage.setItem('intended_plan', plan);
+                    window.location.href = '/signup';
+                });
+        }
+
+        function toggleFAQ(button) {
+            const answer = button.nextElementSibling;
+            const icon = button.querySelector('i');
+            
+            // Close all other FAQs
+            document.querySelectorAll('.faq-answer').forEach(el => {
+                if (el !== answer) {
+                    el.classList.remove('show');
+                    el.previousElementSibling.querySelector('i').classList.remove('bi-chevron-up');
+                    el.previousElementSibling.querySelector('i').classList.add('bi-chevron-down');
+                }
+            });
+            
+            // Toggle current FAQ
+            answer.classList.toggle('show');
+            icon.classList.toggle('bi-chevron-down');
+            icon.classList.toggle('bi-chevron-up');
+        }
+
+        // Check for intended plan after signup
+        document.addEventListener('DOMContentLoaded', function() {
+            const intendedPlan = sessionStorage.getItem('intended_plan');
+            if (intendedPlan && window.location.search.includes('verified=true')) {
+                sessionStorage.removeItem('intended_plan');
+                window.location.href = `/upgrade?plan=${intendedPlan}`;
+            }
+        });
+    </script>
+</body>
+</html>

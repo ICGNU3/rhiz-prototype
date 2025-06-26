@@ -1,0 +1,97 @@
+**Title:** Implement Signup, Free Plan, and Paid Tier in OuRhizome Contact Intelligence App
+
+**Goal:** Add low-friction user authentication, activate a basic pricing tier system, and enable gated features to move toward monetization without compromising early usability.
+
+---
+
+### 👤 User Authentication
+
+- Add Google + Email (magic link) signup options
+- Store user session in Supabase or equivalent
+- Save user metadata: signup time, tier, usage count
+- Allow “Guest Mode” with no login, but prompt save after 3 actions
+
+---
+
+### 💳 Pricing Tier System
+
+#### Free Plan (Explorer)
+- Max 1 goal at a time
+- Limit of 50 contacts imported
+- No calendar/email integration
+- Basic AI suggestions (3 total)
+- No CRM sync
+- Save progress in Supabase
+
+#### Paid Plan (Founder+)
+- Unlimited goals
+- Up to 1,000 contacts
+- Full contact import (CSV, LinkedIn, Twitter sync)
+- AI-generated outreach (unlimited)
+- Smart reminders, deduplication, calendar integration
+- Full network map and analytics
+- Gamification layer unlocked
+
+Start price: $19/month or $180/year  
+Use Stripe for payments and webhooks into Supabase user profile
+
+---
+
+### 🛠 Signup & Onboarding Flow
+
+**Step 1:** Show splash screen → “Start with your first goal”
+
+**Step 2:** Prompt user to write goal (save as temporary unless signed in)
+
+**Step 3:** After goal creation, gently prompt:
+“Want to save this goal and build your network around it? Sign up free.”
+
+**Step 4:** After signup, unlock network matcher and goal dashboard
+
+**Step 5:** On gated features (e.g., contact sync, outreach), show paywall modal with:
+- Side-by-side tier comparison
+- Upgrade via Stripe
+- Add badge on user profile: `Founder+`
+
+---
+
+### 📦 Files/Pages to Create
+
+- `/signup`
+- `/pricing`
+- `/onboarding/goal`
+- `/dashboard`
+- `/upgrade-modal`
+- `/guest-warning`
+
+---
+
+### ✨ Bonus: Add to Navigation
+
+| Section       | Access         |
+|---------------|----------------|
+| Dashboard     | All users      |
+| Contacts      | Free (limit 50)|
+| Goals         | Free/Paid      |
+| AI Outreach   | Paid only      |
+| Network Map   | Paid only      |
+| Conference Mode | Paid only    |
+| Upgrade Page  | All users      |
+
+---
+
+### Success Criteria
+
+- A user can enter and save a goal
+- Guest users are prompted after interaction
+- Signed-in users are placed on a free tier
+- Stripe connects and upgrades user access on payment
+- Tiered access gates are enforced on backend
+
+---
+
+### Optional Next Prompts
+
+- Add badge/label to “Founder+” users in the UI  
+- Build tier-specific landing page copy  
+- Activate limited AI usage meter on free tier  

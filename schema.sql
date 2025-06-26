@@ -1,8 +1,22 @@
--- Users table
+-- Enhanced Users table with authentication and subscription tiers
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
-  email TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  email TEXT UNIQUE,
+  google_id TEXT,
+  magic_link_token TEXT,
+  magic_link_expires TIMESTAMP,
+  subscription_tier TEXT DEFAULT 'explorer', -- explorer (free), founder_plus (paid)
+  stripe_customer_id TEXT,
+  stripe_subscription_id TEXT,
+  subscription_status TEXT DEFAULT 'active', -- active, canceled, past_due
+  subscription_expires TIMESTAMP,
+  goals_count INTEGER DEFAULT 0,
+  contacts_count INTEGER DEFAULT 0,
+  ai_suggestions_used INTEGER DEFAULT 0,
+  is_guest BOOLEAN DEFAULT FALSE,
+  guest_actions_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Enhanced Contacts table with CRM intelligence
@@ -195,3 +209,58 @@ CREATE INDEX IF NOT EXISTS idx_conference_contacts_conference ON conference_cont
 CREATE INDEX IF NOT EXISTS idx_conference_contacts_contact ON conference_contacts(contact_id);
 CREATE INDEX IF NOT EXISTS idx_conference_follow_ups_conference ON conference_follow_ups(conference_id);
 CREATE INDEX IF NOT EXISTS idx_conference_follow_ups_timing ON conference_follow_ups(timing, completed);
+
+-- Usage tracking for tier enforcement
+CREATE TABLE IF NOT EXISTS usage_tracking (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  action_type TEXT NOT NULL, -- goal_created, contact_imported, ai_suggestion_generated, outreach_sent
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  metadata TEXT, -- JSON object with additional context
+  FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+-- Magic link authentication
+CREATE TABLE IF NOT EXISTS magic_links (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,
+  token TEXT UNIQUE NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  used BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Guest sessions tracking
+CREATE TABLE IF NOT EXISTS guest_sessions (
+  id TEXT PRIMARY KEY,
+  session_token TEXT UNIQUE NOT NULL,
+  goals_created INTEGER DEFAULT 0,
+  contacts_added INTEGER DEFAULT 0,
+  actions_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP
+);
+
+-- Subscription history for analytics
+CREATE TABLE IF NOT EXISTS subscription_history (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  action TEXT NOT NULL, -- upgraded, downgraded, canceled, renewed
+  from_tier TEXT,
+  to_tier TEXT,
+  stripe_event_id TEXT,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+-- Additional indexes for authentication and billing
+CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
+CREATE INDEX IF NOT EXISTS idx_users_google_id ON users (google_id);
+CREATE INDEX IF NOT EXISTS idx_users_stripe_customer ON users (stripe_customer_id);
+CREATE INDEX IF NOT EXISTS idx_users_subscription_tier ON users (subscription_tier);
+CREATE INDEX IF NOT EXISTS idx_magic_links_token ON magic_links (token);
+CREATE INDEX IF NOT EXISTS idx_magic_links_email ON magic_links (email);
+CREATE INDEX IF NOT EXISTS idx_guest_sessions_token ON guest_sessions (session_token);
+CREATE INDEX IF NOT EXISTS idx_usage_tracking_user ON usage_tracking (user_id);
+CREATE INDEX IF NOT EXISTS idx_usage_tracking_action ON usage_tracking (action_type);
+CREATE INDEX IF NOT EXISTS idx_subscription_history_user ON subscription_history (user_id);
