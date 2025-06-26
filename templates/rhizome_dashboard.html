@@ -303,7 +303,10 @@ class RhizomaticNetwork {
 
     async loadNetworkData() {
         try {
-            document.getElementById('loadingIndicator').style.display = 'block';
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'block';
+            }
             
             const response = await fetch('/api/rhizome/network-graph');
             const data = await response.json();
@@ -320,7 +323,10 @@ class RhizomaticNetwork {
             console.error('Error:', error);
             this.showError('Network connection error');
         } finally {
-            document.getElementById('loadingIndicator').style.display = 'none';
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'none';
+            }
         }
     }
 
