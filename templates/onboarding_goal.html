@@ -8,16 +8,31 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --accent-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            /* Updated color system to match Root Membership landing page */
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #0f0f1a;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-accent: rgba(255, 255, 255, 0.9);
+            --accent-blue: #4facfe;
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --accent-emerald: #10b981;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --gradient-primary: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+            --gradient-accent: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
         }
 
         body {
-            background: radial-gradient(ellipse at top, #1a1b3a 0%, #0f0f1e 70%);
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(139, 92, 246, 0.1) 0%, transparent 70%),
+                radial-gradient(circle at 75% 75%, rgba(236, 72, 153, 0.08) 0%, transparent 70%);
             min-height: 100vh;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-primary);
         }
 
         .onboarding-container {
