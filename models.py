@@ -254,6 +254,27 @@ class AISuggestion:
             return suggestion_id
         finally:
             conn.close()
+    
+    def get_recent(self, user_id, limit=5):
+        """Get recent AI suggestions for a user"""
+        conn = self.db.get_connection()
+        try:
+            suggestions = conn.execute(
+                """SELECT ai.*, c.name as contact_name, g.title as goal_title 
+                   FROM ai_suggestions ai
+                   JOIN contacts c ON ai.contact_id = c.id
+                   JOIN goals g ON ai.goal_id = g.id
+                   WHERE g.user_id = ? 
+                   ORDER BY ai.created_at DESC 
+                   LIMIT ?""",
+                (user_id, limit)
+            ).fetchall()
+            return [dict(suggestion) for suggestion in suggestions]
+        except Exception as e:
+            logging.error(f"Error getting recent AI suggestions: {e}")
+            return []
+        finally:
+            conn.close()
 
 class ContactInteraction:
     def __init__(self, db):
@@ -302,6 +323,26 @@ class ContactInteraction:
                 (user_id, days_back)
             ).fetchall()
             return [dict(interaction) for interaction in interactions]
+        finally:
+            conn.close()
+    
+    def get_recent(self, user_id, limit=5):
+        """Get recent contact interactions for a user"""
+        conn = self.db.get_connection()
+        try:
+            interactions = conn.execute(
+                """SELECT ci.*, c.name as contact_name 
+                   FROM contact_interactions ci 
+                   JOIN contacts c ON ci.contact_id = c.id 
+                   WHERE ci.user_id = ? 
+                   ORDER BY ci.timestamp DESC 
+                   LIMIT ?""",
+                (user_id, limit)
+            ).fetchall()
+            return [dict(interaction) for interaction in interactions]
+        except Exception as e:
+            logging.error(f"Error getting recent interactions: {e}")
+            return []
         finally:
             conn.close()
 
