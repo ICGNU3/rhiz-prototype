@@ -1,35 +1,70 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import Navbar from './components/layout/Navbar';
+import Dashboard from './pages/Dashboard';
+import Goals from './pages/Goals';
+import Contacts from './pages/Contacts';
+import Intelligence from './pages/Intelligence';
+import Settings from './pages/Settings';
+import Login from './pages/Login';
+import { useAuth } from './hooks/useAuth';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Create a query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
+
+function AppContent() {
+  const { user, isLoading, logout } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="glass-card p-8 text-center">
+          <div className="animate-spin w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading Rhiz...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login />;
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="min-h-screen flex flex-col">
+      <Navbar user={user} onLogout={logout} />
+      <main className="flex-1 p-6">
+        <div className="max-w-7xl mx-auto">
+          <Routes>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/goals" element={<Goals />} />
+            <Route path="/contacts" element={<Contacts />} />
+            <Route path="/intelligence" element={<Intelligence />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </div>
+      </main>
+    </div>
+  );
 }
 
-export default App
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <AppContent />
+      </Router>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
