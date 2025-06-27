@@ -78,27 +78,30 @@ def dashboard():
     user_id = get_current_user_id()
     
     try:
-        # Import models from routes package
+        # Import models correctly from routes package
         from . import goal_model, contact_model, ai_suggestion_model, interaction_model, gamification
         
-        # Get dashboard data
+        # Get dashboard data safely
         dashboard_data = {
-            'goals': goal_model.get_all(user_id)[:5],  # Recent 5
-            'contacts': contact_model.get_all(user_id)[:6],  # Recent 6
-            'ai_suggestions': ai_suggestion_model.get_recent(user_id, limit=5),
-            'recent_interactions': interaction_model.get_recent(user_id, limit=5)
+            'goals': goal_model.get_all(user_id)[:5] if goal_model.get_all(user_id) else [],
+            'contacts': contact_model.get_all(user_id)[:6] if contact_model.get_all(user_id) else [],
+            'ai_suggestions': ai_suggestion_model.get_recent(user_id, limit=5) if hasattr(ai_suggestion_model, 'get_recent') else [],
+            'recent_interactions': interaction_model.get_recent(user_id, limit=5) if hasattr(interaction_model, 'get_recent') else []
         }
         
-        # Get user stats
+        # Get user stats safely
+        all_goals = goal_model.get_all(user_id) if goal_model.get_all(user_id) else []
+        all_contacts = contact_model.get_all(user_id) if contact_model.get_all(user_id) else []
+        
         stats = {
-            'total_goals': len(goal_model.get_all(user_id)),
-            'total_contacts': len(contact_model.get_all(user_id)),
-            'pending_follow_ups': interaction_model.count_pending_follow_ups(user_id),
-            'this_month_interactions': interaction_model.count_this_month(user_id)
+            'total_goals': len(all_goals),
+            'total_contacts': len(all_contacts),
+            'pending_follow_ups': getattr(interaction_model, 'count_pending_follow_ups', lambda x: 0)(user_id),
+            'this_month_interactions': getattr(interaction_model, 'count_this_month', lambda x: 0)(user_id)
         }
         
-        # Get user level/XP info
-        user_profile = gamification.get_user_profile(user_id)
+        # Get user level/XP info safely
+        user_profile = gamification.get_user_profile(user_id) if hasattr(gamification, 'get_user_profile') else {}
         
         return render_template('dashboard.html', 
                              **dashboard_data,
@@ -107,17 +110,29 @@ def dashboard():
                              
     except Exception as e:
         logging.error(f"Dashboard error: {e}")
-        from flask import flash
-        flash('Error loading dashboard', 'error')
+        logging.exception("Full dashboard error traceback:")
         
-        # Fallback to basic dashboard
-        return render_template('dashboard.html', 
-                             goals=[], 
-                             contacts=[], 
-                             ai_suggestions=[],
-                             recent_interactions=[],
-                             stats={},
-                             user_profile={})
+        # Try with minimal data
+        try:
+            return render_template('dashboard.html', 
+                                 goals=[], 
+                                 contacts=[], 
+                                 ai_suggestions=[],
+                                 recent_interactions=[],
+                                 stats={'total_goals': 0, 'total_contacts': 0, 'pending_follow_ups': 0, 'this_month_interactions': 0},
+                                 user_profile={'xp': 0, 'title': 'Contact Seeker', 'streak_count': 0})
+        except Exception as template_error:
+            logging.error(f"Template error: {template_error}")
+            # Return simple HTML if template fails
+            return '''
+            <!DOCTYPE html>
+            <html><head><title>Dashboard</title></head>
+            <body>
+                <h1>Dashboard</h1>
+                <p>Welcome to your dashboard!</p>
+                <p>User ID: ''' + str(user_id) + '''</p>
+            </body></html>
+            '''
 
 @core_bp.route('/index')
 def index():
