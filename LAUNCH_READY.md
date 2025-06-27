@@ -1,4 +1,4 @@
-# 🚀 OuRhizome Launch Ready Summary
+# 🚀 Rhiz Launch Ready Summary
 
 ## Status: 95% Ready for Launch
 

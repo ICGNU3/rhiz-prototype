@@ -1,4 +1,4 @@
-# Founder Network AI - Contact Intelligence CRM
+# Rhiz - Contact Intelligence CRM
 
 ## Overview
 

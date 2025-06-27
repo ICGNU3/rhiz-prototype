@@ -1,4 +1,4 @@
-# OuRhizome Production Launch Checklist
+# Rhiz Production Launch Checklist
 
 ## 🚀 Launch Readiness Status: 92%
 
