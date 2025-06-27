@@ -1,0 +1,83 @@
+Upgrade Prompt: Relationship Intelligence Layer Expansion
+Objective:
+Integrate advanced relationship intelligence features into our existing Flask-based app. These upgrades enhance goal-based networking, memory recovery, communication, and action tracking — all without turning it into a traditional CRM.
+
+🔧 Add These Features:
+1. Unknown But Important Contacts
+Add a section called "Unknown but Important" under Contacts.
+
+Allow users to input names or numbers without context.
+
+Auto-tag these as "To Be Remembered".
+
+Build an AI suggestion engine that:
+
+Pulls clues from shared events, domains, mutuals.
+
+Asks reflective prompts like “Did you meet at [conference]?”
+
+Weekly email or UI notification to review these contacts.
+
+2. Reminders & Notifications
+Add automated reminders for:
+
+Birthdays, anniversaries, check-ins (weekly, monthly, etc.)
+
+Last interaction date → prompt follow-up if overdue
+
+Let users customize frequency per contact.
+
+Use a background job (e.g., Celery) to send notifications.
+
+3. Relationship History + Timeline
+On each contact’s profile:
+
+Display a scrollable timeline of all interactions: messages, notes, meetings, tasks
+
+Include timestamps and labels
+
+Use SQLAlchemy relationship tables to map events to people
+
+4. Private Journaling
+Add a secure journaling panel under each contact
+
+Support rich text + markdown
+
+Allow date-stamped entries that stay private (not shared)
+
+5. Contact-Based Tasks
+Let users create and track to-dos linked to specific contacts
+
+Include due dates, status (open/done), and goal alignment
+
+Show upcoming tasks in dashboard
+
+6. File Attachments
+Add ability to upload docs (PDFs, pitches, notes) to a contact’s profile
+
+Store using secure S3 or similar file system
+
+Add metadata tagging for searchability
+
+7. Mass Messaging (Warm-Up Tool)
+Add ability to:
+
+Send group texts, emails, or DMs (via integrated APIs)
+
+Filter contacts by tag, goal, or relationship type
+
+Include templated prompts like:
+
+“Hey, quick check-in — I’m working on [goal] and thought of you…”
+
+“What’s something you’re excited about this month?”
+
+Track open/click/response rates if email/SMS provider supports it
+
+💡 Optional (Future Prep)
+Start preparing for zkSync private contact graph.
+
+Add toggle for contacts to be included in future token graph (opt-in).
+
+Prep API endpoints that can sync this data into a protocol version later.
+

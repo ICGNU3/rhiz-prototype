@@ -23,6 +23,7 @@ from gamification import GamificationEngine
 from auth import AuthManager, SubscriptionManager, EmailService as AuthEmailService
 from stripe_integration import StripePaymentManager, PricingHelper
 from collective_actions import CollectiveActionsManager
+from relationship_intelligence import RelationshipIntelligence
 from network_metrics import NetworkMetricsManager
 from shared_ai_assistant import SharedAIAssistant
 from utils.email import email_service as resend_email_service
@@ -72,6 +73,7 @@ ai_matcher = AIContactMatcher(db)
 search_engine = ContactSearchEngine(db)
 gamification = GamificationEngine(db)
 collective_actions_manager = CollectiveActionsManager()
+relationship_intel = RelationshipIntelligence(db)
 network_metrics_manager = NetworkMetricsManager()
 shared_ai_assistant = SharedAIAssistant()
 

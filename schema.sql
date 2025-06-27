@@ -359,3 +359,123 @@ CREATE INDEX IF NOT EXISTS idx_guest_sessions_token ON guest_sessions (session_t
 CREATE INDEX IF NOT EXISTS idx_usage_tracking_user ON usage_tracking (user_id);
 CREATE INDEX IF NOT EXISTS idx_usage_tracking_action ON usage_tracking (action_type);
 CREATE INDEX IF NOT EXISTS idx_subscription_history_user ON subscription_history (user_id);
+
+-- Relationship Intelligence Layer Enhancement Tables
+
+-- Enhanced Contact Timeline Events (expanding on existing interaction_logs)
+CREATE TABLE IF NOT EXISTS contact_timeline_events (
+    id TEXT PRIMARY KEY,
+    contact_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    event_type TEXT NOT NULL, -- 'note', 'message', 'meeting', 'task', 'email', 'call', 'interaction'
+    title TEXT NOT NULL,
+    description TEXT,
+    event_date DATETIME NOT NULL,
+    metadata TEXT, -- JSON data for event-specific info
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (contact_id) REFERENCES contacts(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Unknown but Important Contacts
+CREATE TABLE IF NOT EXISTS unknown_contacts (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    identifier TEXT NOT NULL, -- name, phone number, email, etc.
+    identifier_type TEXT NOT NULL, -- 'name', 'phone', 'email', 'handle'
+    context_clues TEXT, -- JSON array of potential context
+    ai_suggestions TEXT, -- JSON array of AI-generated suggestions
+    status TEXT DEFAULT 'unknown', -- 'unknown', 'investigating', 'identified', 'irrelevant'
+    notes TEXT,
+    potential_contact_id TEXT, -- Link to contacts table if identified
+    review_count INTEGER DEFAULT 0,
+    last_reviewed DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (potential_contact_id) REFERENCES contacts(id)
+);
+
+-- Mass Message Campaigns
+CREATE TABLE IF NOT EXISTS mass_message_campaigns (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    message_template TEXT NOT NULL,
+    message_type TEXT NOT NULL, -- 'email', 'sms', 'dm'
+    target_criteria TEXT, -- JSON for filtering criteria
+    target_contact_ids TEXT, -- JSON array of contact IDs
+    status TEXT DEFAULT 'draft', -- 'draft', 'scheduled', 'sending', 'sent', 'cancelled'
+    scheduled_at DATETIME,
+    sent_at DATETIME,
+    total_recipients INTEGER DEFAULT 0,
+    successful_sends INTEGER DEFAULT 0,
+    failed_sends INTEGER DEFAULT 0,
+    open_rate REAL DEFAULT 0,
+    response_rate REAL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Mass Message Recipients & Tracking
+CREATE TABLE IF NOT EXISTS mass_message_recipients (
+    id TEXT PRIMARY KEY,
+    campaign_id TEXT NOT NULL,
+    contact_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    personalized_message TEXT,
+    send_status TEXT DEFAULT 'pending', -- 'pending', 'sent', 'failed', 'bounced'
+    sent_at DATETIME,
+    opened_at DATETIME,
+    clicked_at DATETIME,
+    replied_at DATETIME,
+    error_message TEXT,
+    metadata TEXT, -- JSON for provider-specific tracking data
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (campaign_id) REFERENCES mass_message_campaigns(id),
+    FOREIGN KEY (contact_id) REFERENCES contacts(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Contact Relationship Mapping (for future protocol integration)
+CREATE TABLE IF NOT EXISTS contact_relationships (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    contact_a_id TEXT NOT NULL,
+    contact_b_id TEXT NOT NULL,
+    relationship_type TEXT NOT NULL, -- 'knows', 'worked_with', 'introduced', 'mutual_connection'
+    strength INTEGER DEFAULT 1, -- 1-5 scale
+    context TEXT,
+    verified BOOLEAN DEFAULT FALSE,
+    protocol_opted_in BOOLEAN DEFAULT FALSE, -- For future zkSync integration
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (contact_a_id) REFERENCES contacts(id),
+    FOREIGN KEY (contact_b_id) REFERENCES contacts(id)
+);
+
+-- Enhanced indexes for relationship intelligence features
+CREATE INDEX IF NOT EXISTS idx_contact_timeline_events_contact_id ON contact_timeline_events(contact_id);
+CREATE INDEX IF NOT EXISTS idx_contact_timeline_events_user_id ON contact_timeline_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_contact_timeline_events_event_date ON contact_timeline_events(event_date);
+CREATE INDEX IF NOT EXISTS idx_contact_timeline_events_type ON contact_timeline_events(event_type);
+
+CREATE INDEX IF NOT EXISTS idx_unknown_contacts_user_id ON unknown_contacts(user_id);
+CREATE INDEX IF NOT EXISTS idx_unknown_contacts_status ON unknown_contacts(status);
+CREATE INDEX IF NOT EXISTS idx_unknown_contacts_identifier_type ON unknown_contacts(identifier_type);
+
+CREATE INDEX IF NOT EXISTS idx_mass_message_campaigns_user_id ON mass_message_campaigns(user_id);
+CREATE INDEX IF NOT EXISTS idx_mass_message_campaigns_status ON mass_message_campaigns(status);
+CREATE INDEX IF NOT EXISTS idx_mass_message_campaigns_scheduled ON mass_message_campaigns(scheduled_at);
+
+CREATE INDEX IF NOT EXISTS idx_mass_message_recipients_campaign_id ON mass_message_recipients(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_mass_message_recipients_contact_id ON mass_message_recipients(contact_id);
+CREATE INDEX IF NOT EXISTS idx_mass_message_recipients_status ON mass_message_recipients(send_status);
+
+CREATE INDEX IF NOT EXISTS idx_contact_relationships_user_id ON contact_relationships(user_id);
+CREATE INDEX IF NOT EXISTS idx_contact_relationships_contact_a ON contact_relationships(contact_a_id);
+CREATE INDEX IF NOT EXISTS idx_contact_relationships_contact_b ON contact_relationships(contact_b_id);
+CREATE INDEX IF NOT EXISTS idx_contact_relationships_type ON contact_relationships(relationship_type);
