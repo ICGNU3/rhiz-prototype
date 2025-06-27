@@ -46,7 +46,10 @@ const Dashboard: React.FC = () => {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 bg-gray-700 rounded w-1/3 mb-8 animate-pulse"></div>
+        <div className="flex items-center space-x-4 mb-8">
+          <div className="h-8 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl w-1/3 animate-pulse"></div>
+          <Sparkles className="w-6 h-6 text-purple-400 animate-pulse" />
+        </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="glass-card p-6 animate-pulse">
