@@ -88,6 +88,25 @@ def login():
     
     return jsonify({'error': 'User not found'}), 404
 
+@api_bp.route('/auth/demo-login', methods=['POST'])
+def demo_login():
+    """Quick demo login for testing"""
+    db = get_db()
+    user = db.execute('SELECT * FROM users WHERE email = ?', ('demo@rhiz.app',)).fetchone()
+    
+    if user:
+        session['user_id'] = user['id']
+        return jsonify({
+            'success': True,
+            'user': {
+                'id': user['id'],
+                'email': user['email'],
+                'subscription_tier': user['subscription_tier']
+            }
+        })
+    
+    return jsonify({'error': 'Demo user not found'}), 404
+
 @api_bp.route('/auth/magic-link', methods=['POST'])
 def send_magic_link():
     data = request.get_json()
