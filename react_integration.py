@@ -30,9 +30,15 @@ def get_db():
 def serve_react():
     """Serve the React frontend for all app routes"""
     try:
+        # Get the current route to determine content
+        route = request.path
+        
+        # Route-specific content
+        page_content = get_page_content(route)
+        
         # In production, this would serve the built React app
-        # For development, we'll serve a basic HTML page that loads the React dev server
-        return '''
+        # For development, we'll serve a glassmorphism page with route-specific content
+        html_template = '''
         <!DOCTYPE html>
         <html>
         <head>
@@ -321,90 +327,21 @@ def serve_react():
                 <div class="nav-container">
                     <div class="logo">Rhiz</div>
                     <ul class="nav-links">
-                        <li><a href="/" class="nav-link active">Dashboard</a></li>
-                        <li><a href="/goals" class="nav-link">Goals</a></li>
-                        <li><a href="/contacts" class="nav-link">Contacts</a></li>
-                        <li><a href="/intelligence" class="nav-link">Intelligence</a></li>
-                        <li><a href="/settings" class="nav-link">Settings</a></li>
+                        <li><a href="/app" class="nav-link active">Dashboard</a></li>
+                        <li><a href="/app/goals" class="nav-link">Goals</a></li>
+                        <li><a href="/app/contacts" class="nav-link">Contacts</a></li>
+                        <li><a href="/app/intelligence" class="nav-link">Intelligence</a></li>
+                        <li><a href="/app/settings" class="nav-link">Settings</a></li>
                     </ul>
                 </div>
             </nav>
             
             <main class="main-content">
                 <div class="glass-card">
-                    <h1 class="section-title">Welcome to Rhiz</h1>
-                    <p class="section-subtitle">Your intelligent relationship network is ready</p>
+                    <h1 class="section-title">{page_content['title']}</h1>
+                    <p class="section-subtitle">{page_content['subtitle']}</p>
                     
-                    <div class="dashboard-grid">
-                        <div class="glass-card">
-                            <h3 class="section-title">System Status</h3>
-                            <div class="stat-item">
-                                <span class="stat-label">Backend</span>
-                                <span class="status-indicator">✅ Running</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">Database</span>
-                                <span class="status-indicator">✅ Connected</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">API Routes</span>
-                                <span class="status-indicator">✅ Active</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">AI Engine</span>
-                                <span class="status-indicator">✅ Ready</span>
-                            </div>
-                        </div>
-                        
-                        <div class="glass-card">
-                            <h3 class="section-title">Quick Stats</h3>
-                            <div class="stat-item">
-                                <span class="stat-label">Total Contacts</span>
-                                <span class="stat-value">5</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">Active Goals</span>
-                                <span class="stat-value">3</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">AI Suggestions</span>
-                                <span class="stat-value">12</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">Trust Insights</span>
-                                <span class="stat-value">Ready</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="feature-grid">
-                        <div class="feature-card">
-                            <div class="feature-icon">🎯</div>
-                            <h4 class="feature-title">Goals & Matching</h4>
-                            <p class="feature-description">AI-powered goal matching with your network contacts using semantic analysis</p>
-                        </div>
-                        <div class="feature-card">
-                            <div class="feature-icon">👥</div>
-                            <h4 class="feature-title">Contact Intelligence</h4>
-                            <p class="feature-description">Multi-source contact sync with intelligent deduplication and enrichment</p>
-                        </div>
-                        <div class="feature-card">
-                            <div class="feature-icon">🧠</div>
-                            <h4 class="feature-title">Trust Insights</h4>
-                            <p class="feature-description">Real-time relationship intelligence with trust scoring and behavioral analysis</p>
-                        </div>
-                        <div class="feature-card">
-                            <div class="feature-icon">🌐</div>
-                            <h4 class="feature-title">Network Visualization</h4>
-                            <p class="feature-description">Interactive relationship mapping with rhizomatic intelligence layers</p>
-                        </div>
-                    </div>
-                    
-                    <div class="quick-actions">
-                        <a href="/api/health" class="btn">Test API Health</a>
-                        <a href="/dashboard-legacy" class="btn btn-secondary">View Legacy Dashboard</a>
-                        <a href="/api/demo/seed" class="btn btn-secondary">Load Demo Data</a>
-                    </div>
+                    {page_content['main_content']}
                 </div>
             </main>
         </body>
@@ -603,6 +540,269 @@ def seed_demo_data():
     except Exception as e:
         logging.error(f"Error seeding demo data: {e}")
         return jsonify({'error': f'Failed to seed demo data: {str(e)}'}), 500
+
+def get_page_content(route):
+    """Get page-specific content based on route"""
+    if route.endswith('/goals') or route.endswith('/app/goals'):
+        return {
+            'title': 'Goals & Matching',
+            'subtitle': 'AI-powered goal matching with semantic analysis',
+            'main_content': '''
+                <div class="dashboard-grid">
+                    <div class="glass-card">
+                        <h3 class="section-title">Create New Goal</h3>
+                        <form class="goal-form">
+                            <div class="form-group">
+                                <label class="form-label">Goal Title</label>
+                                <input type="text" class="form-input" placeholder="e.g., Raise $250k Angel Round">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-input" rows="3" placeholder="Describe your goal in detail..."></textarea>
+                            </div>
+                            <button type="submit" class="btn">Create Goal & Find Matches</button>
+                        </form>
+                    </div>
+                    
+                    <div class="glass-card">
+                        <h3 class="section-title">Recent Goals</h3>
+                        <div class="goal-list">
+                            <div class="goal-item">
+                                <h4 class="goal-title">Raise $250k Angel Round</h4>
+                                <p class="goal-description">Seeking angel investors for our SaaS platform...</p>
+                                <div class="goal-stats">
+                                    <span class="stat-badge">3 matches found</span>
+                                    <span class="stat-badge">92% confidence</span>
+                                </div>
+                            </div>
+                            <div class="goal-item">
+                                <h4 class="goal-title">Hire Senior Developer</h4>
+                                <p class="goal-description">Need to find a senior full-stack developer...</p>
+                                <div class="goal-stats">
+                                    <span class="stat-badge">2 matches found</span>
+                                    <span class="stat-badge">88% confidence</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            '''
+        }
+    elif route.endswith('/contacts') or route.endswith('/app/contacts'):
+        return {
+            'title': 'Contact Intelligence',
+            'subtitle': 'Multi-source contact sync with intelligent deduplication',
+            'main_content': '''
+                <div class="dashboard-grid">
+                    <div class="glass-card">
+                        <h3 class="section-title">Contact Management</h3>
+                        <div class="contact-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Total Contacts</span>
+                                <span class="stat-value">5</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Warm Connections</span>
+                                <span class="stat-value">3</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Last Sync</span>
+                                <span class="stat-value">2 hours ago</span>
+                            </div>
+                        </div>
+                        <div class="quick-actions">
+                            <button class="btn">Add Contact</button>
+                            <button class="btn btn-secondary">Import CSV</button>
+                            <button class="btn btn-secondary">Sync LinkedIn</button>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card">
+                        <h3 class="section-title">Recent Contacts</h3>
+                        <div class="contact-list">
+                            <div class="contact-item">
+                                <div class="contact-info">
+                                    <h4 class="contact-name">Sarah Chen</h4>
+                                    <p class="contact-company">TechVentures Capital - Partner</p>
+                                </div>
+                                <span class="warmth-badge warm">Warm</span>
+                            </div>
+                            <div class="contact-item">
+                                <div class="contact-info">
+                                    <h4 class="contact-name">Marcus Johnson</h4>
+                                    <p class="contact-company">CloudScale - CTO</p>
+                                </div>
+                                <span class="warmth-badge hot">Hot</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            '''
+        }
+    elif route.endswith('/intelligence') or route.endswith('/app/intelligence'):
+        return {
+            'title': 'Trust Insights',
+            'subtitle': 'Real-time relationship intelligence with trust scoring',
+            'main_content': '''
+                <div class="dashboard-grid">
+                    <div class="glass-card">
+                        <h3 class="section-title">Trust Analytics</h3>
+                        <div class="trust-metrics">
+                            <div class="metric-card">
+                                <h4 class="metric-title">Network Health</h4>
+                                <div class="metric-value">87%</div>
+                                <p class="metric-description">Overall relationship strength</p>
+                            </div>
+                            <div class="metric-card">
+                                <h4 class="metric-title">Response Rate</h4>
+                                <div class="metric-value">72%</div>
+                                <p class="metric-description">Average contact responsiveness</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card">
+                        <h3 class="section-title">AI Recommendations</h3>
+                        <div class="recommendation-list">
+                            <div class="recommendation-item">
+                                <h4 class="recommendation-title">Introduction Opportunity</h4>
+                                <p class="recommendation-description">Connect Sarah Chen with Marcus Johnson - both interested in SaaS investments</p>
+                                <button class="btn btn-small">Make Introduction</button>
+                            </div>
+                            <div class="recommendation-item">
+                                <h4 class="recommendation-title">Follow-up Reminder</h4>
+                                <p class="recommendation-description">Emily Rodriguez hasn't responded in 2 weeks - consider gentle follow-up</p>
+                                <button class="btn btn-small">Send Follow-up</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            '''
+        }
+    elif route.endswith('/settings') or route.endswith('/app/settings'):
+        return {
+            'title': 'Settings',
+            'subtitle': 'Configure your Rhiz experience',
+            'main_content': '''
+                <div class="dashboard-grid">
+                    <div class="glass-card">
+                        <h3 class="section-title">API Integrations</h3>
+                        <div class="integration-list">
+                            <div class="integration-item">
+                                <div class="integration-info">
+                                    <h4 class="integration-name">OpenAI</h4>
+                                    <p class="integration-status">Connected</p>
+                                </div>
+                                <span class="status-indicator">✅ Active</span>
+                            </div>
+                            <div class="integration-item">
+                                <div class="integration-info">
+                                    <h4 class="integration-name">LinkedIn</h4>
+                                    <p class="integration-status">Not Connected</p>
+                                </div>
+                                <button class="btn btn-small">Connect</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card">
+                        <h3 class="section-title">Preferences</h3>
+                        <div class="preferences-list">
+                            <div class="preference-item">
+                                <label class="preference-label">AI Suggestion Frequency</label>
+                                <select class="form-input">
+                                    <option>Real-time</option>
+                                    <option>Daily</option>
+                                    <option>Weekly</option>
+                                </select>
+                            </div>
+                            <div class="preference-item">
+                                <label class="preference-label">Trust Insights</label>
+                                <input type="checkbox" checked> Enable automatic trust scoring
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            '''
+        }
+    else:
+        # Default dashboard content
+        return {
+            'title': 'Welcome to Rhiz',
+            'subtitle': 'Your intelligent relationship network is ready',
+            'main_content': '''
+                <div class="dashboard-grid">
+                    <div class="glass-card">
+                        <h3 class="section-title">System Status</h3>
+                        <div class="stat-item">
+                            <span class="stat-label">Backend</span>
+                            <span class="status-indicator">✅ Running</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Database</span>
+                            <span class="status-indicator">✅ Connected</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">API Routes</span>
+                            <span class="status-indicator">✅ Active</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">AI Engine</span>
+                            <span class="status-indicator">✅ Ready</span>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card">
+                        <h3 class="section-title">Quick Stats</h3>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Contacts</span>
+                            <span class="stat-value">5</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Active Goals</span>
+                            <span class="stat-value">3</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">AI Suggestions</span>
+                            <span class="stat-value">12</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Trust Insights</span>
+                            <span class="stat-value">Ready</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h4 class="feature-title">Goals & Matching</h4>
+                        <p class="feature-description">AI-powered goal matching with your network contacts using semantic analysis</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">👥</div>
+                        <h4 class="feature-title">Contact Intelligence</h4>
+                        <p class="feature-description">Multi-source contact sync with intelligent deduplication and enrichment</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🧠</div>
+                        <h4 class="feature-title">Trust Insights</h4>
+                        <p class="feature-description">Real-time relationship intelligence with trust scoring and behavioral analysis</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🌐</div>
+                        <h4 class="feature-title">Network Visualization</h4>
+                        <p class="feature-description">Interactive relationship mapping with rhizomatic intelligence layers</p>
+                    </div>
+                </div>
+                
+                <div class="quick-actions">
+                    <a href="/api/health" class="btn">Test API Health</a>
+                    <a href="/dashboard-legacy" class="btn btn-secondary">View Legacy Dashboard</a>
+                    <a href="/api/demo/seed" class="btn btn-secondary">Load Demo Data</a>
+                </div>
+            '''
+        }
 
 def register_react_integration(app):
     """Register React integration with the Flask app"""
