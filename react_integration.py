@@ -46,7 +46,7 @@ def serve_react():
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <style>
-                :root {
+                :root {{{
                     --text-primary: #ffffff;
                     --text-secondary: rgba(255, 255, 255, 0.7);
                     --glass-bg: rgba(255, 255, 255, 0.05);
@@ -55,25 +55,25 @@ def serve_react():
                     --primary-400: #6bb6fe;
                     --secondary-500: #8b5cf6;
                     --accent-500: #ec4899;
-                }
+                }}}
                 
-                * {
+                * {{
                     margin: 0;
                     padding: 0;
                     box-sizing: border-box;
-                }
+                }}
                 
-                body { 
+                body {{ 
                     margin: 0; 
                     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
                     background: radial-gradient(ellipse at top, #1e3a8a 0%, #0f172a 50%, #0a0b0d 100%);
                     color: var(--text-primary);
                     min-height: 100vh;
                     overflow-x: hidden;
-                }
+                }}
                 
                 /* Floating background orbs */
-                .floating-orbs {
+                .floating-orbs {{
                     position: fixed;
                     top: 0;
                     left: 0;
@@ -81,48 +81,48 @@ def serve_react():
                     height: 100%;
                     pointer-events: none;
                     z-index: -1;
-                }
+                }}
                 
-                .orb {
+                .orb {{
                     position: absolute;
                     border-radius: 50%;
                     background: linear-gradient(135deg, rgba(79, 172, 254, 0.3), rgba(139, 92, 246, 0.2));
                     animation: float 20s infinite linear;
                     filter: blur(40px);
-                }
+                }}
                 
-                .orb:nth-child(1) {
+                .orb:nth-child(1) {{
                     width: 300px;
                     height: 300px;
                     top: -150px;
                     left: -150px;
                     animation-delay: 0s;
-                }
+                }}
                 
-                .orb:nth-child(2) {
+                .orb:nth-child(2) {{
                     width: 200px;
                     height: 200px;
                     top: 50%;
                     right: -100px;
                     animation-delay: -5s;
-                }
+                }}
                 
-                .orb:nth-child(3) {
+                .orb:nth-child(3) {{
                     width: 400px;
                     height: 400px;
                     bottom: -200px;
                     left: 30%;
                     animation-delay: -10s;
-                }
+                }}
                 
-                @keyframes float {
-                    0%, 100% { transform: translate(0, 0) rotate(0deg); }
-                    33% { transform: translate(30px, -30px) rotate(120deg); }
-                    66% { transform: translate(-20px, 20px) rotate(240deg); }
-                }
+                @keyframes float {{
+                    0%, 100% {{ transform: translate(0, 0) rotate(0deg); }}
+                    33% {{ transform: translate(30px, -30px) rotate(120deg); }}
+                    66% {{ transform: translate(-20px, 20px) rotate(240deg); }}
+                }}
                 
                 /* Navigation */
-                .navbar {
+                .navbar {{
                     position: fixed;
                     top: 0;
                     left: 0;
@@ -132,98 +132,98 @@ def serve_react():
                     backdrop-filter: blur(16px);
                     background: var(--glass-bg);
                     border-bottom: 1px solid var(--glass-border);
-                }
+                }}
                 
-                .nav-container {
+                .nav-container {{
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
                     max-width: 1200px;
                     margin: 0 auto;
-                }
+                }}
                 
-                .logo {
+                .logo {{
                     font-size: 1.5rem;
                     font-weight: 700;
                     background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
                     background-clip: text;
                     -webkit-background-clip: text;
                     -webkit-text-fill-color: transparent;
-                }
+                }}
                 
-                .nav-links {
+                .nav-links {{
                     display: flex;
                     gap: 2rem;
                     list-style: none;
-                }
+                }}
                 
-                .nav-link {
+                .nav-link {{
                     color: var(--text-secondary);
                     text-decoration: none;
                     font-weight: 500;
                     transition: color 0.3s ease;
-                }
+                }}
                 
-                .nav-link:hover, .nav-link.active {
+                .nav-link:hover, .nav-link.active {{
                     color: var(--text-primary);
-                }
+                }}
                 
                 /* Main content */
-                .main-content {
+                .main-content {{
                     padding: 8rem 2rem 2rem;
                     max-width: 1200px;
                     margin: 0 auto;
-                }
+                }}
                 
-                .glass-card {
+                .glass-card {{
                     background: var(--glass-bg);
                     backdrop-filter: blur(16px);
                     border: 1px solid var(--glass-border);
                     border-radius: 1rem;
                     padding: 2rem;
                     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-                }
+                }}
                 
-                .dashboard-grid {
+                .dashboard-grid {{
                     display: grid;
                     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
                     gap: 2rem;
                     margin-bottom: 2rem;
-                }
+                }}
                 
-                .section-title {
+                .section-title {{
                     font-size: 1.5rem;
                     font-weight: 600;
                     margin-bottom: 1rem;
                     color: var(--text-primary);
-                }
+                }}
                 
-                .section-subtitle {
+                .section-subtitle {{
                     color: var(--text-secondary);
                     margin-bottom: 2rem;
-                }
+                }}
                 
-                .stat-item {
+                .stat-item {{
                     display: flex;
                     justify-content: space-between;
                     padding: 1rem 0;
                     border-bottom: 1px solid var(--glass-border);
-                }
+                }}
                 
-                .stat-item:last-child {
+                .stat-item:last-child {{
                     border-bottom: none;
-                }
+                }}
                 
-                .stat-label {
+                .stat-label {{
                     color: var(--text-secondary);
-                }
+                }}
                 
-                .stat-value {
+                .stat-value {{
                     color: var(--text-primary);
                     font-weight: 600;
-                }
+                }}
                 
-                .btn {
+                .btn {{
                     background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
                     color: white;
                     padding: 0.75rem 1.5rem;
@@ -234,32 +234,32 @@ def serve_react():
                     display: inline-block;
                     transition: all 0.3s ease;
                     cursor: pointer;
-                }
+                }}
                 
-                .btn:hover {
+                .btn:hover {{
                     transform: translateY(-2px);
                     box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
-                }
+                }}
                 
-                .btn-secondary {
+                .btn-secondary {{
                     background: var(--glass-bg);
                     color: var(--text-primary);
                     border: 1px solid var(--glass-border);
-                }
+                }}
                 
-                .btn-secondary:hover {
+                .btn-secondary:hover {{
                     background: rgba(255, 255, 255, 0.1);
                     box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
-                }
+                }}
                 
-                .quick-actions {
+                .quick-actions {{
                     display: flex;
                     gap: 1rem;
                     flex-wrap: wrap;
                     margin-top: 2rem;
-                }
+                }}
                 
-                .status-indicator {
+                .status-indicator {{
                     display: inline-flex;
                     align-items: center;
                     gap: 0.5rem;
@@ -269,29 +269,29 @@ def serve_react():
                     border-radius: 0.5rem;
                     border: 1px solid rgba(34, 197, 94, 0.3);
                     font-size: 0.875rem;
-                }
+                }}
                 
-                .feature-grid {
+                .feature-grid {{
                     display: grid;
                     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
                     gap: 1.5rem;
                     margin-top: 2rem;
-                }
+                }}
                 
-                .feature-card {
+                .feature-card {{
                     background: rgba(255, 255, 255, 0.03);
                     border: 1px solid var(--glass-border);
                     border-radius: 0.75rem;
                     padding: 1.5rem;
                     transition: all 0.3s ease;
-                }
+                }}
                 
-                .feature-card:hover {
+                .feature-card:hover {{
                     background: rgba(255, 255, 255, 0.06);
                     transform: translateY(-2px);
-                }
+                }}
                 
-                .feature-icon {
+                .feature-icon {{
                     width: 2.5rem;
                     height: 2.5rem;
                     background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
@@ -301,19 +301,19 @@ def serve_react():
                     justify-content: center;
                     margin-bottom: 1rem;
                     font-size: 1.25rem;
-                }
+                }}
                 
-                .feature-title {
+                .feature-title {{
                     font-weight: 600;
                     margin-bottom: 0.5rem;
                     color: var(--text-primary);
-                }
+                }}
                 
-                .feature-description {
+                .feature-description {{
                     color: var(--text-secondary);
                     font-size: 0.875rem;
                     line-height: 1.5;
-                }
+                }}
             </style>
         </head>
         <body>
@@ -338,15 +338,18 @@ def serve_react():
             
             <main class="main-content">
                 <div class="glass-card">
-                    <h1 class="section-title">{page_content['title']}</h1>
-                    <p class="section-subtitle">{page_content['subtitle']}</p>
+                    <h1 class="section-title">{title}</h1>
+                    <p class="section-subtitle">{subtitle}</p>
                     
-                    {page_content['main_content']}
+                    {main_content}
                 </div>
             </main>
         </body>
         </html>
         '''
+        
+        # Format the template with the page content
+        return html_template.format(**page_content)
     except Exception as e:
         logging.error(f"Error serving React frontend: {e}")
         return jsonify({'error': 'Frontend unavailable'}), 500
@@ -370,18 +373,18 @@ def seed_demo_data():
         
         # Create sample goals
         goals = [
-            {
+            {{
                 'title': 'Raise $250k Angel Round',
                 'description': 'Seeking angel investors for our SaaS platform. Looking for strategic investors with enterprise software experience.'
-            },
-            {
+            }},
+            {{
                 'title': 'Hire Senior Developer',
                 'description': 'Need to find a senior full-stack developer with React and Python experience for our growing team.'
-            },
-            {
+            }},
+            {{
                 'title': 'Find Beta Customers',
                 'description': 'Looking for 10-15 early adopters in the SMB space to test our product and provide feedback.'
-            }
+            }}
         ]
         
         goal_ids = []
@@ -402,7 +405,7 @@ def seed_demo_data():
         
         # Create sample contacts
         contacts = [
-            {
+            {{
                 'name': 'Sarah Chen',
                 'email': 'sarah@techventures.com',
                 'company': 'TechVentures Capital',
@@ -412,8 +415,8 @@ def seed_demo_data():
                 'warmth_label': 'Warm',
                 'notes': 'Met at TechCrunch. Interested in enterprise SaaS. Focus on Series A.',
                 'linkedin': 'https://linkedin.com/in/sarahchen'
-            },
-            {
+            }},
+            {{
                 'name': 'Marcus Johnson',
                 'email': 'marcus@cloudscale.io',
                 'company': 'CloudScale',
@@ -423,8 +426,8 @@ def seed_demo_data():
                 'warmth_label': 'Hot',
                 'notes': 'Fellow founder. Sold previous company to Microsoft. Great mentor.',
                 'linkedin': 'https://linkedin.com/in/marcusjohnson'
-            },
-            {
+            }},
+            {{
                 'name': 'Emily Rodriguez',
                 'email': 'emily@buildwright.com',
                 'company': 'BuildWright Solutions',
@@ -434,8 +437,8 @@ def seed_demo_data():
                 'warmth_label': 'Lukewarm',
                 'notes': 'Potential customer. Company has 150 employees. Interested in productivity tools.',
                 'linkedin': 'https://linkedin.com/in/emilyrodriguez'
-            },
-            {
+            }},
+            {{
                 'name': 'David Kim',
                 'email': 'david@freelance.dev',
                 'company': 'Independent',
@@ -445,8 +448,8 @@ def seed_demo_data():
                 'warmth_label': 'Warm',
                 'notes': '8 years experience. React, Node.js, Python. Available for hire.',
                 'linkedin': 'https://linkedin.com/in/davidkim'
-            },
-            {
+            }},
+            {{
                 'name': 'Lisa Park',
                 'email': 'lisa@innovatelab.co',
                 'company': 'InnovateLab',
@@ -456,7 +459,7 @@ def seed_demo_data():
                 'warmth_label': 'Warm',
                 'notes': 'Product expert. Previously at Google. Open to advising early-stage startups.',
                 'linkedin': 'https://linkedin.com/in/lisapark'
-            }
+            }}
         ]
         
         contact_ids = []
@@ -485,24 +488,24 @@ def seed_demo_data():
         
         # Create AI suggestions
         suggestions = [
-            {
+            {{
                 'goal_id': goal_ids[0],  # Raise funding
                 'contact_id': contact_ids[0],  # Sarah Chen (investor)
                 'confidence': 0.92,
                 'suggestion': 'Sarah specializes in enterprise SaaS investments and has shown interest in your space. Great fit for your angel round.'
-            },
-            {
+            }},
+            {{
                 'goal_id': goal_ids[1],  # Hire developer
                 'contact_id': contact_ids[3],  # David Kim (developer)
                 'confidence': 0.88,
                 'suggestion': 'David has the exact technical skills you need and is actively looking for opportunities.'
-            },
-            {
+            }},
+            {{
                 'goal_id': goal_ids[2],  # Beta customers
                 'contact_id': contact_ids[2],  # Emily Rodriguez (potential customer)
                 'confidence': 0.75,
                 'suggestion': 'Emily\'s company fits your target customer profile and she\'s expressed interest in productivity tools.'
-            }
+            }}
         ]
         
         for suggestion in suggestions:
@@ -528,23 +531,23 @@ def seed_demo_data():
         # Set demo user in session
         session['user_id'] = user_id
         
-        return jsonify({
+        return jsonify({{
             'success': True,
             'message': 'Demo data created successfully',
             'user_id': user_id,
             'goals_created': len(goal_ids),
             'contacts_created': len(contact_ids),
             'suggestions_created': len(suggestions)
-        })
+        }})
         
     except Exception as e:
-        logging.error(f"Error seeding demo data: {e}")
-        return jsonify({'error': f'Failed to seed demo data: {str(e)}'}), 500
+        logging.error(f"Error seeding demo data: {{e}}")
+        return jsonify({{'error': f'Failed to seed demo data: {{str(e)}}'}}), 500
 
 def get_page_content(route):
     """Get page-specific content based on route"""
     if route.endswith('/goals') or route.endswith('/app/goals'):
-        return {
+        return {{
             'title': 'Goals & Matching',
             'subtitle': 'AI-powered goal matching with semantic analysis',
             'main_content': '''
@@ -587,9 +590,9 @@ def get_page_content(route):
                     </div>
                 </div>
             '''
-        }
+        }}
     elif route.endswith('/contacts') or route.endswith('/app/contacts'):
-        return {
+        return {{
             'title': 'Contact Intelligence',
             'subtitle': 'Multi-source contact sync with intelligent deduplication',
             'main_content': '''
@@ -638,9 +641,9 @@ def get_page_content(route):
                     </div>
                 </div>
             '''
-        }
+        }}
     elif route.endswith('/intelligence') or route.endswith('/app/intelligence'):
-        return {
+        return {{
             'title': 'Trust Insights',
             'subtitle': 'Real-time relationship intelligence with trust scoring',
             'main_content': '''
@@ -678,9 +681,9 @@ def get_page_content(route):
                     </div>
                 </div>
             '''
-        }
+        }}
     elif route.endswith('/settings') or route.endswith('/app/settings'):
-        return {
+        return {{
             'title': 'Settings',
             'subtitle': 'Configure your Rhiz experience',
             'main_content': '''
@@ -724,10 +727,10 @@ def get_page_content(route):
                     </div>
                 </div>
             '''
-        }
+        }}
     else:
         # Default dashboard content
-        return {
+        return {{
             'title': 'Welcome to Rhiz',
             'subtitle': 'Your intelligent relationship network is ready',
             'main_content': '''
@@ -802,7 +805,7 @@ def get_page_content(route):
                     <a href="/api/demo/seed" class="btn btn-secondary">Load Demo Data</a>
                 </div>
             '''
-        }
+        }}
 
 def register_react_integration(app):
     """Register React integration with the Flask app"""
