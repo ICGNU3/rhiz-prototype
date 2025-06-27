@@ -10,6 +10,7 @@ import os
 import json
 import logging
 from datetime import datetime, timedelta
+from dataclasses import asdict
 
 # Create API blueprint
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -689,6 +690,219 @@ def import_csv_contacts():
         return jsonify(results)
     except Exception as e:
         logging.error(f"CSV import error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Trust Insights endpoints
+@api_bp.route('/trust/insights', methods=['GET'])
+@auth_required
+def get_trust_insights():
+    """Get trust insights for current user"""
+    user_id = session.get('user_id')
+    
+    try:
+        from trust_insights import TrustInsightsEngine
+        trust_engine = TrustInsightsEngine()
+        trust_engine.init_trust_tables()
+        
+        insights = trust_engine.get_trust_insights_for_user(user_id)
+        
+        # Convert to dict for JSON serialization
+        insights_data = []
+        for insight in insights:
+            insight_dict = asdict(insight)
+            insight_dict['trust_signals'] = [asdict(signal) for signal in insight.trust_signals]
+            insights_data.append(insight_dict)
+        
+        return jsonify({
+            'success': True,
+            'insights': insights_data
+        })
+        
+    except Exception as e:
+        logging.error(f"Trust insights error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/trust/health', methods=['GET'])
+@auth_required
+def get_trust_health():
+    """Get user's overall trust health analysis"""
+    user_id = session.get('user_id')
+    
+    try:
+        from trust_insights import TrustInsightsEngine
+        trust_engine = TrustInsightsEngine()
+        health_data = trust_engine.generate_user_trust_health(user_id)
+        
+        return jsonify({
+            'success': True,
+            'health': health_data
+        })
+        
+    except Exception as e:
+        logging.error(f"Trust health error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/trust/update', methods=['POST'])
+@auth_required
+def update_trust_insights():
+    """Update trust insights for all user contacts"""
+    user_id = session.get('user_id')
+    
+    try:
+        from trust_insights import TrustInsightsEngine
+        trust_engine = TrustInsightsEngine()
+        trust_engine.init_trust_tables()
+        trust_engine.update_all_trust_insights(user_id)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Trust insights updated successfully'
+        })
+        
+    except Exception as e:
+        logging.error(f"Trust update error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/trust/signal', methods=['POST'])
+@auth_required
+def record_trust_signal():
+    """Record a trust signal for a contact"""
+    user_id = session.get('user_id')
+    data = request.get_json()
+    
+    contact_id = data.get('contact_id')
+    signal_type = data.get('signal_type')
+    value = data.get('value')
+    context = data.get('context', {})
+    
+    if not all([contact_id, signal_type, value is not None]):
+        return jsonify({'error': 'Missing required fields'}), 400
+    
+    try:
+        # Verify contact belongs to user
+        db = get_db()
+        contact = db.execute(
+            'SELECT id FROM contacts WHERE id = ? AND user_id = ?',
+            (contact_id, user_id)
+        ).fetchone()
+        db.close()
+        
+        if not contact:
+            return jsonify({'error': 'Contact not found'}), 404
+        
+        from trust_insights import TrustInsightsEngine
+        trust_engine = TrustInsightsEngine()
+        trust_engine.record_trust_signal(contact_id, signal_type, value, context)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Trust signal recorded'
+        })
+        
+    except Exception as e:
+        logging.error(f"Trust signal error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/trust/contact/<int:contact_id>', methods=['GET'])
+@auth_required
+def get_contact_trust_insight(contact_id):
+    """Get detailed trust insight for specific contact"""
+    user_id = session.get('user_id')
+    
+    try:
+        # Verify contact belongs to user
+        db = get_db()
+        contact = db.execute(
+            'SELECT * FROM contacts WHERE id = ? AND user_id = ?',
+            (contact_id, user_id)
+        ).fetchone()
+        
+        if not contact:
+            return jsonify({'error': 'Contact not found'}), 404
+        
+        # Get trust insight
+        insight = db.execute(
+            'SELECT * FROM trust_insights WHERE contact_id = ?',
+            (contact_id,)
+        ).fetchone()
+        
+        # Get trust signals
+        signals = db.execute(
+            '''SELECT * FROM trust_signals 
+               WHERE contact_id = ? 
+               ORDER BY timestamp DESC 
+               LIMIT 20''',
+            (contact_id,)
+        ).fetchall()
+        
+        # Get trust timeline
+        timeline = db.execute(
+            '''SELECT * FROM trust_timeline 
+               WHERE contact_id = ? 
+               ORDER BY timestamp DESC 
+               LIMIT 50''',
+            (contact_id,)
+        ).fetchall()
+        
+        db.close()
+        
+        return jsonify({
+            'success': True,
+            'contact': dict(contact),
+            'insight': dict(insight) if insight else None,
+            'signals': [dict(s) for s in signals],
+            'timeline': [dict(t) for t in timeline]
+        })
+        
+    except Exception as e:
+        logging.error(f"Contact trust insight error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/trust/tiers', methods=['GET'])
+@auth_required
+def get_trust_tiers():
+    """Get trust tier distribution for user"""
+    user_id = session.get('user_id')
+    
+    try:
+        db = get_db()
+        
+        # Get trust tier distribution
+        tier_distribution = db.execute(
+            '''SELECT trust_tier, COUNT(*) as count
+               FROM contacts 
+               WHERE user_id = ? AND trust_tier IS NOT NULL
+               GROUP BY trust_tier''',
+            (user_id,)
+        ).fetchall()
+        
+        # Get contacts by tier
+        tiers_data = {}
+        for tier_row in tier_distribution:
+            tier = tier_row['trust_tier']
+            contacts = db.execute(
+                '''SELECT c.*, ti.trust_score, ti.last_interaction
+                   FROM contacts c
+                   LEFT JOIN trust_insights ti ON c.id = ti.contact_id
+                   WHERE c.user_id = ? AND c.trust_tier = ?
+                   ORDER BY ti.trust_score DESC''',
+                (user_id, tier)
+            ).fetchall()
+            
+            tiers_data[tier] = {
+                'count': tier_row['count'],
+                'contacts': [dict(c) for c in contacts]
+            }
+        
+        db.close()
+        
+        return jsonify({
+            'success': True,
+            'tiers': tiers_data
+        })
+        
+    except Exception as e:
+        logging.error(f"Trust tiers error: {e}")
         return jsonify({'error': str(e)}), 500
 
 def register_api_routes(app):

@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Goals from './pages/Goals';
 import Contacts from './pages/Contacts';
 import Intelligence from './pages/Intelligence';
+import TrustInsights from './pages/TrustInsights';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import { useAuth } from './hooks/useAuth';
@@ -49,6 +50,7 @@ function AppContent() {
             <Route path="/goals" element={<Goals />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/intelligence" element={<Intelligence />} />
+            <Route path="/trust" element={<TrustInsights />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Routes>
