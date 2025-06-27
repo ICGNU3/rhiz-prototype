@@ -20,12 +20,13 @@ def get_db():
     return db
 
 # Serve React static files
-@react_bp.route('/')
-@react_bp.route('/dashboard')
-@react_bp.route('/goals')
-@react_bp.route('/contacts')
-@react_bp.route('/intelligence')
-@react_bp.route('/settings')
+@react_bp.route('/app')
+@react_bp.route('/app/')
+@react_bp.route('/app/dashboard')
+@react_bp.route('/app/goals')
+@react_bp.route('/app/contacts')
+@react_bp.route('/app/intelligence')
+@react_bp.route('/app/settings')
 def serve_react():
     """Serve the React frontend for all app routes"""
     try:
