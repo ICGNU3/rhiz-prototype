@@ -1198,6 +1198,242 @@ Best regards"""
             'error': 'Failed to regenerate message'
         }), 500
 
+# Enhanced PWA and Mobile API Routes
+@app.route('/shared-content', methods=['POST'])
+def handle_shared_content():
+    """Handle content shared from other apps via Web Share Target API"""
+    try:
+        user_id = get_current_user()
+        if not user_id:
+            return redirect('/auth/login')
+        
+        title = request.form.get('title', '')
+        text = request.form.get('text', '')
+        url = request.form.get('url', '')
+        files = request.files.getlist('files')
+        
+        # Process shared content
+        if files:
+            # Handle shared files (vCard, CSV, images)
+            for file in files:
+                if file.filename.endswith('.vcf'):
+                    # Process vCard import
+                    flash('vCard import feature coming soon!', 'info')
+                elif file.filename.endswith('.csv'):
+                    # Redirect to CSV import
+                    return redirect('/contacts/import')
+        
+        # Handle shared text/URL
+        if url and 'linkedin.com' in url:
+            # Extract LinkedIn profile info
+            return redirect(f'/contacts/new?linkedin_url={url}')
+        elif title or text:
+            # Create new contact with shared info
+            return redirect(f'/contacts/new?name={title}&notes={text}')
+        
+        flash('Content shared successfully!', 'success')
+        return redirect('/')
+        
+    except Exception as e:
+        logging.error(f"Shared content error: {e}")
+        flash('Error processing shared content', 'error')
+        return redirect('/')
+
+@app.route('/api/pwa/install-prompt', methods=['POST'])
+def pwa_install_prompt():
+    """Track PWA installation prompts"""
+    try:
+        data = request.get_json()
+        action = data.get('action')  # 'shown', 'accepted', 'dismissed'
+        
+        # Log PWA install metrics
+        logging.info(f"PWA install prompt: {action}")
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/pwa/push-subscription', methods=['POST'])
+def update_push_subscription():
+    """Update push notification subscription"""
+    try:
+        user_id = get_current_user()
+        if not user_id:
+            return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+        
+        subscription_data = request.get_json()
+        
+        # Store push subscription in database
+        db.execute("""
+            INSERT OR REPLACE INTO push_subscriptions 
+            (user_id, endpoint, p256dh_key, auth_key, created_at)
+            VALUES (?, ?, ?, ?, datetime('now'))
+        """, [
+            user_id,
+            subscription_data.get('endpoint'),
+            subscription_data.get('keys', {}).get('p256dh'),
+            subscription_data.get('keys', {}).get('auth')
+        ])
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        logging.error(f"Push subscription error: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/mobile/quick-actions')
+def mobile_quick_actions():
+    """Get quick actions for mobile interface"""
+    try:
+        user_id = get_current_user()
+        if not user_id:
+            return jsonify({'actions': []})
+        
+        # Get user's most common actions
+        quick_actions = [
+            {
+                'id': 'add_contact',
+                'label': 'Add Contact',
+                'icon': 'person-plus',
+                'url': '/contacts/new',
+                'badge': None
+            },
+            {
+                'id': 'new_goal',
+                'label': 'New Goal',
+                'icon': 'target',
+                'url': '/goals/new',
+                'badge': None
+            },
+            {
+                'id': 'follow_ups',
+                'label': 'Follow-ups',
+                'icon': 'clock',
+                'url': '/crm/pipeline',
+                'badge': contact_model.count_follow_ups_due(user_id) or None
+            },
+            {
+                'id': 'voice_memo',
+                'label': 'Voice Memo',
+                'icon': 'mic',
+                'action': 'voice_record',
+                'badge': None
+            }
+        ]
+        
+        return jsonify({'actions': quick_actions})
+    except Exception as e:
+        return jsonify({'actions': [], 'error': str(e)})
+
+@app.route('/api/mobile/sync-status')
+def mobile_sync_status():
+    """Get sync status for mobile app"""
+    try:
+        user_id = get_current_user()
+        if not user_id:
+            return jsonify({'synced': False})
+        
+        # Check last sync times
+        last_contact_sync = db.execute(
+            "SELECT MAX(updated_at) FROM contacts WHERE user_id = ?", 
+            [user_id]
+        ).fetchone()[0]
+        
+        last_goal_sync = db.execute(
+            "SELECT MAX(updated_at) FROM goals WHERE user_id = ?", 
+            [user_id]
+        ).fetchone()[0]
+        
+        return jsonify({
+            'synced': True,
+            'last_contact_sync': last_contact_sync,
+            'last_goal_sync': last_goal_sync,
+            'offline_items': 0  # Count of items waiting to sync
+        })
+    except Exception as e:
+        return jsonify({'synced': False, 'error': str(e)})
+
+@app.route('/api/mobile/voice-memo', methods=['POST'])
+def process_voice_memo():
+    """Process voice memo for contact creation"""
+    try:
+        user_id = get_current_user()
+        if not user_id:
+            return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+        
+        audio_file = request.files.get('audio')
+        if not audio_file:
+            return jsonify({'success': False, 'error': 'No audio file provided'}), 400
+        
+        # Save audio file temporarily
+        import tempfile
+        import os
+        
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
+            audio_file.save(tmp_file.name)
+            
+            try:
+                # Use OpenAI Whisper to transcribe
+                transcription = openai_utils.transcribe_audio(tmp_file.name)
+                
+                # Extract contact information using AI
+                contact_info = openai_utils.extract_contact_info_from_text(transcription)
+                
+                return jsonify({
+                    'success': True,
+                    'transcription': transcription,
+                    'contact_info': contact_info
+                })
+                
+            finally:
+                os.unlink(tmp_file.name)
+        
+    except Exception as e:
+        logging.error(f"Voice memo processing error: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Failed to process voice memo'
+        }), 500
+
+@app.route('/offline')
+def offline_fallback():
+    """Offline fallback page for PWA"""
+    return render_template('mobile/offline.html'), 200
+
+@app.route('/api/mobile/network-status')
+def network_status():
+    """Check network connectivity"""
+    return jsonify({
+        'online': True,
+        'timestamp': int(time.time())
+    })
+
+@app.route('/api/mobile/background-sync', methods=['POST'])
+def trigger_background_sync():
+    """Trigger background sync for offline data"""
+    try:
+        user_id = get_current_user()
+        if not user_id:
+            return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+        
+        sync_type = request.json.get('type', 'all')
+        
+        # Process different sync types
+        if sync_type in ['all', 'contacts']:
+            # Sync contacts
+            pass
+        
+        if sync_type in ['all', 'goals']:
+            # Sync goals
+            pass
+        
+        if sync_type in ['all', 'interactions']:
+            # Sync interactions
+            pass
+        
+        return jsonify({'success': True, 'synced_items': 0})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/email_setup')
 def email_setup():
     """Email configuration setup page"""

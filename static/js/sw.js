@@ -1,17 +1,31 @@
-// Service Worker for Founder Network AI PWA
-const CACHE_NAME = 'founder-network-ai-v1';
-const STATIC_CACHE = 'static-v1';
-const DYNAMIC_CACHE = 'dynamic-v1';
+// Enhanced Service Worker for Rhiz PWA
+const CACHE_NAME = 'rhiz-pwa-v2';
+const STATIC_CACHE = 'rhiz-static-v2';
+const DYNAMIC_CACHE = 'rhiz-dynamic-v2';
+const OFFLINE_CACHE = 'rhiz-offline-v1';
 
 const STATIC_FILES = [
   '/',
+  '/offline.html',
   '/static/manifest.json',
   '/static/js/app.js',
+  '/static/js/background-gamification.js',
   '/static/css/mobile.css',
+  '/static/css/root-membership-theme.css',
+  '/static/images/ourhizome-logo.png',
+  '/static/icons/icon-192x192.png',
+  '/static/icons/icon-512x512.png',
   'https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css',
   'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'
 ];
+
+const OFFLINE_FALLBACKS = {
+  '/contacts': '/offline.html',
+  '/goals': '/offline.html',
+  '/crm/pipeline': '/offline.html',
+  '/analytics': '/offline.html'
+};
 
 const CACHE_STRATEGIES = {
   // Network first for API calls and dynamic content
@@ -183,7 +197,7 @@ async function staleWhileRevalidate(request) {
   return cached || fetchPromise;
 }
 
-// Background sync for offline actions
+// Enhanced background sync for offline actions
 self.addEventListener('sync', event => {
   console.log('[SW] Background sync:', event.tag);
   
@@ -191,6 +205,62 @@ self.addEventListener('sync', event => {
     event.waitUntil(syncOfflineContacts());
   } else if (event.tag === 'interaction-sync') {
     event.waitUntil(syncOfflineInteractions());
+  } else if (event.tag === 'email-sync') {
+    event.waitUntil(syncOfflineEmails());
+  } else if (event.tag === 'goal-sync') {
+    event.waitUntil(syncOfflineGoals());
+  }
+});
+
+// Push notification handler
+self.addEventListener('push', event => {
+  console.log('[SW] Push notification received:', event);
+  
+  const options = {
+    body: event.data ? event.data.text() : 'New notification from Rhiz',
+    icon: '/static/icons/icon-192x192.png',
+    badge: '/static/icons/icon-72x72.png',
+    vibrate: [200, 100, 200],
+    data: {
+      url: '/'
+    },
+    actions: [
+      {
+        action: 'open',
+        title: 'Open Rhiz',
+        icon: '/static/icons/icon-72x72.png'
+      },
+      {
+        action: 'dismiss',
+        title: 'Dismiss'
+      }
+    ]
+  };
+  
+  event.waitUntil(
+    self.registration.showNotification('Rhiz', options)
+  );
+});
+
+// Notification click handler
+self.addEventListener('notificationclick', event => {
+  console.log('[SW] Notification clicked:', event);
+  
+  event.notification.close();
+  
+  if (event.action === 'open' || !event.action) {
+    event.waitUntil(
+      clients.openWindow(event.notification.data.url || '/')
+    );
+  }
+});
+
+// Periodic background sync for updates
+self.addEventListener('periodicsync', event => {
+  console.log('[SW] Periodic sync:', event.tag);
+  
+  if (event.tag === 'content-sync') {
+    event.waitUntil(syncPeriodicContent());
   }
 });
 
