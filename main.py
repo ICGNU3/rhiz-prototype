@@ -8,6 +8,10 @@ from api_routes import register_api_routes
 # Register API routes for React frontend
 register_api_routes(app)
 
+# Register React integration routes
+from react_integration import register_react_integration
+register_react_integration(app)
+
 # Import and register Monique CRM blueprint
 try:
     from monique_crm import monique_bp
