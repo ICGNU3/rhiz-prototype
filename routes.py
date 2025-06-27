@@ -1030,6 +1030,174 @@ def send_ai_message():
             'error': 'Failed to send AI message'
         }), 500
 
+@app.route('/api/generate-subject', methods=['POST'])
+def generate_subject():
+    """Generate smart email subject line"""
+    try:
+        data = request.get_json()
+        contact_name = data.get('contact_name', '')
+        goal_title = data.get('goal_title', '')
+        confidence_score = float(data.get('confidence_score', 0))
+        
+        confidence_percent = int(confidence_score * 100)
+        
+        # Use OpenAI to generate a smart subject
+        subject_options = [
+            f"Quick intro - {confidence_percent}% network match for {goal_title}",
+            f"Potential collaboration on {goal_title}",
+            f"Introduction regarding {goal_title}",
+            f"Connection opportunity - {goal_title}",
+            f"Exploring synergies with {goal_title}"
+        ]
+        
+        # For now, return the first option. Could enhance with AI generation later
+        subject = subject_options[0]
+        
+        return jsonify({
+            'success': True,
+            'subject': subject
+        })
+        
+    except Exception as e:
+        logging.error(f"Failed to generate subject: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Failed to generate subject'
+        }), 500
+
+@app.route('/api/adjust-tone', methods=['POST'])
+def adjust_tone():
+    """Adjust message tone using AI"""
+    try:
+        data = request.get_json()
+        contact_name = data.get('contact_name', '')
+        goal_title = data.get('goal_title', '')
+        goal_description = data.get('goal_description', '')
+        tone = data.get('tone', 'professional')
+        contact_id = data.get('contact_id')
+        
+        # Get contact details for more context
+        contact = contact_model.get_by_id(contact_id) if contact_id else {}
+        
+        # Generate message with specific tone
+        if tone == 'professional':
+            message = f"""Dear {contact_name},
+
+I hope this message finds you well. I'm currently {goal_title.lower()} and believe your expertise would provide valuable insights for this initiative.
+
+{goal_description}
+
+Would you be available for a brief discussion at your convenience? I'd greatly appreciate the opportunity to learn from your experience.
+
+Best regards"""
+        elif tone == 'casual':
+            message = f"""Hi {contact_name}!
+
+Hope you're doing well! I'm working on {goal_title.lower()} and thought you'd be a great person to chat with.
+
+{goal_description}
+
+Would love to grab coffee or have a quick call if you're interested. Let me know what works for you!
+
+Cheers"""
+        elif tone == 'urgent':
+            message = f"""Hi {contact_name},
+
+I'm reaching out because I'm {goal_title.lower()} and need to move quickly on this. Your experience makes you someone I'd really value input from.
+
+{goal_description}
+
+Would you have 15-20 minutes this week to discuss? Happy to work around your schedule.
+
+Thanks so much"""
+        else:
+            # Default warm tone
+            message = f"""Hi {contact_name},
+
+I hope you're doing well. I'm currently {goal_title.lower()} and thought you might have some valuable insights to share.
+
+{goal_description}
+
+Would you be open to a brief conversation to explore this further? I'd really appreciate your perspective.
+
+Best"""
+        
+        return jsonify({
+            'success': True,
+            'message': message
+        })
+        
+    except Exception as e:
+        logging.error(f"Failed to adjust tone: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Failed to adjust tone'
+        }), 500
+
+@app.route('/api/regenerate-message', methods=['POST'])
+def regenerate_message():
+    """Regenerate AI message for contact"""
+    try:
+        data = request.get_json()
+        contact_id = data.get('contact_id')
+        goal_id = data.get('goal_id')
+        
+        if not contact_id or not goal_id:
+            return jsonify({
+                'success': False,
+                'error': 'Missing contact or goal ID'
+            }), 400
+        
+        # Get contact and goal details
+        contact = contact_model.get_by_id(contact_id)
+        goal = goal_model.get_by_id(goal_id)
+        
+        if not contact or not goal:
+            return jsonify({
+                'success': False,
+                'error': 'Contact or goal not found'
+            }), 404
+        
+        try:
+            # Generate new message using OpenAI
+            message = openai_utils.generate_outreach_message(
+                contact_name=contact['name'],
+                goal_title=goal['title'],
+                goal_description=goal['description'],
+                contact_notes=contact.get('notes', ''),
+                tone="warm"
+            )
+            
+            return jsonify({
+                'success': True,
+                'message': message
+            })
+            
+        except Exception as e:
+            logging.error(f"OpenAI generation failed: {e}")
+            # Fallback to template message
+            fallback_message = f"""Hi {contact['name']},
+
+I hope you're doing well. I'm currently working on {goal['title'].lower()} and thought you might have some valuable insights to share.
+
+{goal['description']}
+
+Would you be open to a brief conversation? I'd really appreciate your perspective on this.
+
+Best regards"""
+            
+            return jsonify({
+                'success': True,
+                'message': fallback_message
+            })
+        
+    except Exception as e:
+        logging.error(f"Failed to regenerate message: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Failed to regenerate message'
+        }), 500
+
 @app.route('/email_setup')
 def email_setup():
     """Email configuration setup page"""
