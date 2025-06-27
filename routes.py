@@ -79,6 +79,9 @@ collective_actions_manager = CollectiveActionsManager()
 relationship_intel = RelationshipIntelligence(db)
 network_metrics_manager = NetworkMetricsManager()
 shared_ai_assistant = SharedAIAssistant()
+trust_contribution_engine = TrustContributionEngine()
+unknown_contact_discovery = UnknownContactDiscovery()
+coordination_infrastructure = CoordinationInfrastructure()
 
 # Initialize authentication and subscription managers
 auth_manager = AuthManager(db)
@@ -3275,3 +3278,201 @@ def relationship_intelligence_dashboard():
                          user=user, data=dashboard_data,
                          unknown_contacts=unknown_contacts[:10],
                          due_reminders=due_reminders[:10])
+
+# ==================== ADVANCED COORDINATION INFRASTRUCTURE ====================
+
+@app.route('/coordination')
+@login_required
+def coordination_dashboard():
+    """Coordination infrastructure dashboard"""
+    user_id = session.get('user_id')
+    overview = coordination_infrastructure.get_user_coordination_overview(user_id)
+    templates = coordination_infrastructure.get_coordination_templates()
+    
+    return render_template('coordination/dashboard.html', 
+                         overview=overview, 
+                         templates=templates)
+
+@app.route('/coordination/project/create', methods=['GET', 'POST'])
+@login_required
+def create_coordination_project():
+    """Create new coordination project"""
+    user_id = session.get('user_id')
+    
+    if request.method == 'POST':
+        title = request.form.get('title')
+        description = request.form.get('description')
+        project_type = request.form.get('project_type')
+        template_id = request.form.get('template_id')
+        
+        if template_id:
+            template_id = int(template_id)
+        else:
+            template_id = None
+            
+        project_id = coordination_infrastructure.create_coordination_project(
+            coordinator_id=user_id,
+            title=title,
+            description=description,
+            project_type=project_type,
+            template_id=template_id
+        )
+        
+        flash('Coordination project created successfully!', 'success')
+        return redirect(url_for('coordination_project_detail', project_id=project_id))
+    
+    templates = coordination_infrastructure.get_coordination_templates()
+    return render_template('coordination/create_project.html', templates=templates)
+
+@app.route('/coordination/project/<int:project_id>')
+@login_required
+def coordination_project_detail(project_id):
+    """View coordination project details"""
+    project_data = coordination_infrastructure.get_project_dashboard(project_id)
+    
+    if not project_data:
+        flash('Project not found', 'error')
+        return redirect(url_for('coordination_dashboard'))
+    
+    user_id = session.get('user_id')
+    suggestions = coordination_infrastructure.suggest_project_participants(project_id, user_id)
+    
+    return render_template('coordination/project_detail.html', 
+                         project=project_data, 
+                         suggestions=suggestions)
+
+# ==================== TRUST & CONTRIBUTION TRACKING ====================
+
+@app.route('/trust-insights')
+@login_required
+def trust_insights_dashboard():
+    """Trust and contribution insights dashboard"""
+    user_id = session.get('user_id')
+    insights = trust_contribution_engine.get_trust_insights(user_id)
+    top_contributors = trust_contribution_engine.get_top_contributors(user_id)
+    
+    return render_template('trust/insights_dashboard.html', 
+                         insights=insights,
+                         top_contributors=top_contributors)
+
+@app.route('/contact/<int:contact_id>/record-contribution', methods=['POST'])
+@login_required
+def record_contribution():
+    """Record a contribution from a contact"""
+    contact_id = request.form.get('contact_id')
+    contribution_type = request.form.get('contribution_type')
+    value_level = request.form.get('value_level')
+    description = request.form.get('description', '')
+    
+    contribution_id = trust_contribution_engine.record_contribution(
+        contact_id=int(contact_id),
+        contribution_type=contribution_type,
+        value_level=value_level,
+        description=description
+    )
+    
+    return jsonify({'success': True, 'contribution_id': contribution_id})
+
+@app.route('/contact/<int:contact_id>/trust-profile')
+@login_required
+def contact_trust_profile(contact_id):
+    """View trust profile for a contact"""
+    trust_metrics = trust_contribution_engine.get_trust_metrics(contact_id)
+    contribution_history = trust_contribution_engine.get_contribution_history(contact_id)
+    
+    # Get contact details
+    contact = contact_model.get_by_id(contact_id)
+    
+    return render_template('trust/contact_trust_profile.html',
+                         contact=contact,
+                         trust_metrics=trust_metrics,
+                         contribution_history=contribution_history)
+
+# ==================== UNKNOWN CONTACT DISCOVERY ====================
+
+@app.route('/discovery')
+@login_required
+def unknown_contact_discovery_dashboard():
+    """Unknown contact discovery dashboard"""
+    user_id = session.get('user_id')
+    insights = unknown_contact_discovery.get_discovery_insights(user_id)
+    
+    return render_template('discovery/dashboard.html', insights=insights)
+
+@app.route('/discovery/goal/<int:goal_id>/discover')
+@login_required
+def discover_contacts_for_goal(goal_id):
+    """Discover unknown contacts for a specific goal"""
+    user_id = session.get('user_id')
+    suggestions = unknown_contact_discovery.discover_unknown_contacts_for_goal(user_id, goal_id)
+    
+    return jsonify({'suggestions': suggestions})
+
+@app.route('/discovery/expansion-opportunities')
+@login_required
+def network_expansion_opportunities():
+    """Get network expansion opportunities"""
+    user_id = session.get('user_id')
+    opportunities = unknown_contact_discovery.discover_network_expansion_opportunities(user_id)
+    
+    return render_template('discovery/expansion_opportunities.html', 
+                         opportunities=opportunities)
+
+@app.route('/discovery/suggestion/<int:suggestion_id>/status', methods=['POST'])
+@login_required
+def update_discovery_suggestion_status(suggestion_id):
+    """Update status of a discovery suggestion"""
+    status = request.form.get('status')
+    notes = request.form.get('notes', '')
+    
+    success = unknown_contact_discovery.mark_suggestion_status(suggestion_id, status, notes)
+    
+    return jsonify({'success': success})
+
+# ==================== API ENDPOINTS FOR ADVANCED FEATURES ====================
+
+@app.route('/api/coordination/project/<int:project_id>/participants', methods=['POST'])
+@login_required
+def api_add_project_participant(project_id):
+    """API: Add participant to project"""
+    data = request.get_json()
+    
+    success = coordination_infrastructure.add_project_participant(
+        project_id=project_id,
+        contact_id=data['contact_id'],
+        role=data['role'],
+        commitment_level=data.get('commitment_level', 'medium'),
+        skills=data.get('skills', []),
+        availability=data.get('availability', '')
+    )
+    
+    return jsonify({'success': success})
+
+@app.route('/api/coordination/milestone/<int:milestone_id>/complete', methods=['POST'])
+@login_required
+def api_complete_milestone(milestone_id):
+    """API: Mark milestone as complete"""
+    user_id = session.get('user_id')
+    notes = request.get_json().get('notes', '')
+    
+    success = coordination_infrastructure.complete_milestone(milestone_id, user_id, notes)
+    
+    return jsonify({'success': success})
+
+@app.route('/api/trust/contact/<int:contact_id>/metrics')
+@login_required
+def api_get_trust_metrics(contact_id):
+    """API: Get trust metrics for contact"""
+    metrics = trust_contribution_engine.get_trust_metrics(contact_id)
+    
+    if metrics:
+        return jsonify({
+            'trust_score': metrics.trust_score,
+            'reliability_score': metrics.reliability_score,
+            'responsiveness_score': metrics.responsiveness_score,
+            'value_delivered_score': metrics.value_delivered_score,
+            'consistency_score': metrics.consistency_score,
+            'last_updated': metrics.last_updated.isoformat()
+        })
+    else:
+        return jsonify({'error': 'No trust metrics found'}), 404

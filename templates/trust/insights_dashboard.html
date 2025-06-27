@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Trust & Contribution Insights - Rhiz{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Trust & Contribution Insights</h2>
+            <p class="text-muted">Track relationship value and contribution patterns</p>
+        </div>
+    </div>
+
+    <!-- Trust Overview -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-shield-check display-4 mb-2"></i>
+                    <h4 class="card-title">{{ insights.average_trust_score or 0 }}%</h4>
+                    <p class="card-text">Avg Trust Score</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-arrow-up-circle display-4 mb-2"></i>
+                    <h4 class="card-title">{{ insights.total_contributions or 0 }}</h4>
+                    <p class="card-text">Total Contributions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-lightning-charge display-4 mb-2"></i>
+                    <h4 class="card-title">{{ insights.high_value_contacts or 0 }}</h4>
+                    <p class="card-text">High Value Contacts</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-clock-history display-4 mb-2"></i>
+                    <h4 class="card-title">{{ insights.avg_responsiveness or 0 }}%</h4>
+                    <p class="card-text">Avg Responsiveness</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Contributors -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Top Contributors</h5>
+            <span class="badge bg-secondary">{{ top_contributors|length or 0 }} contacts</span>
+        </div>
+        <div class="card-body">
+            {% if top_contributors %}
+                <div class="row g-3">
+                    {% for contributor in top_contributors %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-start border-success border-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="card-title mb-0">{{ contributor.name }}</h6>
+                                    <span class="badge bg-success">{{ contributor.trust_score }}%</span>
+                                </div>
+                                
+                                <p class="text-muted small mb-2">{{ contributor.title or 'No title' }} at {{ contributor.company or 'Unknown company' }}</p>
+                                
+                                <!-- Trust Metrics -->
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small>Reliability</small>
+                                        <small>{{ contributor.reliability_score or 0 }}%</small>
+                                    </div>
+                                    <div class="progress mb-2" style="height: 6px;">
+                                        <div class="progress-bar bg-primary" style="width: {{ contributor.reliability_score or 0 }}%"></div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small>Responsiveness</small>
+                                        <small>{{ contributor.responsiveness_score or 0 }}%</small>
+                                    </div>
+                                    <div class="progress mb-2" style="height: 6px;">
+                                        <div class="progress-bar bg-info" style="width: {{ contributor.responsiveness_score or 0 }}%"></div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small>Value Delivered</small>
+                                        <small>{{ contributor.value_delivered_score or 0 }}%</small>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-success" style="width: {{ contributor.value_delivered_score or 0 }}%"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Recent Contributions -->
+                                {% if contributor.recent_contributions %}
+                                <div class="mb-3">
+                                    <small class="text-muted">Recent contributions:</small>
+                                    <ul class="list-unstyled small mt-1">
+                                        {% for contribution in contributor.recent_contributions[:3] %}
+                                        <li class="mb-1">
+                                            <span class="badge bg-light text-dark me-1">{{ contribution.contribution_type }}</span>
+                                            {{ contribution.description[:50] }}{% if contribution.description|length > 50 %}...{% endif %}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="mt-3">
+                                    <a href="{{ url_for('contact_trust_profile', contact_id=contributor.id) }}" 
+                                       class="btn btn-outline-success btn-sm">
+                                        View Trust Profile
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-shield-check display-1 text-muted"></i>
+                    <h5 class="mt-3">No Trust Data Yet</h5>
+                    <p class="text-muted">Start tracking contributions to build trust insights</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Trust Trends -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Trust Insights Summary</h5>
+        </div>
+        <div class="card-body">
+            {% if insights %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Network Trust Health</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle text-success me-2"></i>{{ insights.reliable_contacts or 0 }} highly reliable contacts</li>
+                            <li><i class="bi bi-lightning text-warning me-2"></i>{{ insights.responsive_contacts or 0 }} highly responsive contacts</li>
+                            <li><i class="bi bi-star text-info me-2"></i>{{ insights.consistent_contacts or 0 }} consistently valuable contacts</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Contribution Patterns</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-graph-up text-success me-2"></i>{{ insights.introductions_made or 0 }} introductions facilitated</li>
+                            <li><i class="bi bi-lightbulb text-warning me-2"></i>{{ insights.advice_sessions or 0 }} advice sessions</li>
+                            <li><i class="bi bi-briefcase text-info me-2"></i>{{ insights.business_opportunities or 0 }} business opportunities</li>
+                        </ul>
+                    </div>
+                </div>
+            {% else %}
+                <p class="text-muted">No trust insights available yet. Start tracking contributions to see patterns.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

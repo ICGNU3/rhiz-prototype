@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Coordination Hub - Rhiz{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Coordination Hub</h2>
+            <p class="text-muted">Multi-party project coordination infrastructure</p>
+        </div>
+        <a href="{{ url_for('create_coordination_project') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>New Project
+        </a>
+    </div>
+
+    <!-- Overview Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-diagram-2 display-4 mb-2"></i>
+                    <h5 class="card-title">{{ overview.active_projects or 0 }}</h5>
+                    <p class="card-text">Active Projects</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-people display-4 mb-2"></i>
+                    <h5 class="card-title">{{ overview.total_participants or 0 }}</h5>
+                    <p class="card-text">Participants</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-flag display-4 mb-2"></i>
+                    <h5 class="card-title">{{ overview.completed_milestones or 0 }}</h5>
+                    <p class="card-text">Milestones</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-collection display-4 mb-2"></i>
+                    <h5 class="card-title">{{ templates|length or 0 }}</h5>
+                    <p class="card-text">Templates</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Projects -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Active Projects</h5>
+            <span class="badge bg-secondary">{{ overview.active_projects or 0 }} active</span>
+        </div>
+        <div class="card-body">
+            {% if overview.projects %}
+                <div class="row g-3">
+                    {% for project in overview.projects %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-start border-primary border-3">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ project.title }}</h6>
+                                <p class="card-text text-muted small">{{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}</p>
+                                
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-{{ 'success' if project.status == 'active' else 'warning' }}">
+                                        {{ project.status|title }}
+                                    </span>
+                                    <small class="text-muted">{{ project.participants|length }} participants</small>
+                                </div>
+                                
+                                {% if project.progress %}
+                                <div class="progress mb-2" style="height: 8px;">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {{ project.progress }}%">
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ project.progress }}% complete</small>
+                                {% endif %}
+                                
+                                <div class="mt-3">
+                                    <a href="{{ url_for('coordination_project_detail', project_id=project.id) }}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-diagram-2 display-1 text-muted"></i>
+                    <h5 class="mt-3">No Active Projects</h5>
+                    <p class="text-muted">Start coordinating multi-party initiatives and collaborations</p>
+                    <a href="{{ url_for('create_coordination_project') }}" class="btn btn-primary">
+                        Create First Project
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Project Templates -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Project Templates</h5>
+        </div>
+        <div class="card-body">
+            {% if templates %}
+                <div class="row g-3">
+                    {% for template in templates %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ template.name }}</h6>
+                                <p class="card-text text-muted small">{{ template.description }}</p>
+                                <div class="mt-3">
+                                    <a href="{{ url_for('create_coordination_project', template_id=template.id) }}" 
+                                       class="btn btn-outline-secondary btn-sm">
+                                        Use Template
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">No project templates available.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

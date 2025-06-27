@@ -241,11 +241,25 @@
                                 <small class="text-muted d-block">Progress & metrics</small>
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><h6 class="dropdown-header">Relationship Intelligence</h6></li>
+                            <li><h6 class="dropdown-header">Advanced Intelligence</h6></li>
                             <li><a class="dropdown-item" href="{{ url_for('relationship_intelligence_dashboard') }}">
                                 <i class="bi bi-diagram-3 me-2"></i>Intelligence Hub
                                 <small class="text-muted d-block">Advanced relationship insights</small>
                             </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('unknown_contact_discovery_dashboard') }}">
+                                <i class="bi bi-search me-2"></i>Contact Discovery
+                                <small class="text-muted d-block">Find unknown valuable contacts</small>
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('trust_insights_dashboard') }}">
+                                <i class="bi bi-shield-check me-2"></i>Trust & Contribution
+                                <small class="text-muted d-block">Track relationship value</small>
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('coordination_dashboard') }}">
+                                <i class="bi bi-diagram-2 me-2"></i>Coordination Hub
+                                <small class="text-muted d-block">Multi-party project coordination</small>
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">Legacy Tools</h6></li>
                             <li><a class="dropdown-item" href="{{ url_for('unknown_contacts') }}">
                                 <i class="bi bi-question-circle me-2"></i>Unknown Contacts
                                 <small class="text-muted d-block">Identify important connections</small>
