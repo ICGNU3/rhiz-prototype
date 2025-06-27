@@ -13,9 +13,9 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def landing():
-    """Landing page with working navigation"""
+    """Working landing page override"""
     return """
     <!DOCTYPE html>
     <html>
