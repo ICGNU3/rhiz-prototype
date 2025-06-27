@@ -6,9 +6,9 @@ Provides shared utilities and dependencies for all route modules
 from flask import session, redirect, url_for, flash
 from functools import wraps
 from models import Database, User, Contact, Goal, AISuggestion, ContactInteraction
-from openai_utils import OpenAIUtils
-from gamification import GamificationEngine
-from auth import AuthManager, SubscriptionManager
+from services.ai.openai_utils import OpenAIUtils
+from features.gamification.gamification import GamificationEngine
+from services.auth.auth import AuthManager, SubscriptionManager
 from utils.validation import validate_session_user_id, safe_get_user_id, ValidationError
 import logging
 
