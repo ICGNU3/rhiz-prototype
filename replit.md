@@ -82,6 +82,18 @@ The application follows an enhanced Flask MVC architecture with AI-powered conta
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
+- **June 27, 2025**: Business-Aware Landing Page Redesign completed
+  - Completely restructured landing page using business-aware design principles to eliminate redundancy and improve conversion
+  - Simplified hero message to "Grow with Purpose. Connect with Intelligence." for clarity and impact
+  - Reorganized content hierarchy: Hero → Why Rhiz.ai Exists → How It Works → Root Membership Invite → Vision
+  - Removed repetitive sections (cost comparison, detailed benefits) and consolidated value propositions into focused sections
+  - Added authentic pre-launch positioning with "100 founding members to ground this system" messaging
+  - Created clean "How It Works" flow: Start with Goal → See Network Differently → Act with Intelligence
+  - Updated navigation branding from "Root Membership" to proper "Rhiz.ai" with network diagram icon
+  - Implemented business-aware copy strategy: only positive statements of what rhiz.ai "is", never what it "isn't"
+  - Streamlined Root Membership benefits into concise 5-point value grid within invitation section
+  - Added "Living Protocol for Connection" vision section emphasizing future decentralized ownership model
+
 - **June 27, 2025**: App Name Correction to "Rhiz.ai" completed
   - Corrected app name from "Founder Network AI" to proper "Rhiz.ai" branding throughout the platform
   - Updated login page title from "Login - Root Membership" to "Login - Rhiz.ai"
