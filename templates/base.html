@@ -190,7 +190,7 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
         <div class="container">
-            <a class="navbar-brand text-white d-flex align-items-center" href="{{ url_for('index') }}">
+            <a class="navbar-brand text-white d-flex align-items-center" href="{{ url_for('core_routes.landing') }}">
                 <img src="{{ url_for('static', filename='images/ourhizome-logo.png') }}" alt="OuRhizome" style="height: 32px; width: 32px; margin-right: 10px;">
                 <span class="fw-bold">OuRhizome</span>
             </a>
@@ -202,17 +202,17 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link text-light" href="{{ url_for('index') }}">
+                        <a class="nav-link text-light" href="{{ url_for('core_routes.dashboard') }}">
                             <i class="bi bi-house me-1"></i>Home
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-light" href="{{ url_for('goals') }}">
+                        <a class="nav-link text-light" href="{{ url_for('goal_routes.goals') }}">
                             <i class="bi bi-bullseye me-1"></i>Goals
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-light" href="{{ url_for('contacts') }}">
+                        <a class="nav-link text-light" href="{{ url_for('contact_routes.contacts') }}">
                             <i class="bi bi-people me-1"></i>Contacts
                         </a>
                     </li>
