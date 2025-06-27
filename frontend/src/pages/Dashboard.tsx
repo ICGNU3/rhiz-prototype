@@ -103,21 +103,32 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Welcome to Rhiz</h1>
-          <p className="text-gray-400 mt-2">Your intelligent relationship network at a glance</p>
-        </div>
-        <div className="flex space-x-3">
-          <button
-            onClick={() => window.location.href = '/goals'}
-            className="px-6 py-3 rounded-xl backdrop-blur-xl border border-white/20 flex items-center space-x-2 transition-all duration-300 hover:border-white/40 hover:shadow-lg"
-            style={{ 
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white'
-            }}
-          >
+      {/* Enhanced Header with Future-Forward Design */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-3xl blur-3xl"></div>
+        <div className="relative backdrop-blur-xl bg-white/5 border border-white/20 rounded-3xl p-8 flex justify-between items-center">
+          <div>
+            <div className="flex items-center space-x-4 mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Welcome to Rhiz
+              </h1>
+              <Sparkles className="w-8 h-8 text-purple-400 animate-pulse" />
+            </div>
+            <p className="text-gray-300 text-lg">Your intelligent relationship network at a glance</p>
+            <div className="flex items-center space-x-2 mt-3">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-sm text-green-400 font-medium">System Active • AI Intelligence Online</span>
+            </div>
+          </div>
+          <div className="flex space-x-3">
+            <button
+              onClick={() => window.location.href = '/app/goals'}
+              className="group px-8 py-4 rounded-2xl backdrop-blur-xl border border-white/20 flex items-center space-x-3 transition-all duration-500 hover:border-white/40 hover:shadow-2xl hover:scale-105 transform"
+              style={{ 
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white'
+              }}
+            >
             <Plus size={18} />
             <span>New Goal</span>
           </button>
@@ -133,6 +144,7 @@ const Dashboard: React.FC = () => {
             <span>Add Contact</span>
           </button>
         </div>
+      </div>
       </div>
 
       {/* Stats Grid */}

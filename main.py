@@ -1,9 +1,10 @@
-from main_refactored import app
+from app import app
 from flask import jsonify
 import os
 import logging
 from datetime import datetime
 from api_routes import register_api_routes
+import simple_routes  # Import the routes module to register them
 
 # Register API routes for React frontend
 register_api_routes(app)
