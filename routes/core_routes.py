@@ -74,65 +74,8 @@ def landing():
 @core_bp.route('/dashboard')
 @login_required
 def dashboard():
-    """Main dashboard for authenticated users"""
-    user_id = get_current_user_id()
-    
-    try:
-        # Import models correctly from routes package
-        from . import goal_model, contact_model, ai_suggestion_model, interaction_model, gamification
-        
-        # Get dashboard data safely
-        dashboard_data = {
-            'goals': goal_model.get_all(user_id)[:5] if goal_model.get_all(user_id) else [],
-            'contacts': contact_model.get_all(user_id)[:6] if contact_model.get_all(user_id) else [],
-            'ai_suggestions': ai_suggestion_model.get_recent(user_id, limit=5) if hasattr(ai_suggestion_model, 'get_recent') else [],
-            'recent_interactions': interaction_model.get_recent(user_id, limit=5) if hasattr(interaction_model, 'get_recent') else []
-        }
-        
-        # Get user stats safely
-        all_goals = goal_model.get_all(user_id) if goal_model.get_all(user_id) else []
-        all_contacts = contact_model.get_all(user_id) if contact_model.get_all(user_id) else []
-        
-        stats = {
-            'total_goals': len(all_goals),
-            'total_contacts': len(all_contacts),
-            'pending_follow_ups': getattr(interaction_model, 'count_pending_follow_ups', lambda x: 0)(user_id),
-            'this_month_interactions': getattr(interaction_model, 'count_this_month', lambda x: 0)(user_id)
-        }
-        
-        # Get user level/XP info safely
-        user_profile = gamification.get_user_profile(user_id) if hasattr(gamification, 'get_user_profile') else {}
-        
-        return render_template('dashboard.html', 
-                             **dashboard_data,
-                             stats=stats,
-                             user_profile=user_profile)
-                             
-    except Exception as e:
-        logging.error(f"Dashboard error: {e}")
-        logging.exception("Full dashboard error traceback:")
-        
-        # Try with minimal data
-        try:
-            return render_template('dashboard.html', 
-                                 goals=[], 
-                                 contacts=[], 
-                                 ai_suggestions=[],
-                                 recent_interactions=[],
-                                 stats={'total_goals': 0, 'total_contacts': 0, 'pending_follow_ups': 0, 'this_month_interactions': 0},
-                                 user_profile={'xp': 0, 'title': 'Contact Seeker', 'streak_count': 0})
-        except Exception as template_error:
-            logging.error(f"Template error: {template_error}")
-            # Return simple HTML if template fails
-            return '''
-            <!DOCTYPE html>
-            <html><head><title>Dashboard</title></head>
-            <body>
-                <h1>Dashboard</h1>
-                <p>Welcome to your dashboard!</p>
-                <p>User ID: ''' + str(user_id) + '''</p>
-            </body></html>
-            '''
+    """Redirect to new glassmorphism dashboard"""
+    return redirect('/app')
 
 @core_bp.route('/index')
 def index():

@@ -22,23 +22,8 @@ goal_routes = GoalRoutes()
 @goal_bp.route('/goals')
 @login_required
 def goals():
-    """Display all goals"""
-    user_id = get_current_user_id()
-    
-    try:
-        all_goals = goal_routes.goal_model.get_all(user_id)
-        
-        # Get completion status and suggestion counts for each goal
-        for goal in all_goals:
-            goal['suggestion_count'] = goal_routes.ai_suggestion_model.count_by_goal_id(goal['id'])
-            goal['contact_matches'] = goal_routes.ai_suggestion_model.count_matches_by_goal_id(goal['id'])
-        
-        return render_template('goals.html', goals=all_goals)
-        
-    except Exception as e:
-        logging.error(f"Error loading goals: {e}")
-        goal_routes.flash_error('Failed to load goals')
-        return render_template('goals.html', goals=[])
+    """Redirect to new glassmorphism goals page"""
+    return redirect('/app/goals')
 
 @goal_bp.route('/goals/create', methods=['GET', 'POST'])
 @login_required

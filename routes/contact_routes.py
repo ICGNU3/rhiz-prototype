@@ -38,25 +38,8 @@ contact_routes = ContactRoutes()
 @contact_bp.route('/contacts')
 @login_required
 def contacts():
-    """Display all contacts with search and filtering"""
-    user_id = get_current_user_id()
-    
-    # Get query parameters
-    search = request.args.get('search', '')
-    warmth_filter = request.args.get('warmth', '')
-    company_filter = request.args.get('company', '')
-    
-    try:
-        if search or warmth_filter or company_filter:
-            # Apply filters
-            all_contacts = contact_routes.contact_model.search_contacts(
-                user_id=user_id,
-                search_term=search,
-                warmth_status=warmth_filter,
-                company=company_filter
-            )
-        else:
-            all_contacts = contact_routes.contact_model.get_all(user_id)
+    """Redirect to new glassmorphism contacts page"""
+    return redirect('/app/contacts')
         
         # Get filter options for dropdowns  
         from models import Contact
