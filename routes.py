@@ -239,8 +239,10 @@ def send_magic_link():
             return jsonify({'error': 'Failed to generate authentication token'}), 500
         
         # Send magic link email
-        magic_link = f"{request.host_url}auth/verify?token={token}"
-        success = auth_email_service.send_magic_link(email, magic_link)
+        base_url = request.host_url.rstrip('/')
+        app.logger.info(f"Attempting to send magic link to {email} with base_url: {base_url}")
+        success = auth_email_service.send_magic_link(email, token, base_url)
+        app.logger.info(f"Magic link send result: {success}")
         
         if success:
             # Handle different response types
@@ -2794,6 +2796,31 @@ def network_dashboard():
                              ticker_messages=[],
                              recent_milestones=[])
 
+
+@app.route('/test-email-debug')
+@require_auth
+def test_email_debug():
+    """Debug route to test email sending"""
+    try:
+        user_id = session.get('user_id')
+        user = get_user_by_id(user_id)
+        if not user:
+            return "User not found", 404
+        
+        email = user.get('email')
+        test_result = auth_email_service.send_magic_link(email, "test-token-123", "http://localhost:5000")
+        
+        return f"""
+        <h2>Email Test Results</h2>
+        <p><strong>Email service configured:</strong> {auth_email_service.is_configured}</p>
+        <p><strong>Target email:</strong> {email}</p>
+        <p><strong>Send result:</strong> {test_result}</p>
+        <p><strong>API Key present:</strong> {'Yes' if auth_email_service.api_key else 'No'}</p>
+        <p><strong>From email:</strong> {auth_email_service.from_email}</p>
+        """
+        
+    except Exception as e:
+        return f"Error: {str(e)}", 500
 
 @app.route('/api/network-metrics')
 def api_network_metrics():
