@@ -345,6 +345,42 @@ class ContactInteraction:
             return []
         finally:
             conn.close()
+    
+    def count_pending_follow_ups(self, user_id):
+        """Count pending follow-ups for a user"""
+        conn = self.db.get_connection()
+        try:
+            count = conn.execute(
+                """SELECT COUNT(*) as count 
+                   FROM contact_interactions 
+                   WHERE user_id = ? AND follow_up_needed = 1 
+                   AND (follow_up_date IS NULL OR follow_up_date <= datetime('now'))""",
+                (user_id,)
+            ).fetchone()
+            return count['count'] if count else 0
+        except Exception as e:
+            logging.error(f"Error counting pending follow-ups: {e}")
+            return 0
+        finally:
+            conn.close()
+    
+    def count_this_month(self, user_id):
+        """Count interactions this month for a user"""
+        conn = self.db.get_connection()
+        try:
+            count = conn.execute(
+                """SELECT COUNT(*) as count 
+                   FROM contact_interactions 
+                   WHERE user_id = ? 
+                   AND timestamp >= datetime('now', 'start of month')""",
+                (user_id,)
+            ).fetchone()
+            return count['count'] if count else 0
+        except Exception as e:
+            logging.error(f"Error counting this month's interactions: {e}")
+            return 0
+        finally:
+            conn.close()
 
 class ContactRelationship:
     def __init__(self, db):

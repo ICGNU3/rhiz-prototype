@@ -78,24 +78,27 @@ def dashboard():
     user_id = get_current_user_id()
     
     try:
+        # Import models from routes package
+        from . import goal_model, contact_model, ai_suggestion_model, interaction_model, gamification
+        
         # Get dashboard data
         dashboard_data = {
-            'goals': core_routes.goal_model.get_all(user_id)[:5],  # Recent 5
-            'contacts': core_routes.contact_model.get_all(user_id)[:6],  # Recent 6
-            'ai_suggestions': core_routes.ai_suggestion_model.get_recent(user_id, limit=5),
-            'recent_interactions': core_routes.interaction_model.get_recent(user_id, limit=5)
+            'goals': goal_model.get_all(user_id)[:5],  # Recent 5
+            'contacts': contact_model.get_all(user_id)[:6],  # Recent 6
+            'ai_suggestions': ai_suggestion_model.get_recent(user_id, limit=5),
+            'recent_interactions': interaction_model.get_recent(user_id, limit=5)
         }
         
         # Get user stats
         stats = {
-            'total_goals': len(core_routes.goal_model.get_all(user_id)),
-            'total_contacts': len(core_routes.contact_model.get_all(user_id)),
-            'pending_follow_ups': core_routes.interaction_model.count_pending_follow_ups(user_id),
-            'this_month_interactions': core_routes.interaction_model.count_this_month(user_id)
+            'total_goals': len(goal_model.get_all(user_id)),
+            'total_contacts': len(contact_model.get_all(user_id)),
+            'pending_follow_ups': interaction_model.count_pending_follow_ups(user_id),
+            'this_month_interactions': interaction_model.count_this_month(user_id)
         }
         
         # Get user level/XP info
-        user_profile = core_routes.gamification.get_user_profile(user_id)
+        user_profile = gamification.get_user_profile(user_id)
         
         return render_template('dashboard.html', 
                              **dashboard_data,
@@ -104,7 +107,8 @@ def dashboard():
                              
     except Exception as e:
         logging.error(f"Dashboard error: {e}")
-        core_routes.flash_error('Error loading dashboard')
+        from flask import flash
+        flash('Error loading dashboard', 'error')
         
         # Fallback to basic dashboard
         return render_template('dashboard.html', 
