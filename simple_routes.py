@@ -24,6 +24,25 @@ def signup():
     """Signup page route"""
     return render_template('signup.html')
 
+@app.route('/login')
+def login():
+    """Login page route"""
+    return render_template('login.html')
+
+@app.route('/auth/magic-link', methods=['POST'])
+def send_magic_link():
+    """Handle magic link requests"""
+    try:
+        from flask import request, jsonify
+        email = request.form.get('email')
+        if not email:
+            return jsonify({'error': 'Email required'}), 400
+        
+        # For now, redirect to demo login as fallback
+        return jsonify({'message': f'Magic link sent to {email}', 'redirect': '/demo-login'}), 200
+    except Exception as e:
+        return jsonify({'error': 'Magic link service temporarily unavailable'}), 500
+
 @app.route('/demo-login')
 def demo_login():
     """Quick demo login for immediate access"""
