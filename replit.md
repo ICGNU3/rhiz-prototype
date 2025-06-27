@@ -1,4 +1,4 @@
-# Founder Network AI - Contact Intelligence CRM
+# Rhiz.ai - Contact Intelligence CRM
 
 ## Overview
 
@@ -82,6 +82,16 @@ The application follows an enhanced Flask MVC architecture with AI-powered conta
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
+- **June 27, 2025**: App Name Correction to "Rhiz.ai" completed
+  - Corrected app name from "Founder Network AI" to proper "Rhiz.ai" branding throughout the platform
+  - Updated login page title from "Login - Root Membership" to "Login - Rhiz.ai"
+  - Changed logo alt text and page header from "Root Membership" to "Rhiz.ai" for proper brand identity
+  - Updated signup CTA from "Apply for Root Membership" to "Apply to Join Rhiz.ai"
+  - Modified email setup page title from "Email Setup - Root Membership" to "Email Setup - Rhiz.ai"
+  - Updated replit.md documentation to reflect correct app name "Rhiz.ai" instead of outdated references
+  - Maintained "Root Membership" concept as subscription model while establishing "Rhiz.ai" as primary brand
+  - Completed consistent branding across all authentication and setup pages for clarity
+
 - **June 27, 2025**: Complete OuRhizome Brand Removal completed
   - Removed all "OuRhizome" references from landing page for clarity and simplicity
   - Updated navigation header to use proper Root Membership logo with text branding
