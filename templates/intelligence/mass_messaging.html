@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">Mass Messaging Campaigns</h1>
+                    <p class="text-muted">Create and manage targeted message campaigns for your network</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCampaignModal">
+                        <i class="bi bi-plus me-2"></i>Create Campaign
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaigns List -->
+    <div class="row">
+        {% if campaigns %}
+        {% for campaign in campaigns %}
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0">{{ campaign.title }}</h5>
+                        <small class="text-muted">{{ campaign.message_type|title }} Campaign</small>
+                    </div>
+                    <span class="badge bg-{{ 'success' if campaign.status == 'sent' else 'warning' if campaign.status == 'draft' else 'info' }}">
+                        {{ campaign.status|title }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <!-- Campaign Stats -->
+                    <div class="row mb-3">
+                        <div class="col-4 text-center">
+                            <div class="h5 mb-0">{{ campaign.total_recipients }}</div>
+                            <small class="text-muted">Recipients</small>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="h5 mb-0">{{ campaign.stats.sent if campaign.stats else 0 }}</div>
+                            <small class="text-muted">Sent</small>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="h5 mb-0">{{ campaign.stats.opened if campaign.stats else 0 }}</div>
+                            <small class="text-muted">Opened</small>
+                        </div>
+                    </div>
+
+                    <!-- Message Preview -->
+                    <div class="mb-3">
+                        <h6>Message Preview:</h6>
+                        <div class="bg-light p-3 rounded small">
+                            {{ campaign.message_template[:150] }}{% if campaign.message_template|length > 150 %}...{% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Target Criteria -->
+                    {% if campaign.target_criteria %}
+                    <div class="mb-3">
+                        <h6>Targeting:</h6>
+                        <div class="small">
+                            {% for key, value in campaign.target_criteria.items() %}
+                            <span class="badge bg-secondary me-1">{{ key }}: {{ value }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Campaign Info -->
+                    <div class="small text-muted">
+                        <div>Created: {{ campaign.created_at|format_datetime }}</div>
+                        {% if campaign.sent_at %}
+                        <div>Sent: {{ campaign.sent_at|format_datetime }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="btn-group w-100">
+                        {% if campaign.status == 'draft' %}
+                        <button class="btn btn-outline-primary btn-sm" onclick="editCampaign('{{ campaign.id }}')">
+                            <i class="bi bi-pencil me-1"></i>Edit
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="sendCampaign('{{ campaign.id }}')">
+                            <i class="bi bi-send me-1"></i>Send
+                        </button>
+                        {% else %}
+                        <button class="btn btn-outline-info btn-sm" onclick="viewCampaignDetails('{{ campaign.id }}')">
+                            <i class="bi bi-eye me-1"></i>View Details
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="duplicateCampaign('{{ campaign.id }}')">
+                            <i class="bi bi-files me-1"></i>Duplicate
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% else %}
+        <!-- Empty State -->
+        <div class="col-12">
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-envelope-paper display-1 text-muted"></i>
+                </div>
+                <h4>No Campaigns Yet</h4>
+                <p class="text-muted mb-4">
+                    Create your first mass messaging campaign to reach multiple contacts efficiently.
+                </p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCampaignModal">
+                    <i class="bi bi-plus me-2"></i>Create Your First Campaign
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Create Campaign Modal -->
+<div class="modal fade" id="createCampaignModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Mass Message Campaign</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createCampaignForm">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="campaignTitle" class="form-label">Campaign Title *</label>
+                                <input type="text" class="form-control" id="campaignTitle" placeholder="e.g., Q1 Investor Update" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="messageType" class="form-label">Message Type</label>
+                                <select class="form-select" id="messageType">
+                                    <option value="email">Email</option>
+                                    <option value="message">Direct Message</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="messageTemplate" class="form-label">Message Template *</label>
+                        <textarea class="form-control" id="messageTemplate" rows="8" required 
+                                  placeholder="Hi {{contact_name}},
+
+Hope you're doing well! I wanted to reach out about...
+
+Best regards,
+Your Name
+
+Note: Use {{contact_name}}, {{contact_company}}, and other variables for personalization."></textarea>
+                        <div class="form-text">
+                            Available variables: {{contact_name}}, {{contact_company}}, {{contact_title}}, {{contact_warmth}}
+                        </div>
+                    </div>
+
+                    <!-- Target Selection -->
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="form-label">Target Contacts</label>
+                            <div class="border rounded p-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="targetMethod" id="targetAll" value="all" checked>
+                                    <label class="form-check-label" for="targetAll">
+                                        All Contacts
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="targetMethod" id="targetCriteria" value="criteria">
+                                    <label class="form-check-label" for="targetCriteria">
+                                        Filter by Criteria
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="targetMethod" id="targetSpecific" value="specific">
+                                    <label class="form-check-label" for="targetSpecific">
+                                        Select Specific Contacts
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Criteria Options (hidden by default) -->
+                    <div id="criteriaOptions" class="mt-3" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="warmthFilter" class="form-label">Warmth Level</label>
+                                <select class="form-select" id="warmthFilter">
+                                    <option value="">Any</option>
+                                    <option value="1">Cold (1)</option>
+                                    <option value="2">Cool (2)</option>
+                                    <option value="3">Warm (3)</option>
+                                    <option value="4">Hot (4)</option>
+                                    <option value="5">Active (5)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="companyFilter" class="form-label">Company</label>
+                                <input type="text" class="form-control" id="companyFilter" placeholder="Company name">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="relationshipFilter" class="form-label">Relationship Type</label>
+                                <select class="form-select" id="relationshipFilter">
+                                    <option value="">Any</option>
+                                    <option value="investor">Investor</option>
+                                    <option value="advisor">Advisor</option>
+                                    <option value="customer">Customer</option>
+                                    <option value="partner">Partner</option>
+                                    <option value="colleague">Colleague</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Selection (hidden by default) -->
+                    <div id="contactSelection" class="mt-3" style="display: none;">
+                        <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                            <div class="text-muted mb-2">Loading contacts...</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="createCampaign()">Create Campaign</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Handle target method changes
+document.querySelectorAll('input[name="targetMethod"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        document.getElementById('criteriaOptions').style.display = 
+            this.value === 'criteria' ? 'block' : 'none';
+        document.getElementById('contactSelection').style.display = 
+            this.value === 'specific' ? 'block' : 'none';
+        
+        if (this.value === 'specific') {
+            loadContactsForSelection();
+        }
+    });
+});
+
+function loadContactsForSelection() {
+    const container = document.querySelector('#contactSelection .border');
+    container.innerHTML = '<div class="text-muted mb-2">Loading contacts...</div>';
+    
+    // Load contacts from API
+    fetch('/api/contacts')
+    .then(response => response.json())
+    .then(data => {
+        if (data.contacts) {
+            const contactsHtml = data.contacts.map(contact => `
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="${contact.id}" id="contact_${contact.id}">
+                    <label class="form-check-label" for="contact_${contact.id}">
+                        ${contact.name} ${contact.company ? '(' + contact.company + ')' : ''}
+                    </label>
+                </div>
+            `).join('');
+            
+            container.innerHTML = contactsHtml || '<div class="text-muted">No contacts available</div>';
+        } else {
+            container.innerHTML = '<div class="text-muted">Failed to load contacts</div>';
+        }
+    })
+    .catch(error => {
+        console.error('Error loading contacts:', error);
+        container.innerHTML = '<div class="text-muted">Failed to load contacts</div>';
+    });
+}
+
+function createCampaign() {
+    const title = document.getElementById('campaignTitle').value.trim();
+    const messageTemplate = document.getElementById('messageTemplate').value.trim();
+    const messageType = document.getElementById('messageType').value;
+    const targetMethod = document.querySelector('input[name="targetMethod"]:checked').value;
+    
+    if (!title || !messageTemplate) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    let targetCriteria = {};
+    let targetContactIds = null;
+    
+    if (targetMethod === 'criteria') {
+        const warmth = document.getElementById('warmthFilter').value;
+        const company = document.getElementById('companyFilter').value.trim();
+        const relationship = document.getElementById('relationshipFilter').value;
+        
+        if (warmth) targetCriteria.warmth = parseInt(warmth);
+        if (company) targetCriteria.company = company;
+        if (relationship) targetCriteria.relationship_type = relationship;
+    } else if (targetMethod === 'specific') {
+        const selectedContacts = Array.from(document.querySelectorAll('#contactSelection input[type="checkbox"]:checked'));
+        targetContactIds = selectedContacts.map(cb => cb.value);
+        
+        if (targetContactIds.length === 0) {
+            showToast('Please select at least one contact', 'error');
+            return;
+        }
+    }
+    
+    // Show loading state
+    const btn = event.target;
+    const originalText = btn.textContent;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
+    btn.disabled = true;
+    
+    fetch('/api/mass-messaging/campaigns', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            title: title,
+            message_template: messageTemplate,
+            message_type: messageType,
+            target_criteria: Object.keys(targetCriteria).length > 0 ? targetCriteria : null,
+            target_contact_ids: targetContactIds
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Campaign created successfully!', 'success');
+            
+            // Close modal and reload page
+            const modal = bootstrap.Modal.getInstance(document.getElementById('createCampaignModal'));
+            modal.hide();
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showToast(data.error || 'Failed to create campaign', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Failed to create campaign', 'error');
+    })
+    .finally(() => {
+        // Restore button
+        btn.textContent = originalText;
+        btn.disabled = false;
+    });
+}
+
+function editCampaign(campaignId) {
+    // TODO: Implement campaign editing
+    showToast('Campaign editing will be available soon', 'info');
+}
+
+function sendCampaign(campaignId) {
+    if (confirm('Are you sure you want to send this campaign? This action cannot be undone.')) {
+        // TODO: Implement campaign sending
+        showToast('Campaign sending will be available soon', 'info');
+    }
+}
+
+function viewCampaignDetails(campaignId) {
+    // TODO: Implement campaign details view
+    showToast('Campaign details view will be available soon', 'info');
+}
+
+function duplicateCampaign(campaignId) {
+    // TODO: Implement campaign duplication
+    showToast('Campaign duplication will be available soon', 'info');
+}
+
+function showToast(message, type = 'info') {
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type === 'error' ? 'danger' : type} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    // Add to toast container
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(container);
+    }
+    
+    container.appendChild(toast);
+    
+    // Show toast
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    // Remove after hiding
+    toast.addEventListener('hidden.bs.toast', () => {
+        toast.remove();
+    });
+}
+
+// Clear form when modal is hidden
+document.getElementById('createCampaignModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('createCampaignForm').reset();
+    document.getElementById('criteriaOptions').style.display = 'none';
+    document.getElementById('contactSelection').style.display = 'none';
+});
+</script>
+{% endblock %}

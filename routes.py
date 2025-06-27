@@ -2997,3 +2997,220 @@ def test_email():
             'error': error_msg,
             'to': to_email
         }), 500
+
+# ==================== Relationship Intelligence Routes ====================
+
+@app.route('/intelligence/unknown-contacts')
+def unknown_contacts():
+    """Unknown but Important Contacts page"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('landing'))
+    
+    user = user_model.get_by_id(user_id)
+    unknown_contacts = relationship_intel.get_unknown_contacts(user_id)
+    
+    return render_template('intelligence/unknown_contacts.html', 
+                         user=user, unknown_contacts=unknown_contacts)
+
+@app.route('/api/unknown-contacts/add', methods=['POST'])
+def add_unknown_contact():
+    """Add an unknown contact"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    data = request.json
+    identifier = data.get('identifier')
+    identifier_type = data.get('identifier_type', 'name')
+    context_clues = data.get('context_clues', [])
+    
+    if not identifier:
+        return jsonify({'success': False, 'error': 'Identifier required'}), 400
+    
+    unknown_id = relationship_intel.add_unknown_contact(
+        user_id, identifier, identifier_type, context_clues
+    )
+    
+    if unknown_id:
+        # Award XP for adding unknown contact
+        gamification.award_xp(user_id, 'unknown_contact_added', {
+            'base_points': 5,
+            'description': f'Added unknown contact: {identifier}'
+        })
+        
+        return jsonify({'success': True, 'unknown_id': unknown_id})
+    else:
+        return jsonify({'success': False, 'error': 'Failed to add unknown contact'}), 500
+
+@app.route('/api/unknown-contacts/<unknown_id>/review', methods=['POST'])
+def review_unknown_contact(unknown_id):
+    """Review and update unknown contact status"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    data = request.json
+    action = data.get('action')  # 'identified', 'irrelevant', 'investigating'
+    notes = data.get('notes')
+    contact_id = data.get('contact_id')
+    
+    if not action:
+        return jsonify({'success': False, 'error': 'Action required'}), 400
+    
+    success = relationship_intel.review_unknown_contact(unknown_id, action, notes, contact_id)
+    
+    if success:
+        # Award XP for reviewing unknown contact
+        gamification.award_xp(user_id, 'unknown_contact_reviewed', {
+            'base_points': 10 if action == 'identified' else 5,
+            'description': f'Reviewed unknown contact: {action}'
+        })
+        
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'error': 'Failed to review contact'}), 500
+
+@app.route('/contacts/<contact_id>/timeline')
+def contact_timeline(contact_id):
+    """Contact timeline page"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('landing'))
+    
+    contact = contact_model.get_by_id(contact_id)
+    if not contact or contact['user_id'] != user_id:
+        flash('Contact not found', 'error')
+        return redirect(url_for('contacts'))
+    
+    timeline = relationship_intel.get_contact_timeline(contact_id)
+    
+    return render_template('contacts/timeline.html', 
+                         contact=contact, timeline=timeline)
+
+@app.route('/api/contacts/<contact_id>/timeline/add', methods=['POST'])
+def add_timeline_event(contact_id):
+    """Add event to contact timeline"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    data = request.json
+    event_type = data.get('event_type')
+    title = data.get('title')
+    description = data.get('description')
+    event_date = data.get('event_date')
+    metadata = data.get('metadata', {})
+    
+    if not event_type or not title:
+        return jsonify({'success': False, 'error': 'Event type and title required'}), 400
+    
+    # Parse event date if provided
+    parsed_date = None
+    if event_date:
+        try:
+            from datetime import datetime
+            parsed_date = datetime.fromisoformat(event_date.replace('Z', '+00:00'))
+        except:
+            parsed_date = None
+    
+    event_id = relationship_intel.add_timeline_event(
+        contact_id, user_id, event_type, title, description, parsed_date, metadata
+    )
+    
+    if event_id:
+        # Award XP for adding timeline event
+        gamification.award_xp(user_id, 'timeline_event_added', {
+            'base_points': 10,
+            'description': f'Added timeline event: {title}'
+        })
+        
+        return jsonify({'success': True, 'event_id': event_id})
+    else:
+        return jsonify({'success': False, 'error': 'Failed to add timeline event'}), 500
+
+@app.route('/intelligence/mass-messaging')
+def mass_messaging():
+    """Mass messaging campaigns page"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('landing'))
+    
+    user = user_model.get_by_id(user_id)
+    campaigns = relationship_intel.get_mass_message_campaigns(user_id)
+    
+    return render_template('intelligence/mass_messaging.html', 
+                         user=user, campaigns=campaigns)
+
+@app.route('/api/mass-messaging/campaigns', methods=['POST'])
+def create_mass_message_campaign():
+    """Create a new mass message campaign"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    data = request.json
+    title = data.get('title')
+    message_template = data.get('message_template')
+    message_type = data.get('message_type', 'email')
+    target_criteria = data.get('target_criteria', {})
+    target_contact_ids = data.get('target_contact_ids')
+    
+    if not title or not message_template:
+        return jsonify({'success': False, 'error': 'Title and message template required'}), 400
+    
+    campaign_id = relationship_intel.create_mass_message_campaign(
+        user_id, title, message_template, message_type, target_criteria, target_contact_ids
+    )
+    
+    if campaign_id:
+        # Award XP for creating campaign
+        gamification.award_xp(user_id, 'mass_campaign_created', {
+            'base_points': 25,
+            'description': f'Created mass message campaign: {title}'
+        })
+        
+        return jsonify({'success': True, 'campaign_id': campaign_id})
+    else:
+        return jsonify({'success': False, 'error': 'Failed to create campaign'}), 500
+
+@app.route('/api/relationship-intelligence/analysis')
+def relationship_analysis():
+    """Get relationship pattern analysis"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    analysis = relationship_intel.analyze_relationship_patterns(user_id)
+    return jsonify({'success': True, 'analysis': analysis})
+
+@app.route('/intelligence/relationships')
+def relationship_intelligence_dashboard():
+    """Relationship intelligence dashboard"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('landing'))
+    
+    user = user_model.get_by_id(user_id)
+    
+    # Get comprehensive relationship intelligence data
+    unknown_contacts = relationship_intel.get_unknown_contacts(user_id, status='unknown')
+    analysis = relationship_intel.analyze_relationship_patterns(user_id)
+    due_reminders = relationship_intel.check_due_reminders(user_id)
+    weekly_summary = relationship_intel.get_weekly_unknown_contacts_summary(user_id)
+    recent_campaigns = relationship_intel.get_mass_message_campaigns(user_id)[:5]
+    
+    dashboard_data = {
+        'unknown_contacts_count': len(unknown_contacts),
+        'due_reminders_count': len(due_reminders),
+        'total_contacts': analysis.get('total_contacts', 0),
+        'warmth_distribution': analysis.get('warmth_distribution', {}),
+        'recommendations': analysis.get('recommendations', []),
+        'recent_campaigns': recent_campaigns,
+        'weekly_summary': weekly_summary
+    }
+    
+    return render_template('intelligence/relationship_dashboard.html', 
+                         user=user, data=dashboard_data,
+                         unknown_contacts=unknown_contacts[:10],
+                         due_reminders=due_reminders[:10])

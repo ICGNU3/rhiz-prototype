@@ -241,6 +241,20 @@
                                 <small class="text-muted d-block">Progress & metrics</small>
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">Relationship Intelligence</h6></li>
+                            <li><a class="dropdown-item" href="{{ url_for('relationship_intelligence_dashboard') }}">
+                                <i class="bi bi-diagram-3 me-2"></i>Intelligence Hub
+                                <small class="text-muted d-block">Advanced relationship insights</small>
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('unknown_contacts') }}">
+                                <i class="bi bi-question-circle me-2"></i>Unknown Contacts
+                                <small class="text-muted d-block">Identify important connections</small>
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('mass_messaging') }}">
+                                <i class="bi bi-envelope-paper me-2"></i>Mass Messaging
+                                <small class="text-muted d-block">Campaign management</small>
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
                             <li><h6 class="dropdown-header">CRM Tools</h6></li>
                             <li><a class="dropdown-item" href="{{ url_for('monique.reminders') }}">
                                 <i class="bi bi-bell me-2"></i>Reminders
