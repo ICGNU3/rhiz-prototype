@@ -21,8 +21,8 @@ except Exception as e:
 from react_integration import register_react_integration
 register_react_integration(app)
 
-# Monique CRM functionality integrated in organized route blueprints
-# CRM features available through Intelligence navigation section
+# Import simple working routes for immediate user access
+import simple_routes
 
 @app.route('/health')
 def health_check():
