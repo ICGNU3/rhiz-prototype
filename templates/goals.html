@@ -51,7 +51,7 @@
                                 </small>
                                 
                                 {% if goal.embedding %}
-                                    <a href="{{ url_for('match_goal', goal_id=goal.id) }}" class="btn btn-primary btn-sm">
+                                    <a href="/match_goal/{{ goal.id }}" class="btn btn-primary btn-sm">
                                         <i class="bi bi-search me-1"></i>Find Matches
                                     </a>
                                 {% else %}
@@ -124,7 +124,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             
-            <form action="{{ url_for('create_goal') }}" method="POST">
+            <form action="/create_goal" method="POST">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="title" class="form-label">Goal Title *</label>
