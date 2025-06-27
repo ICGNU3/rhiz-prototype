@@ -15,18 +15,20 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(contact_bp)
 app.register_blueprint(goal_bp)
 
-# Register advanced feature blueprints (these need to be created)
+# Register intelligence and advanced feature blueprints
 try:
     from routes.intelligence_routes import intelligence_bp
     app.register_blueprint(intelligence_bp)
-except ImportError:
-    print("Intelligence routes not yet migrated")
+    print("Intelligence routes loaded successfully")
+except ImportError as e:
+    print(f"Intelligence routes not available: {e}")
 
+# Legacy routes compatibility (temporary)
 try:
-    from routes.advanced_routes import advanced_bp
-    app.register_blueprint(advanced_bp)
-except ImportError:
-    print("Advanced routes not yet migrated")
+    import routes as legacy_routes
+    print("Legacy routes still active - migration in progress")
+except ImportError as e:
+    print(f"Legacy routes disabled: {e}")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

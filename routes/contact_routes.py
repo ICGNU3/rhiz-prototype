@@ -18,9 +18,20 @@ contact_bp = Blueprint('contact_routes', __name__)
 class ContactRoutes(RouteBase):
     def __init__(self):
         super().__init__()
-        self.csv_importer = CSVContactImporter(self.db)
-        self.linkedin_importer = LinkedInContactImporter(self.db)
-        self.email_sender = SimpleEmailSender(self.db)
+        try:
+            self.csv_importer = CSVContactImporter(self.db)
+        except Exception:
+            self.csv_importer = None
+        
+        try:
+            self.linkedin_importer = LinkedInContactImporter()
+        except Exception:
+            self.linkedin_importer = None
+        
+        try:
+            self.email_sender = SimpleEmailSender(self.db)
+        except Exception:
+            self.email_sender = None
 
 contact_routes = ContactRoutes()
 

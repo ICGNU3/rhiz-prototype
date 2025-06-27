@@ -1,12 +1,16 @@
-from app import app
+from main_refactored import app
 from flask import jsonify
 import os
 import logging
 from datetime import datetime
 
 # Import and register Monique CRM blueprint
-from monique_crm import monique_bp
-app.register_blueprint(monique_bp)
+try:
+    from monique_crm import monique_bp
+    app.register_blueprint(monique_bp)
+    print("Monique CRM routes loaded successfully")
+except ImportError as e:
+    print(f"Monique CRM routes not available: {e}")
 
 @app.route('/health')
 def health_check():
