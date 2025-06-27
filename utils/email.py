@@ -435,5 +435,214 @@ class ResendEmailService:
             logging.error(f"Failed to send application confirmation email: {e}")
             return False
 
+    def send_root_invitation_email(self, to_email: str, inviter_name: str, inviter_company: str, base_url: str = None) -> bool:
+        """Send Root Membership invitation email when adding a contact"""
+        if not self.is_configured:
+            logger.error("Email service not configured - cannot send Root invitation")
+            return False
+            
+        try:
+            # Use current domain or fallback
+            if not base_url:
+                base_url = os.environ.get('REPLIT_DEV_DOMAIN', 'https://ourhizome.com')
+                if not base_url.startswith('http'):
+                    base_url = f"https://{base_url}"
+            
+            application_link = f"{base_url}/?invited=true&inviter={inviter_name}"
+            
+            subject = f"{inviter_name} invited you to join OuRhizome Root Members"
+            
+            html_content = f"""
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>You're Invited to Join OuRhizome Root Members</title>
+                <style>
+                    body {{
+                        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                        line-height: 1.6;
+                        color: #333;
+                        max-width: 600px;
+                        margin: 0 auto;
+                        padding: 20px;
+                        background-color: #f8f9fa;
+                    }}
+                    .container {{
+                        background: white;
+                        border-radius: 12px;
+                        padding: 40px;
+                        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+                    }}
+                    .logo {{
+                        text-align: center;
+                        margin-bottom: 30px;
+                    }}
+                    .logo h1 {{
+                        color: #667eea;
+                        font-size: 24px;
+                        font-weight: 700;
+                        margin: 0;
+                    }}
+                    .invitation-header {{
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        padding: 30px;
+                        border-radius: 8px;
+                        text-align: center;
+                        margin-bottom: 30px;
+                    }}
+                    .invitation-header h2 {{
+                        margin: 0;
+                        font-size: 24px;
+                        font-weight: 600;
+                    }}
+                    .content {{
+                        color: #4a5568;
+                        font-size: 16px;
+                        line-height: 1.7;
+                        margin-bottom: 30px;
+                    }}
+                    .content p {{
+                        margin-bottom: 20px;
+                    }}
+                    .accelerator-list {{
+                        display: flex;
+                        justify-content: center;
+                        flex-wrap: wrap;
+                        gap: 15px;
+                        margin: 25px 0;
+                        padding: 20px;
+                        background: #f7fafc;
+                        border-radius: 8px;
+                    }}
+                    .accelerator-badge {{
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        padding: 8px 16px;
+                        border-radius: 20px;
+                        font-size: 14px;
+                        font-weight: 500;
+                    }}
+                    .cta-button {{
+                        display: inline-block;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        padding: 16px 32px;
+                        text-decoration: none;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        font-size: 16px;
+                        text-align: center;
+                        margin: 20px 0;
+                    }}
+                    .footer {{
+                        text-align: center;
+                        color: #718096;
+                        font-size: 14px;
+                        margin-top: 40px;
+                        padding-top: 20px;
+                        border-top: 1px solid #e2e8f0;
+                    }}
+                    .invited-by {{
+                        background: #f7fafc;
+                        padding: 20px;
+                        border-radius: 8px;
+                        border-left: 4px solid #667eea;
+                        margin-bottom: 30px;
+                    }}
+                    .invited-by strong {{
+                        color: #2d3748;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="logo">
+                        <h1>OuRhizome</h1>
+                    </div>
+                    
+                    <div class="invitation-header">
+                        <h2>You are invited to be one of the One Hundred Root Members</h2>
+                    </div>
+                    
+                    <div class="invited-by">
+                        <strong>{inviter_name}</strong> from {inviter_company} has invited you to join OuRhizome's exclusive Root Membership program.
+                    </div>
+                    
+                    <div class="content">
+                        <p><strong>Depth over scale.</strong> We're building something lasting with a small group of founders who understand that relationships create enduring value.</p>
+                        
+                        <p>Root Members become part of a community where mutual support, shared resources, and collective wisdom become the foundation for everyone's success. Solidarity in the work of building something meaningful.</p>
+                        
+                        <div class="accelerator-list">
+                            <div class="accelerator-badge">YC Alumni</div>
+                            <div class="accelerator-badge">Techstars</div>
+                            <div class="accelerator-badge">500 Startups</div>
+                            <div class="accelerator-badge">AngelList</div>
+                        </div>
+                        
+                        <p>Join founders from the most respected accelerators and networks who are already building their future together.</p>
+                        
+                        <p><strong>What you receive as a Root Member:</strong></p>
+                        <ul>
+                            <li><strong>Lifetime Access</strong> - Complete platform access, forever</li>
+                            <li><strong>Advanced AI Tools</strong> - Unlimited relationship analysis and network intelligence</li>
+                            <li><strong>Founder Network</strong> - Direct access to the Root Members community</li>
+                            <li><strong>Exclusive Access</strong> - First access to new products and founder events</li>
+                        </ul>
+                        
+                        <p>This is a limited membership program. Only 100 founders will become Root Members.</p>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <a href="{application_link}" class="cta-button">Accept Invitation & Apply</a>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>This invitation was sent by {inviter_name} through OuRhizome.<br>
+                        If you have questions, reply to this email or visit <a href="{base_url}">ourhizome.com</a></p>
+                        <p>&copy; 2025 OuRhizome. Root Membership Program.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            
+            text_content = f"""
+            You are invited to be one of the One Hundred Root Members
+
+            {inviter_name} from {inviter_company} has invited you to join OuRhizome's exclusive Root Membership program.
+
+            Depth over scale. We're building something lasting with a small group of founders who understand that relationships create enduring value.
+
+            Root Members become part of a community where mutual support, shared resources, and collective wisdom become the foundation for everyone's success. Solidarity in the work of building something meaningful.
+
+            Join founders from YC Alumni, Techstars, 500 Startups, AngelList and other respected accelerators and networks who are already building their future together.
+
+            What you receive as a Root Member:
+            - Lifetime Access - Complete platform access, forever
+            - Advanced AI Tools - Unlimited relationship analysis and network intelligence
+            - Founder Network - Direct access to the Root Members community
+            - Exclusive Access - First access to new products and founder events
+
+            This is a limited membership program. Only 100 founders will become Root Members.
+
+            Accept Invitation & Apply: {application_link}
+
+            This invitation was sent by {inviter_name} through OuRhizome.
+            If you have questions, reply to this email or visit {base_url}
+
+            © 2025 OuRhizome. Root Membership Program.
+            """
+            
+            result = self.send_email(to_email, subject, html_content, text_content)
+            return result['success']
+            
+        except Exception as e:
+            logger.error(f"Error sending Root invitation email: {e}")
+            return False
+
 # Initialize global email service
 email_service = ResendEmailService()
