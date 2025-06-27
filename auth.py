@@ -88,20 +88,22 @@ class AuthManager:
         """Verify magic link token and return email if valid"""
         conn = self.db.get_connection()
         try:
-            link = conn.execute(
-                """SELECT email FROM magic_links 
-                   WHERE token = ? AND expires_at > datetime('now') AND used = FALSE""",
+            user = conn.execute(
+                """SELECT email FROM users 
+                   WHERE magic_link_token = ? AND magic_link_expires > datetime('now')""",
                 (token,)
             ).fetchone()
             
-            if link:
-                # Mark token as used
+            if user:
+                # Clear token after use
                 conn.execute(
-                    "UPDATE magic_links SET used = TRUE WHERE token = ?",
+                    """UPDATE users 
+                       SET magic_link_token = NULL, magic_link_expires = NULL, updated_at = datetime('now')
+                       WHERE magic_link_token = ?""",
                     (token,)
                 )
                 conn.commit()
-                return link['email']
+                return user[0]
             return None
         finally:
             conn.close()
