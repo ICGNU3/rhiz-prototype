@@ -27,7 +27,7 @@
                     </h4>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('core_routes.dashboard') }}">
+                    <form method="POST" action="/placeholder">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="goal_title" class="form-label">Goal Title</label>
@@ -84,7 +84,7 @@
                                         <h6 class="card-title">{{ goal.title }}</h6>
                                         <p class="card-text small text-muted">{{ goal.description[:100] }}{% if goal.description|length > 100 %}...{% endif %}</p>
                                         <div class="d-flex gap-2">
-                                            <a href="{{ url_for('match_goal', goal_id=goal.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <a href="/placeholder" class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-search me-1"></i>Find Matches
                                             </a>
                                             <small class="text-muted align-self-center">{{ goal.created_at[:10] }}</small>
@@ -111,7 +111,7 @@
                         <i class="bi bi-people me-2"></i>
                         Your Network ({{ recent_contacts|length }} shown)
                     </h5>
-                    <a href="{{ url_for('contacts') }}" class="btn btn-sm btn-outline-primary">
+                    <a href="{{ /contacts }}" class="btn btn-sm btn-outline-primary">
                         <i class="bi bi-arrow-right me-1"></i>View All Contacts
                     </a>
                 </div>
@@ -146,7 +146,7 @@
                 <div>
                     <strong>Goal Created Successfully!</strong> Found {{ matches|length }} matching contacts with AI-generated messages.
                 </div>
-                <a href="{{ url_for('core_routes.dashboard') }}" class="btn btn-sm btn-outline-success ms-auto">
+                <a href="/placeholder" class="btn btn-sm btn-outline-success ms-auto">
                     <i class="bi bi-plus me-1"></i>Create Another Goal
                 </a>
             </div>
@@ -200,7 +200,7 @@
                             </div>
                         </div>
                         <div class="text-end">
-                            <a href="{{ url_for('contact_detail', contact_id=match.contact_id) }}" class="btn btn-sm btn-outline-primary me-2">
+                            <a href="/placeholder" class="btn btn-sm btn-outline-primary me-2">
                                 <i class="bi bi-eye me-1"></i>View Profile
                             </a>
                         </div>
@@ -278,7 +278,7 @@
                                 <h5 class="modal-title">Send Email - {{ match.contact_name }}</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
-                            <form action="{{ url_for('send_email') }}" method="POST">
+                            <form action="/placeholder" method="POST">
                                 <input type="hidden" name="contact_id" value="{{ match.contact_id }}">
                                 <input type="hidden" name="goal_title" value="{{ goal_title }}">
                                 <div class="modal-body">
@@ -315,7 +315,7 @@
                                 <h5 class="modal-title">Log Interaction - {{ match.contact_name }}</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
-                            <form action="{{ url_for('crm_log_interaction') }}" method="POST">
+                            <form action="/placeholder" method="POST">
                                 <input type="hidden" name="contact_id" value="{{ match.contact_id }}">
                                 <div class="modal-body">
                                     <div class="mb-3">
@@ -350,7 +350,7 @@
                     <i class="bi bi-search display-1 text-muted mb-3"></i>
                     <h4>No matches found</h4>
                     <p class="text-muted">Try creating a more detailed goal description or adding more contacts to your network.</p>
-                    <a href="{{ url_for('core_routes.dashboard') }}" class="btn btn-primary">
+                    <a href="/placeholder" class="btn btn-primary">
                         <i class="bi bi-plus me-1"></i>Create Another Goal
                     </a>
                 </div>

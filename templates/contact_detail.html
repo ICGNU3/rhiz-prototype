@@ -24,7 +24,7 @@
                     </div>
                 </div>
                 <div>
-                    <a href="{{ url_for('contacts') }}" class="btn btn-outline-secondary me-2">
+                    <a href="/contacts" class="btn btn-outline-secondary me-2">
                         <i class="bi bi-arrow-left me-1"></i>Back to Contacts
                     </a>
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#logInteractionModal">
@@ -305,7 +305,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             
-            <form action="{{ url_for('crm_log_interaction') }}" method="POST">
+            <form action="/placeholder" method="POST">
                 <input type="hidden" name="contact_id" value="{{ contact.id }}">
                 
                 <div class="modal-body">

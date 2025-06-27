@@ -50,7 +50,7 @@
                 </div>
                 <div class="card-body">
                     <!-- New Entry Form -->
-                    <form method="post" action="{{ url_for('monique.create_journal_entry', contact_id=contact.id) }}" class="mb-4">
+                    <form method="post" action="/monique/create_journal_entry/{{ contact.id }}" class="mb-4">
                         <div class="card border-primary">
                             <div class="card-header">
                                 <h6 class="card-title mb-0">Add New Entry</h6>

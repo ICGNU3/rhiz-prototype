@@ -36,7 +36,7 @@
                 <div class="card-body">
                     <p class="text-muted mb-3">Transform passive contact collection into goal-aligned outreach. Conference Mode makes networking events a powerful tool for your business growth.</p>
                     
-                    <form method="POST" action="{{ url_for('activate_conference') }}">
+                    <form method="POST" action="/placeholder">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="conference_name" class="form-label">Conference Name *</label>
@@ -96,7 +96,7 @@
                         <h5 class="card-title mb-0">
                             <i class="bi bi-calendar-event me-2"></i>{{ active_conference.name }}
                         </h5>
-                        <form method="POST" action="{{ url_for('deactivate_conference') }}" class="d-inline">
+                        <form method="POST" action="/placeholder" class="d-inline">
                             <button type="submit" class="btn btn-outline-light btn-sm">
                                 <i class="bi bi-stop-circle me-1"></i>Deactivate
                             </button>
@@ -117,7 +117,7 @@
                             {% endif %}
                         </div>
                         <div class="col-md-4 text-md-end">
-                            <form method="POST" action="{{ url_for('generate_conference_followups') }}" class="d-inline">
+                            <form method="POST" action="/placeholder" class="d-inline">
                                 <button type="submit" class="btn btn-warning">
                                     <i class="bi bi-robot me-1"></i>Generate Follow-ups
                                 </button>
@@ -149,7 +149,7 @@
                                     <p class="card-text small text-muted">{{ contact.reason }}</p>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="badge bg-info">{{ contact.timing }}</span>
-                                        <form method="POST" action="{{ url_for('complete_followup') }}" class="d-inline">
+                                        <form method="POST" action="/placeholder" class="d-inline">
                                             <input type="hidden" name="contact_name" value="{{ contact.name }}">
                                             <input type="hidden" name="conference_id" value="{{ active_conference.id }}">
                                             <button type="submit" class="btn btn-sm btn-outline-success">
@@ -182,7 +182,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('capture_conference_contact') }}">
+                    <form method="POST" action="/placeholder">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="name" class="form-label">Name *</label>

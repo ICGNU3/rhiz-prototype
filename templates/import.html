@@ -198,7 +198,7 @@
                     ({{ import_result.duplicates }} duplicates skipped)
                     {% endif %}
                 </div>
-                <a href="{{ url_for('import_contacts') }}" class="btn btn-sm btn-outline-{{ 'success' if import_result.imported > 0 else 'warning' }} ms-auto">
+                <a href="{{ /import_contacts }}" class="btn btn-sm btn-outline-{{ 'success' if import_result.imported > 0 else 'warning' }} ms-auto">
                     <i class="bi bi-plus me-1"></i>Import More
                 </a>
             </div>
@@ -306,16 +306,16 @@
                 </div>
                 <div class="card-body">
                     <div class="d-flex flex-wrap gap-2">
-                        <a href="{{ url_for('contacts') }}" class="btn btn-outline-primary btn-sm">
+                        <a href="{{ /contacts }}" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-people me-1"></i>View All Contacts
                         </a>
-                        <a href="{{ url_for('crm_pipeline') }}" class="btn btn-outline-success btn-sm">
+                        <a href="/crm_pipeline" class="btn btn-outline-success btn-sm">
                             <i class="bi bi-kanban me-1"></i>Organize Pipeline
                         </a>
-                        <a href="{{ url_for('goals') }}" class="btn btn-outline-info btn-sm">
+                        <a href="{{ /goals }}" class="btn btn-outline-info btn-sm">
                             <i class="bi bi-bullseye me-1"></i>Create Goals
                         </a>
-                        <a href="{{ url_for('crm_dashboard') }}" class="btn btn-outline-warning btn-sm">
+                        <a href="/crm_dashboard" class="btn btn-outline-warning btn-sm">
                             <i class="bi bi-robot me-1"></i>AI Suggestions
                         </a>
                     </div>

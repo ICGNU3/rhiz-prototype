@@ -15,7 +15,7 @@
                     </h2>
                     <p class="text-muted">Kanban-style view of your contact relationship stages</p>
                 </div>
-                <a href="{{ url_for('crm_dashboard') }}" class="btn btn-outline-secondary">
+                <a href="/crm_dashboard" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
                 </a>
             </div>
@@ -96,7 +96,7 @@
 
                                 <!-- Actions -->
                                 <div class="d-flex gap-1">
-                                    <a href="{{ url_for('contact_detail', contact_id=contact.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <a href="/placeholder" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-eye"></i>
                                     </a>
                                     
@@ -109,7 +109,7 @@
                                         <ul class="dropdown-menu">
                                             {% if stage != 'Cold' %}
                                             <li>
-                                                <form method="POST" action="{{ url_for('update_warmth') }}" class="m-0">
+                                                <form method="POST" action="/placeholder" class="m-0">
                                                     <input type="hidden" name="contact_id" value="{{ contact.id }}">
                                                     <input type="hidden" name="warmth_status" value="1">
                                                     <input type="hidden" name="warmth_label" value="Cold">
@@ -121,7 +121,7 @@
                                             {% endif %}
                                             {% if stage != 'Aware' %}
                                             <li>
-                                                <form method="POST" action="{{ url_for('update_warmth') }}" class="m-0">
+                                                <form method="POST" action="/placeholder" class="m-0">
                                                     <input type="hidden" name="contact_id" value="{{ contact.id }}">
                                                     <input type="hidden" name="warmth_status" value="2">
                                                     <input type="hidden" name="warmth_label" value="Aware">
@@ -133,7 +133,7 @@
                                             {% endif %}
                                             {% if stage != 'Warm' %}
                                             <li>
-                                                <form method="POST" action="{{ url_for('update_warmth') }}" class="m-0">
+                                                <form method="POST" action="/placeholder" class="m-0">
                                                     <input type="hidden" name="contact_id" value="{{ contact.id }}">
                                                     <input type="hidden" name="warmth_status" value="3">
                                                     <input type="hidden" name="warmth_label" value="Warm">
@@ -145,7 +145,7 @@
                                             {% endif %}
                                             {% if stage != 'Active' %}
                                             <li>
-                                                <form method="POST" action="{{ url_for('update_warmth') }}" class="m-0">
+                                                <form method="POST" action="/placeholder" class="m-0">
                                                     <input type="hidden" name="contact_id" value="{{ contact.id }}">
                                                     <input type="hidden" name="warmth_status" value="4">
                                                     <input type="hidden" name="warmth_label" value="Active">
@@ -157,7 +157,7 @@
                                             {% endif %}
                                             {% if stage != 'Contributor' %}
                                             <li>
-                                                <form method="POST" action="{{ url_for('update_warmth') }}" class="m-0">
+                                                <form method="POST" action="/placeholder" class="m-0">
                                                     <input type="hidden" name="contact_id" value="{{ contact.id }}">
                                                     <input type="hidden" name="warmth_status" value="5">
                                                     <input type="hidden" name="warmth_label" value="Contributor">

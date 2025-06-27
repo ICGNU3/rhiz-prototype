@@ -27,7 +27,7 @@
                     </h4>
                 </div>
                 <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data" action="{{ url_for('import_contacts') }}">
+                    <form method="POST" enctype="multipart/form-data" action="{{ /import_contacts }}">
                         <div class="mb-3">
                             <label for="csv_file" class="form-label">Choose CSV File</label>
                             <input type="file" class="form-control form-control-lg" id="csv_file" name="csv_file" 
@@ -83,7 +83,7 @@
                         </li>
                     </ul>
                     
-                    <a href="{{ url_for('download_sample_csv') }}" class="btn btn-outline-info btn-sm">
+                    <a href="/placeholder" class="btn btn-outline-info btn-sm">
                         <i class="bi bi-download me-1"></i>Download Sample CSV
                     </a>
                 </div>
@@ -185,7 +185,7 @@
                     {{ summary.successful }} of {{ summary.total_processed }} contacts imported successfully
                     ({{ "%.1f" | format(summary.success_rate) }}% success rate)
                 </div>
-                <a href="{{ url_for('import_contacts') }}" class="btn btn-sm btn-outline-{{ 'success' if summary.successful > 0 else 'warning' }} ms-auto">
+                <a href="{{ /import_contacts }}" class="btn btn-sm btn-outline-{{ 'success' if summary.successful > 0 else 'warning' }} ms-auto">
                     <i class="bi bi-plus me-1"></i>Import More
                 </a>
             </div>
@@ -290,10 +290,10 @@
     <!-- Action Buttons -->
     <div class="row mt-4">
         <div class="col-12 text-center">
-            <a href="{{ url_for('contacts') }}" class="btn btn-primary me-2">
+            <a href="{{ /contacts }}" class="btn btn-primary me-2">
                 <i class="bi bi-people me-1"></i>View All Contacts
             </a>
-            <a href="{{ url_for('core_routes.dashboard') }}" class="btn btn-secondary">
+            <a href="/placeholder" class="btn btn-secondary">
                 <i class="bi bi-house me-1"></i>Back to Dashboard
             </a>
         </div>

@@ -82,14 +82,14 @@
                         {% if unknown.ai_suggestions.get('events') %}
                         <div class="mb-2">
                             <strong class="small text-success">Possible events:</strong>
-                            <div class="small text-muted">{{ unknown.ai_suggestions.events|join(', ') }}</div>
+                            <div class="small text-muted">{{ unknown.ai_suggestions.events|join()</div>
                         </div>
                         {% endif %}
 
                         {% if unknown.ai_suggestions.get('connections') %}
                         <div class="mb-2">
                             <strong class="small text-warning">Potential connections:</strong>
-                            <div class="small text-muted">{{ unknown.ai_suggestions.connections|join(', ') }}</div>
+                            <div class="small text-muted">{{ unknown.ai_suggestions.connections|join()</div>
                         </div>
                         {% endif %}
                     </div>

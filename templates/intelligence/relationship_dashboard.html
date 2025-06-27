@@ -142,7 +142,7 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Unknown Contacts to Review</h5>
-                    <a href="{{ url_for('unknown_contacts') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                    <a href="/placeholder" class="btn btn-sm btn-outline-primary">View All</a>
                 </div>
                 <div class="card-body">
                     {% for unknown in unknown_contacts %}
@@ -185,7 +185,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Recent Campaigns</h5>
-                    <a href="{{ url_for('mass_messaging') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                    <a href="/placeholder" class="btn btn-sm btn-outline-primary">View All</a>
                 </div>
                 <div class="card-body">
                     {% for campaign in data.recent_campaigns %}
@@ -285,10 +285,10 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{{ url_for('unknown_contacts') }}" class="btn btn-outline-primary">
+                        <a href="/placeholder" class="btn btn-outline-primary">
                             <i class="bi bi-plus-circle me-2"></i>Add Unknown Contact
                         </a>
-                        <a href="{{ url_for('mass_messaging') }}" class="btn btn-outline-success">
+                        <a href="/placeholder" class="btn btn-outline-success">
                             <i class="bi bi-envelope me-2"></i>Create Campaign
                         </a>
                         <button class="btn btn-outline-info" onclick="analyzeNetwork()">

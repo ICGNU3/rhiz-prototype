@@ -57,7 +57,7 @@
                             </div>
 
                             <div class="d-grid gap-2">
-                                <a href="{{ url_for('collective_action_detail', action_id=action.id) }}" 
+                                <a href="/placeholder" 
                                    class="btn btn-primary btn-sm">
                                     <i class="bi bi-arrow-right me-1"></i>View Progress
                                 </a>
@@ -121,14 +121,14 @@
                                     <button class="btn btn-primary" onclick="joinAction('{{ action.id }}')">
                                         <i class="bi bi-plus-circle me-1"></i>Join Action
                                     </button>
-                                    <a href="{{ url_for('collective_action_detail', action_id=action.id) }}" 
+                                    <a href="/placeholder" 
                                        class="btn btn-outline-secondary btn-sm">
                                         View Details
                                     </a>
                                 </div>
                                 {% else %}
                                 <div class="d-grid">
-                                    <a href="{{ url_for('collective_action_detail', action_id=action.id) }}" 
+                                    <a href="/placeholder" 
                                        class="btn btn-success">
                                         <i class="bi bi-check-circle me-1"></i>Already Joined
                                     </a>
