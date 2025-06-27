@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import './styles/globals.css';
 import Navbar from './components/layout/Navbar';
 import Dashboard from './pages/Dashboard';
 import Goals from './pages/Goals';

@@ -3,6 +3,10 @@ from flask import jsonify
 import os
 import logging
 from datetime import datetime
+from api_routes import register_api_routes
+
+# Register API routes for React frontend
+register_api_routes(app)
 
 # Import and register Monique CRM blueprint
 try:
