@@ -50,7 +50,7 @@ function AppContent() {
             <Route path="/goals" element={<Goals />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/intelligence" element={<Intelligence />} />
-            <Route path="/trust" element={<TrustInsights />} />
+            <Route path="/intelligence/trust-insights" element={<TrustInsights />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Routes>

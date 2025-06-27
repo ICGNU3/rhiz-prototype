@@ -1,8 +1,9 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { intelligenceAPI, networkAPI } from '../services/api';
 import RhizomaticGraph from '../components/network/RhizomaticGraph';
-import { Brain, Network, Sparkles, TrendingUp } from 'lucide-react';
+import { Brain, Network, Sparkles, TrendingUp, Heart, ArrowRight } from 'lucide-react';
 
 const Intelligence: React.FC = () => {
   const { data: suggestions = [], isLoading: suggestionsLoading } = useQuery({
@@ -100,6 +101,42 @@ const Intelligence: React.FC = () => {
           <p className="text-sm text-gray-400">Network strength</p>
         </div>
       </div>
+
+      {/* Trust Insights Navigation */}
+      <Link to="/intelligence/trust-insights" className="block">
+        <div className="glass-card p-6 hover:bg-gray-800/30 transition-all duration-200 cursor-pointer group">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 rounded-lg bg-gradient-to-r from-pink-500 to-red-500">
+                <Heart size={24} className="text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white group-hover:text-primary-400 transition-colors">
+                  Trust Insights
+                </h3>
+                <p className="text-sm text-gray-400">
+                  Real-time relationship intelligence and trust scoring
+                </p>
+              </div>
+            </div>
+            <ArrowRight className="text-gray-500 group-hover:text-primary-400 transition-colors" size={20} />
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-lg font-bold text-white">4</div>
+              <div className="text-xs text-gray-400">Trust Tiers</div>
+            </div>
+            <div>
+              <div className="text-lg font-bold text-white">95%</div>
+              <div className="text-xs text-gray-400">Health Score</div>
+            </div>
+            <div>
+              <div className="text-lg font-bold text-white">12</div>
+              <div className="text-xs text-gray-400">Signals</div>
+            </div>
+          </div>
+        </div>
+      </Link>
 
       {/* AI Suggestions */}
       <div className="glass-card p-6">
