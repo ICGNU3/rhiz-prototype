@@ -39,118 +39,373 @@ def serve_react():
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <style>
+                :root {
+                    --text-primary: #ffffff;
+                    --text-secondary: rgba(255, 255, 255, 0.7);
+                    --glass-bg: rgba(255, 255, 255, 0.05);
+                    --glass-border: rgba(255, 255, 255, 0.1);
+                    --primary-500: #4facfe;
+                    --primary-400: #6bb6fe;
+                    --secondary-500: #8b5cf6;
+                    --accent-500: #ec4899;
+                }
+                
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+                
                 body { 
                     margin: 0; 
-                    font-family: Inter, system-ui; 
-                    background: #0a0b0d; 
-                    color: white; 
-                    display: flex; 
-                    align-items: center; 
-                    justify-content: center; 
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+                    background: radial-gradient(ellipse at top, #1e3a8a 0%, #0f172a 50%, #0a0b0d 100%);
+                    color: var(--text-primary);
                     min-height: 100vh;
+                    overflow-x: hidden;
                 }
-                .container { 
-                    text-align: center; 
-                    background: rgba(255,255,255,0.05); 
-                    padding: 3rem; 
-                    border-radius: 1rem; 
-                    border: 1px solid rgba(255,255,255,0.1);
+                
+                /* Floating background orbs */
+                .floating-orbs {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    pointer-events: none;
+                    z-index: -1;
+                }
+                
+                .orb {
+                    position: absolute;
+                    border-radius: 50%;
+                    background: linear-gradient(135deg, rgba(79, 172, 254, 0.3), rgba(139, 92, 246, 0.2));
+                    animation: float 20s infinite linear;
+                    filter: blur(40px);
+                }
+                
+                .orb:nth-child(1) {
+                    width: 300px;
+                    height: 300px;
+                    top: -150px;
+                    left: -150px;
+                    animation-delay: 0s;
+                }
+                
+                .orb:nth-child(2) {
+                    width: 200px;
+                    height: 200px;
+                    top: 50%;
+                    right: -100px;
+                    animation-delay: -5s;
+                }
+                
+                .orb:nth-child(3) {
+                    width: 400px;
+                    height: 400px;
+                    bottom: -200px;
+                    left: 30%;
+                    animation-delay: -10s;
+                }
+                
+                @keyframes float {
+                    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+                    33% { transform: translate(30px, -30px) rotate(120deg); }
+                    66% { transform: translate(-20px, 20px) rotate(240deg); }
+                }
+                
+                /* Navigation */
+                .navbar {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    z-index: 50;
+                    padding: 1rem 2rem;
                     backdrop-filter: blur(16px);
-                    max-width: 600px;
+                    background: var(--glass-bg);
+                    border-bottom: 1px solid var(--glass-border);
                 }
-                .logo { 
-                    background: linear-gradient(135deg, #4facfe, #8b5cf6); 
-                    width: 80px; 
-                    height: 80px; 
-                    border-radius: 1rem; 
-                    margin: 0 auto 2rem; 
-                    display: flex; 
-                    align-items: center; 
-                    justify-content: center; 
-                    font-size: 2rem; 
-                    font-weight: bold;
+                
+                .nav-container {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    max-width: 1200px;
+                    margin: 0 auto;
                 }
-                h1 {
-                    background: linear-gradient(135deg, #4facfe, #a855f7, #ec4899);
+                
+                .logo {
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
                     background-clip: text;
                     -webkit-background-clip: text;
                     -webkit-text-fill-color: transparent;
-                    font-size: 2.5rem;
-                    margin-bottom: 1rem;
                 }
-                .status {
-                    background: rgba(34, 197, 94, 0.2);
-                    color: #22c55e;
-                    padding: 1rem;
-                    border-radius: 0.5rem;
-                    margin: 2rem 0;
-                    border: 1px solid rgba(34, 197, 94, 0.3);
+                
+                .nav-links {
+                    display: flex;
+                    gap: 2rem;
+                    list-style: none;
                 }
-                .api-info {
-                    background: rgba(59, 130, 246, 0.2);
-                    color: #3b82f6;
-                    padding: 1rem;
-                    border-radius: 0.5rem;
-                    margin: 1rem 0;
-                    border: 1px solid rgba(59, 130, 246, 0.3);
-                    text-align: left;
+                
+                .nav-link {
+                    color: var(--text-secondary);
+                    text-decoration: none;
+                    font-weight: 500;
+                    transition: color 0.3s ease;
                 }
-                .btn {
-                    background: linear-gradient(135deg, #4facfe, #2e9bfe);
-                    color: white;
-                    padding: 12px 24px;
-                    border: none;
-                    border-radius: 8px;
+                
+                .nav-link:hover, .nav-link.active {
+                    color: var(--text-primary);
+                }
+                
+                /* Main content */
+                .main-content {
+                    padding: 8rem 2rem 2rem;
+                    max-width: 1200px;
+                    margin: 0 auto;
+                }
+                
+                .glass-card {
+                    background: var(--glass-bg);
+                    backdrop-filter: blur(16px);
+                    border: 1px solid var(--glass-border);
+                    border-radius: 1rem;
+                    padding: 2rem;
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+                }
+                
+                .dashboard-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                    gap: 2rem;
+                    margin-bottom: 2rem;
+                }
+                
+                .section-title {
+                    font-size: 1.5rem;
                     font-weight: 600;
-                    margin: 0.5rem;
-                    cursor: pointer;
+                    margin-bottom: 1rem;
+                    color: var(--text-primary);
+                }
+                
+                .section-subtitle {
+                    color: var(--text-secondary);
+                    margin-bottom: 2rem;
+                }
+                
+                .stat-item {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 1rem 0;
+                    border-bottom: 1px solid var(--glass-border);
+                }
+                
+                .stat-item:last-child {
+                    border-bottom: none;
+                }
+                
+                .stat-label {
+                    color: var(--text-secondary);
+                }
+                
+                .stat-value {
+                    color: var(--text-primary);
+                    font-weight: 600;
+                }
+                
+                .btn {
+                    background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
+                    color: white;
+                    padding: 0.75rem 1.5rem;
+                    border: none;
+                    border-radius: 0.5rem;
+                    font-weight: 600;
                     text-decoration: none;
                     display: inline-block;
                     transition: all 0.3s ease;
+                    cursor: pointer;
                 }
+                
                 .btn:hover {
-                    transform: translateY(-1px);
-                    box-shadow: 0 6px 24px rgba(79, 172, 254, 0.4);
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
                 }
-                .endpoints {
-                    text-align: left;
-                    font-size: 0.9rem;
-                    font-family: monospace;
-                    line-height: 1.6;
+                
+                .btn-secondary {
+                    background: var(--glass-bg);
+                    color: var(--text-primary);
+                    border: 1px solid var(--glass-border);
+                }
+                
+                .btn-secondary:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+                }
+                
+                .quick-actions {
+                    display: flex;
+                    gap: 1rem;
+                    flex-wrap: wrap;
+                    margin-top: 2rem;
+                }
+                
+                .status-indicator {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    padding: 0.5rem 1rem;
+                    background: rgba(34, 197, 94, 0.2);
+                    color: #22c55e;
+                    border-radius: 0.5rem;
+                    border: 1px solid rgba(34, 197, 94, 0.3);
+                    font-size: 0.875rem;
+                }
+                
+                .feature-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 1.5rem;
+                    margin-top: 2rem;
+                }
+                
+                .feature-card {
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid var(--glass-border);
+                    border-radius: 0.75rem;
+                    padding: 1.5rem;
+                    transition: all 0.3s ease;
+                }
+                
+                .feature-card:hover {
+                    background: rgba(255, 255, 255, 0.06);
+                    transform: translateY(-2px);
+                }
+                
+                .feature-icon {
+                    width: 2.5rem;
+                    height: 2.5rem;
+                    background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
+                    border-radius: 0.5rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-bottom: 1rem;
+                    font-size: 1.25rem;
+                }
+                
+                .feature-title {
+                    font-weight: 600;
+                    margin-bottom: 0.5rem;
+                    color: var(--text-primary);
+                }
+                
+                .feature-description {
+                    color: var(--text-secondary);
+                    font-size: 0.875rem;
+                    line-height: 1.5;
                 }
             </style>
         </head>
         <body>
-            <div class="container">
-                <div class="logo">R</div>
-                <h1>Rhiz Platform Active</h1>
-                <div class="status">
-                    ✅ Flask Backend Running Successfully<br>
-                    ✅ API Routes Registered<br>
-                    ✅ Database Connected
+            <div class="floating-orbs">
+                <div class="orb"></div>
+                <div class="orb"></div>
+                <div class="orb"></div>
+            </div>
+            
+            <nav class="navbar">
+                <div class="nav-container">
+                    <div class="logo">Rhiz</div>
+                    <ul class="nav-links">
+                        <li><a href="/" class="nav-link active">Dashboard</a></li>
+                        <li><a href="/goals" class="nav-link">Goals</a></li>
+                        <li><a href="/contacts" class="nav-link">Contacts</a></li>
+                        <li><a href="/intelligence" class="nav-link">Intelligence</a></li>
+                        <li><a href="/settings" class="nav-link">Settings</a></li>
+                    </ul>
                 </div>
-                
-                <div class="api-info">
-                    <strong>Available API Endpoints:</strong>
-                    <div class="endpoints">
-                        • GET /api/health - System status<br>
-                        • POST /api/auth/magic-link - Authentication<br>
-                        • GET /api/goals - User goals<br>
-                        • GET /api/contacts - Contact list<br>
-                        • GET /api/intelligence/suggestions - AI recommendations<br>
-                        • GET /api/network/graph - Network visualization data
+            </nav>
+            
+            <main class="main-content">
+                <div class="glass-card">
+                    <h1 class="section-title">Welcome to Rhiz</h1>
+                    <p class="section-subtitle">Your intelligent relationship network is ready</p>
+                    
+                    <div class="dashboard-grid">
+                        <div class="glass-card">
+                            <h3 class="section-title">System Status</h3>
+                            <div class="stat-item">
+                                <span class="stat-label">Backend</span>
+                                <span class="status-indicator">✅ Running</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Database</span>
+                                <span class="status-indicator">✅ Connected</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">API Routes</span>
+                                <span class="status-indicator">✅ Active</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">AI Engine</span>
+                                <span class="status-indicator">✅ Ready</span>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card">
+                            <h3 class="section-title">Quick Stats</h3>
+                            <div class="stat-item">
+                                <span class="stat-label">Total Contacts</span>
+                                <span class="stat-value">5</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Active Goals</span>
+                                <span class="stat-value">3</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">AI Suggestions</span>
+                                <span class="stat-value">12</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Trust Insights</span>
+                                <span class="stat-value">Ready</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">🎯</div>
+                            <h4 class="feature-title">Goals & Matching</h4>
+                            <p class="feature-description">AI-powered goal matching with your network contacts using semantic analysis</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">👥</div>
+                            <h4 class="feature-title">Contact Intelligence</h4>
+                            <p class="feature-description">Multi-source contact sync with intelligent deduplication and enrichment</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🧠</div>
+                            <h4 class="feature-title">Trust Insights</h4>
+                            <p class="feature-description">Real-time relationship intelligence with trust scoring and behavioral analysis</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🌐</div>
+                            <h4 class="feature-title">Network Visualization</h4>
+                            <p class="feature-description">Interactive relationship mapping with rhizomatic intelligence layers</p>
+                        </div>
+                    </div>
+                    
+                    <div class="quick-actions">
+                        <a href="/api/health" class="btn">Test API Health</a>
+                        <a href="/dashboard-legacy" class="btn btn-secondary">View Legacy Dashboard</a>
+                        <a href="/api/demo/seed" class="btn btn-secondary">Load Demo Data</a>
                     </div>
                 </div>
-                
-                <p>The React frontend can be developed separately and will integrate with these API endpoints.</p>
-                
-                <a href="/api/health" class="btn">Test API Health</a>
-                <a href="/dashboard-legacy" class="btn">View Legacy Dashboard</a>
-                
-                <p style="margin-top: 2rem; opacity: 0.7; font-size: 0.9rem;">
-                    React development server should be run separately with: <code>cd frontend && npm run dev</code>
-                </p>
-            </div>
+            </main>
         </body>
         </html>
         '''
