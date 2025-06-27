@@ -26,6 +26,9 @@ from collective_actions import CollectiveActionsManager
 from relationship_intelligence import RelationshipIntelligence
 from network_metrics import NetworkMetricsManager
 from shared_ai_assistant import SharedAIAssistant
+from trust_contribution_engine import TrustContributionEngine
+from unknown_contact_discovery import UnknownContactDiscovery
+from coordination_infrastructure import CoordinationInfrastructure
 from utils.email import email_service as resend_email_service
 import logging
 import sqlite3
