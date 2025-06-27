@@ -183,6 +183,46 @@ class Contact:
             return pipeline
         finally:
             conn.close()
+    
+    @staticmethod
+    def get_warmth_options():
+        """Get available warmth status options"""
+        return [
+            ('cold', 'Cold'),
+            ('aware', 'Aware'),
+            ('warm', 'Warm'),
+            ('active', 'Active'),
+            ('contributor', 'Contributor')
+        ]
+    
+    @staticmethod
+    def get_relationship_types():
+        """Get available relationship types"""
+        return [
+            ('colleague', 'Colleague'),
+            ('client', 'Client'),
+            ('advisor', 'Advisor'),
+            ('investor', 'Investor'),
+            ('mentor', 'Mentor'),
+            ('friend', 'Friend'),
+            ('acquaintance', 'Acquaintance'),
+            ('lead', 'Lead')
+        ]
+    
+    def get_company_options(self, user_id):
+        """Get list of unique companies for a user"""
+        conn = self.db.get_connection()
+        try:
+            companies = conn.execute(
+                "SELECT DISTINCT company FROM contacts WHERE user_id = ? AND company IS NOT NULL AND company != '' ORDER BY company",
+                (user_id,)
+            ).fetchall()
+            return [company['company'] for company in companies]
+        except Exception as e:
+            logging.error(f"Error getting company options: {e}")
+            return []
+        finally:
+            conn.close()
 
 class Goal:
     def __init__(self, db):

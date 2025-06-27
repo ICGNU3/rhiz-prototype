@@ -58,8 +58,9 @@ def contacts():
         else:
             all_contacts = contact_routes.contact_model.get_all(user_id)
         
-        # Get filter options for dropdowns
-        warmth_options = contact_routes.contact_model.get_warmth_options(user_id)
+        # Get filter options for dropdowns  
+        from models import Contact
+        warmth_options = Contact.get_warmth_options()
         company_options = contact_routes.contact_model.get_company_options(user_id)
         
         return render_template('contacts.html', 
