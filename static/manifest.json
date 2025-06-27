@@ -1,7 +1,7 @@
 {
-  "name": "OuRhizome - Root Membership Contact Intelligence",
-  "short_name": "OuRhizome",
-  "description": "Goal in mind. People in reach. Moves in motion. Root Membership contact intelligence platform.",
+  "name": "Rhiz - AI-Powered Contact Intelligence",
+  "short_name": "Rhiz",
+  "description": "Intent Sync. AI-powered contact intelligence for founders. Start with a goal, organize your connections, take action.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",
@@ -76,11 +76,47 @@
       "icons": [{ "src": "/static/icons/icon-96x96.png", "sizes": "96x96" }]
     },
     {
+      "name": "New Goal",
+      "short_name": "Goal",
+      "description": "Create a new networking goal",
+      "url": "/goals/new",
+      "icons": [{ "src": "/static/icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
       "name": "Check Follow-ups",
       "short_name": "Follow-ups",
       "description": "See contacts that need follow-up",
       "url": "/crm/pipeline",
       "icons": [{ "src": "/static/icons/icon-96x96.png", "sizes": "96x96" }]
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/shared-content",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "files",
+          "accept": ["text/vcard", ".vcf", "text/csv", ".csv", "image/*"]
+        }
+      ]
+    }
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "mailto",
+      "url": "/contacts/new?email=%s"
+    }
+  ],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
 }
