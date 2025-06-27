@@ -13,108 +13,16 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-@app.route('/', methods=['GET'])
+# Restore original beautiful landing page
+@app.route('/')
 def landing():
-    """Working landing page override"""
-    return """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Rhiz - Relationship Intelligence Platform</title>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
-        <style>
-            body { 
-                background: linear-gradient(135deg, #1e1e2e 0%, #2d3748 100%);
-                min-height: 100vh;
-            }
-            .glass-card {
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                backdrop-filter: blur(10px);
-                border-radius: 12px;
-                padding: 2rem;
-                margin: 1rem 0;
-            }
-            .hero-section {
-                text-align: center;
-                padding: 4rem 0;
-            }
-            .cta-button {
-                font-size: 1.2rem;
-                padding: 1rem 2rem;
-                margin: 0.5rem;
-                border-radius: 8px;
-                text-decoration: none;
-                display: inline-block;
-                transition: all 0.3s ease;
-            }
-            .cta-button:hover {
-                transform: translateY(-2px);
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="hero-section">
-                <div class="glass-card">
-                    <h1 class="display-4 text-white mb-4">Rhiz</h1>
-                    <p class="lead text-light mb-5">High-context relationship intelligence for network architects</p>
-                    
-                    <div class="row text-center">
-                        <div class="col-12 mb-4">
-                            <h3 class="text-white">Choose Your Experience</h3>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="glass-card">
-                                <h5 class="text-white">Quick Demo</h5>
-                                <p class="text-light">Simple interface to test functionality</p>
-                                <a href="/demo-login" class="btn btn-primary btn-lg">Try Simple Demo</a>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="glass-card">
-                                <h5 class="text-white">React Frontend</h5>
-                                <p class="text-light">Modern glassmorphism interface</p>
-                                <a href="/app/dashboard" class="btn btn-success btn-lg">Launch React App</a>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="glass-card">
-                                <h5 class="text-white">Full Platform</h5>
-                                <p class="text-light">Complete feature access</p>
-                                <a href="/signup" class="btn btn-warning btn-lg">Sign Up</a>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-5">
-                        <h4 class="text-white">System Status</h4>
-                        <div class="row">
-                            <div class="col-md-3">
-                                <span class="badge bg-success">Flask Server ✓</span>
-                            </div>
-                            <div class="col-md-3">
-                                <span class="badge bg-success">Database ✓</span>
-                            </div>
-                            <div class="col-md-3">
-                                <span class="badge bg-success">React Frontend ✓</span>
-                            </div>
-                            <div class="col-md-3">
-                                <span class="badge bg-success">API Routes ✓</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </body>
-    </html>
-    """
+    """Original beautiful landing page"""
+    return render_template('landing.html')
+
+@app.route('/signup')
+def signup():
+    """Signup page route"""
+    return render_template('signup.html')
 
 @app.route('/demo-login')
 def demo_login():
