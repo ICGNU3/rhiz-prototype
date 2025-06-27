@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Target, Users, Brain, Heart, Settings, LogOut } from 'lucide-react';
+import { Home, Target, Users, Brain, Settings, LogOut } from 'lucide-react';
 
 interface NavbarProps {
   user?: { email: string; subscription_tier: string };
