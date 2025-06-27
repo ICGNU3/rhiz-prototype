@@ -108,6 +108,17 @@ def init_db():
 # Initialize database on startup
 try:
     init_db()
+    
+    # Initialize sync tables for multi-source contact management
+    try:
+        from contact_sync_engine import ContactSyncEngine
+        sync_engine = ContactSyncEngine()
+        sync_engine.init_sync_tables()
+        logging.info("Multi-source contact sync tables initialized")
+    except Exception as sync_error:
+        logging.warning(f"Sync tables initialization warning: {sync_error}")
+        # Continue without sync tables - they'll be created on first use
+        
 except Exception as e:
     logging.error(f"Failed to initialize database: {e}")
 
