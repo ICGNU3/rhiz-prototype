@@ -391,7 +391,9 @@ def api_create_goal():
 @app.route('/')
 def landing():
     """Modern 2025 landing page"""
-    return render_template('landing.html')
+    import time
+    cache_bust = int(time.time())
+    return render_template('landing.html', cache_bust=cache_bust)
 
 @app.route('/login')
 def login():
