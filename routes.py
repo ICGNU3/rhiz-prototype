@@ -240,9 +240,12 @@ def send_magic_link():
         
         # Send magic link email
         base_url = request.host_url.rstrip('/')
-        app.logger.info(f"Attempting to send magic link to {email} with base_url: {base_url}")
         success = auth_email_service.send_magic_link(email, token, base_url)
-        app.logger.info(f"Magic link send result: {success}")
+        
+        if not success:
+            app.logger.error(f"Failed to send magic link to {email}")
+        else:
+            app.logger.info(f"Magic link sent successfully to {email}")
         
         if success:
             # Handle different response types

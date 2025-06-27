@@ -15,7 +15,8 @@ class ResendEmailService:
     
     def __init__(self):
         self.api_key = os.environ.get('RESEND_API_KEY')
-        self.from_email = os.environ.get('FROM_EMAIL', 'info@ourhizome.com')
+        # Use a verified domain or Resend's default if FROM_EMAIL domain isn't verified
+        self.from_email = os.environ.get('FROM_EMAIL', 'onboarding@resend.dev')
         self.is_configured = False
         
         if self.api_key:
@@ -56,6 +57,7 @@ class ResendEmailService:
             response = resend.Emails.send(email_data)
             
             logger.info(f"Email sent successfully to {to_email} via Resend - ID: {response.get('id', 'unknown')}")
+            logger.info(f"Full Resend response: {response}")
             
             return {
                 'success': True,
