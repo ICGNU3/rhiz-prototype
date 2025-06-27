@@ -167,6 +167,10 @@ class GamificationEngine:
         finally:
             conn.close()
     
+    def get_user_profile(self, user_id: int) -> Dict[str, Any]:
+        """Get user profile including gamification data (alias for get_user_progress)"""
+        return self.get_user_progress(user_id)
+    
     def log_daily_streak(self, user_id: int):
         """Log daily activity and update streak count"""
         today = date.today()

@@ -85,8 +85,11 @@ def login():
             return render_template('login.html')
         
         try:
+            # Import auth_manager from routes package
+            from . import auth_manager
+            
             # Create magic link
-            magic_token = auth_routes.auth_manager.create_magic_link(email)
+            magic_token = auth_manager.create_magic_link(email)
             base_url = request.host_url.rstrip('/')
             
             # Send magic link email
@@ -121,11 +124,14 @@ def login():
 def verify_magic_link(token):
     """Verify magic link and login user"""
     try:
-        email = auth_routes.auth_manager.verify_magic_link(token)
+        # Import auth_manager from routes package
+        from . import auth_manager
+        
+        email = auth_manager.verify_magic_link(token)
         
         if email:
             # Get user by email
-            user = auth_routes.auth_manager.get_user_by_email(email)
+            user = auth_manager.get_user_by_email(email)
             
             if user:
                 # Login user
