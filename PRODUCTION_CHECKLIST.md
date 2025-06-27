@@ -89,7 +89,7 @@ None identified - system is launch-ready with proper environment configuration.
 ## 🔥 LAUNCH COMMAND
 ```bash
 # Set required environment variables in Replit Secrets:
-# SENDGRID_API_KEY, STRIPE_SECRET_KEY, OPENAI_API_KEY, SESSION_SECRET
+# RESEND_API_KEY, STRIPE_SECRET_KEY, OPENAI_API_KEY, SESSION_SECRET, STRIPE_WEBHOOK_SECRET
 
 # Deploy via Replit Deployments
 # Configure custom domain (optional)
@@ -107,7 +107,7 @@ None identified - system is launch-ready with proper environment configuration.
 ## 🆘 EMERGENCY CONTACTS
 - Technical Issues: Check `/health` endpoint
 - Payment Issues: Stripe dashboard
-- Email Issues: SendGrid dashboard
+- Email Issues: Resend dashboard
 - General Monitoring: Application logs
 
 ---
