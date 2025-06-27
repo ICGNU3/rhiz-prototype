@@ -1,0 +1,33 @@
+OURHIZOME → GITHUB UPLOAD GUIDE
+================================
+
+STEP 1: Download from Replit
+- Click three dots (⋯) in file explorer
+- Select "Download as zip" 
+- Extract to your computer
+
+STEP 2: Upload to GitHub
+- Go to: https://github.com/ICGNU3/ourhizome-protocol
+- Click "Add file" → "Upload files"
+- Drag ALL extracted files
+- Commit message: "OuRhizome contact intelligence platform"
+- Click "Commit changes"
+
+DONE! Your complete CRM platform is now on GitHub.
+
+Key Features Included:
+✓ Root Membership application system
+✓ AI-powered contact matching  
+✓ CRM with pipeline management
+✓ Email integration & confirmations
+✓ Network analytics & visualization
+✓ Glassmorphism design
+✓ Production-ready security
+
+Files Prepared:
+✓ .gitignore (protects sensitive data)
+✓ README.md (complete documentation)
+✓ .env.example (setup template)
+✓ All application code (50+ files)
+
+Your OuRhizome platform is ready to deploy! 🚀
