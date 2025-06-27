@@ -1,0 +1,93 @@
+Upgrade the Contacts module of the Rhiz app to support multi-source, intelligent syncing and integration. The current one-by-one upload interface should be replaced with a robust system that allows users to import and manage contacts in bulk from multiple platforms.
+
+New Features to Build:
+
+Multi-Source Syncing:
+
+Integrate APIs for:
+
+Phone Contacts: Use Google People API and Apple Contacts API (via OAuth).
+
+LinkedIn: Use OAuth + scraping fallback if LinkedIn API access is limited.
+
+X.com (Twitter): Use Twitter API v2 to pull followers/following with metadata.
+
+Email Providers: Gmail/Outlook contact list sync.
+
+CSV Upload: Support large file uploads, clean mapping of fields.
+
+Auto-Merge & Deduplication:
+
+Create a normalization engine to detect and merge duplicates using fuzzy matching on:
+
+Name
+
+Email
+
+Phone
+
+Social handle
+
+Add manual override tools to merge/split entries if needed.
+
+Enrichment Layer:
+
+Automatically enrich contacts with:
+
+Profile picture (Gravatar, LinkedIn, X.com)
+
+Bio / headline
+
+Last interaction timestamp
+
+Tags based on profession or relationship type
+
+UI Improvements:
+
+Design a React-based, responsive dashboard using Tailwind CSS.
+
+Display enriched contacts in a scrollable list with:
+
+Profile picture, name, title, origin source (LinkedIn, Phone, etc.)
+
+Tag chips
+
+Action buttons: "Map to Goal", "Add Note", "Message"
+
+Smart Filters & Search:
+
+Add filter options:
+
+Source (Phone, LinkedIn, X.com)
+
+Status (Dormant, Active, Engaged)
+
+Tags or relationship type
+
+Search by name, tag, or keyword across all notes and metadata.
+
+Privacy & Consent:
+
+Ensure GDPR-style data control and explicit consent flow for all synced data.
+
+Allow users to export, delete, or redact any contact information.
+
+Backend Support:
+
+Add background job queue (Celery or RQ) for syncing large lists without UI blocking.
+
+Store synced data in normalized form in PostgreSQL or a graph DB.
+
+Extend relationship object schema to include source, sync_status, and enrichment_status.
+
+Goals:
+
+Move from manual data entry to a seamless network import system.
+
+Empower users to visualize their extended graph faster.
+
+Allow AI agents to activate previously unknown but important contacts (e.g., via signal propagation or suggestion).
+
+Build the foundation for relationship intelligence across platforms.
+
+Important: Do not break existing contacts stored manually. Treat them as one of many sources in the new system.
