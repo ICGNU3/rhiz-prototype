@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Rhiz{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Settings Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <h1 class="h3 mb-2">Settings</h1>
+                <p class="text-muted mb-0">Configure your Rhiz experience</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Sections -->
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="glass-card p-4">
+                <h5 class="mb-3">
+                    <i class="bi bi-envelope-gear me-2"></i>Email Integration
+                </h5>
+                <p class="text-muted small mb-3">Configure email sending for AI-powered outreach</p>
+                <a href="/email-setup" class="btn btn-primary btn-sm">Setup Email</a>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="glass-card p-4">
+                <h5 class="mb-3">
+                    <i class="bi bi-calendar-event me-2"></i>Conference Mode
+                </h5>
+                <p class="text-muted small mb-3">Smart contact capture for networking events</p>
+                <a href="/conference-mode" class="btn btn-outline-primary btn-sm">Configure</a>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="glass-card p-4">
+                <h5 class="mb-3">
+                    <i class="bi bi-sliders me-2"></i>Motivation Mode
+                </h5>
+                <p class="text-muted small mb-3">Customize gamification feedback level</p>
+                <button class="btn btn-outline-primary btn-sm" onclick="openGamificationSettings()">Adjust</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="glass-card p-4">
+                <h5 class="mb-3">
+                    <i class="bi bi-upload me-2"></i>Data Management
+                </h5>
+                <p class="text-muted small mb-3">Import contacts and manage your data</p>
+                <div class="d-flex gap-2">
+                    <a href="/contacts/import" class="btn btn-primary btn-sm">Import Contacts</a>
+                    <a href="/data-export" class="btn btn-outline-secondary btn-sm">Export Data</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="glass-card p-4">
+                <h5 class="mb-3">
+                    <i class="bi bi-person-gear me-2"></i>Account
+                </h5>
+                <p class="text-muted small mb-3">Manage your account and subscription</p>
+                <div class="d-flex gap-2">
+                    <a href="/subscription" class="btn btn-outline-primary btn-sm">Subscription</a>
+                    <a href="/logout" class="btn btn-outline-danger btn-sm">Sign Out</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Information -->
+    {% if session.get('user_email') %}
+    <div class="row">
+        <div class="col-12">
+            <div class="glass-card p-4">
+                <h5 class="mb-3">Account Information</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="small text-muted mb-1">Email</div>
+                        <div>{{ session.get('user_email') }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-muted mb-1">Member Since</div>
+                        <div>{{ session.get('created_at', 'Recently') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+</style>
+{% endblock %}
