@@ -90,7 +90,19 @@ def login():
             
             # Create magic link
             magic_token = auth_manager.create_magic_link(email)
-            base_url = request.host_url.rstrip('/')
+            
+            # Use proper domain for magic links
+            if 'localhost' in request.host_url or '127.0.0.1' in request.host_url:
+                # Use Replit domain when running locally
+                import os
+                replit_domains = os.environ.get('REPLIT_DOMAINS')
+                if replit_domains:
+                    # Take the first domain from the REPLIT_DOMAINS list
+                    base_url = f"https://{replit_domains.split(',')[0]}"
+                else:
+                    base_url = request.host_url.rstrip('/')
+            else:
+                base_url = request.host_url.rstrip('/')
             
             # Send magic link email
             success = resend_email_service.send_email(
