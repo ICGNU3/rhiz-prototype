@@ -15,20 +15,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(contact_bp)
 app.register_blueprint(goal_bp)
 
-# Register intelligence and advanced feature blueprints
-try:
-    from routes.intelligence_routes import intelligence_bp
-    app.register_blueprint(intelligence_bp)
-    print("Intelligence routes loaded successfully")
-except ImportError as e:
-    print(f"Intelligence routes not available: {e}")
-
-# Legacy routes compatibility (temporary)
-try:
-    import routes as legacy_routes
-    print("Legacy routes still active - migration in progress")
-except ImportError as e:
-    print(f"Legacy routes disabled: {e}")
+# React and API blueprints registered in main.py to avoid conflicts
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
