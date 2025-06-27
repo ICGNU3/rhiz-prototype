@@ -40,24 +40,6 @@ contact_routes = ContactRoutes()
 def contacts():
     """Redirect to new glassmorphism contacts page"""
     return redirect('/app/contacts')
-        
-        # Get filter options for dropdowns  
-        from models import Contact
-        warmth_options = Contact.get_warmth_options()
-        company_options = contact_routes.contact_model.get_company_options(user_id)
-        
-        return render_template('contacts.html', 
-                             contacts=all_contacts,
-                             search=search,
-                             warmth_filter=warmth_filter,
-                             company_filter=company_filter,
-                             warmth_options=warmth_options,
-                             company_options=company_options)
-                             
-    except Exception as e:
-        logging.error(f"Error loading contacts: {e}")
-        contact_routes.flash_error('Failed to load contacts')
-        return render_template('contacts.html', contacts=[])
 
 @contact_bp.route('/contacts/create', methods=['GET', 'POST'])
 @login_required
