@@ -72,14 +72,12 @@ class AuthManager:
         
         conn = self.db.get_connection()
         try:
-            # Clean up old tokens for this email
-            conn.execute("DELETE FROM magic_links WHERE email = ?", (email,))
-            
-            # Create new token
+            # Update users table with magic link token
             conn.execute(
-                """INSERT INTO magic_links (id, email, token, expires_at) 
-                   VALUES (?, ?, ?, ?)""",
-                (str(uuid.uuid4()), email, token, expires_at)
+                """UPDATE users 
+                   SET magic_link_token = ?, magic_link_expires = ?, updated_at = datetime('now')
+                   WHERE email = ?""",
+                (token, expires_at, email)
             )
             conn.commit()
             return token

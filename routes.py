@@ -220,13 +220,17 @@ def send_magic_link():
         if not email:
             return jsonify({'error': 'Email is required'}), 400
         
-        # Create or get user
-        user_id = auth_manager.create_or_get_user(email)
-        if not user_id:
-            return jsonify({'error': 'Failed to create user account'}), 500
+        # Create user if doesn't exist, or get existing
+        existing_user = auth_manager.get_user_by_email(email)
+        if not existing_user:
+            user_id = auth_manager.create_user(email)
+            if not user_id:
+                return jsonify({'error': 'Failed to create user account'}), 500
+        else:
+            user_id = existing_user['id']
         
         # Generate magic link token
-        token = auth_manager.generate_magic_link_token(user_id)
+        token = auth_manager.create_magic_link(email)
         if not token:
             return jsonify({'error': 'Failed to generate authentication token'}), 500
         
@@ -252,14 +256,20 @@ def verify_magic_link():
         flash('Invalid or missing verification token')
         return redirect(url_for('signup'))
     
-    # Verify token and get user
-    user_id = auth_manager.verify_magic_link_token(token)
-    if not user_id:
+    # Verify token and get user email
+    user_email = auth_manager.verify_magic_link(token)
+    if not user_email:
         flash('Invalid or expired verification link')
         return redirect(url_for('signup'))
     
+    # Get user ID from email
+    user = auth_manager.get_user_by_email(user_email)
+    if not user:
+        flash('User account not found')
+        return redirect(url_for('signup'))
+    
     # Log in user
-    session['user_id'] = user_id
+    session['user_id'] = user['id']
     session.permanent = True
     
     # Redirect to onboarding or dashboard
