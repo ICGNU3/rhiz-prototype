@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Target, Users, Brain, Settings, LogOut } from 'lucide-react';
+import { Home, Target, Users, Brain, Heart, Settings, LogOut } from 'lucide-react';
 
 interface NavbarProps {
   user?: { email: string; subscription_tier: string };
@@ -15,6 +15,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
     { path: '/goals', icon: Target, label: 'Goals' },
     { path: '/contacts', icon: Users, label: 'Contacts' },
     { path: '/intelligence', icon: Brain, label: 'Intelligence' },
+    { path: '/trust', icon: Heart, label: 'Trust Insights' },
     { path: '/settings', icon: Settings, label: 'Settings' },
   ];
 

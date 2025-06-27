@@ -8,6 +8,15 @@ from api_routes import register_api_routes
 # Register API routes for React frontend
 register_api_routes(app)
 
+# Initialize Trust Insights system
+try:
+    from trust_insights import TrustInsightsEngine
+    trust_engine = TrustInsightsEngine()
+    trust_engine.init_trust_tables()
+    logging.info("Trust Insights system initialized successfully")
+except Exception as e:
+    logging.warning(f"Trust Insights initialization warning: {e}")
+
 # Register React integration routes
 from react_integration import register_react_integration
 register_react_integration(app)
