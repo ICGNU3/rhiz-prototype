@@ -214,8 +214,12 @@ def onboarding_goal():
 def send_magic_link():
     """Send magic link for authentication"""
     try:
-        data = request.get_json()
-        email = data.get('email')
+        # Handle both JSON and form data
+        if request.content_type and 'application/json' in request.content_type:
+            data = request.get_json()
+            email = data.get('email') if data else None
+        else:
+            email = request.form.get('email')
         
         if not email:
             return jsonify({'error': 'Email is required'}), 400
@@ -239,13 +243,27 @@ def send_magic_link():
         success = auth_email_service.send_magic_link(email, magic_link)
         
         if success:
-            return jsonify({'success': True})
+            # Handle different response types
+            if request.content_type and 'application/json' in request.content_type:
+                return jsonify({'success': True})
+            else:
+                # For form submissions, redirect with success message
+                flash('Magic link sent! Check your email to sign in.', 'success')
+                return redirect(url_for('login'))
         else:
-            return jsonify({'error': 'Failed to send magic link email'}), 500
+            if request.content_type and 'application/json' in request.content_type:
+                return jsonify({'error': 'Failed to send magic link email'}), 500
+            else:
+                flash('Failed to send magic link. Please try again.', 'error')
+                return redirect(url_for('login'))
             
     except Exception as e:
         logging.error(f"Magic link error: {e}")
-        return jsonify({'error': 'Internal server error'}), 500
+        if request.content_type and 'application/json' in request.content_type:
+            return jsonify({'error': 'Internal server error'}), 500
+        else:
+            flash('Something went wrong. Please try again.', 'error')
+            return redirect(url_for('login'))
 
 @app.route('/auth/verify')
 def verify_magic_link():

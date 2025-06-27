@@ -13,6 +13,19 @@
                     <p class="text-muted">Enter your email to receive a magic link</p>
                 </div>
 
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+                                <i class="bi bi-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }} me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
                 <form action="{{ url_for('send_magic_link') }}" method="POST">
                     <div class="mb-3">
                         <label for="email" class="form-label">Email Address</label>
