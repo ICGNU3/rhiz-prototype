@@ -64,7 +64,7 @@ def signup():
                 else:
                     flash('Account created but email delivery failed. Contact support.', 'warning')
                 
-                return redirect(url_for('auth_routes.login'))
+                return redirect('/login')
             else:
                 flash('Failed to create account', 'error')
                 
@@ -133,7 +133,7 @@ def verify_magic_link(token):
                 session['user_email'] = user['email']
                 
                 flash('Successfully logged in!', 'success')
-                return redirect(url_for('dashboard'))
+                return redirect('/dashboard')
             else:
                 flash('User account not found', 'error')
         else:
@@ -143,14 +143,14 @@ def verify_magic_link(token):
         logging.error(f"Magic link verification error: {e}")
         flash('Login failed. Please try again.', 'error')
     
-    return redirect(url_for('auth_routes.login'))
+    return redirect('/login')
 
 @auth_bp.route('/logout')
 def logout():
     """Logout user"""
     session.clear()
     flash('Successfully logged out', 'success')
-    return redirect(url_for('landing'))
+    return redirect('/')
 
 @auth_bp.route('/pricing')
 def pricing():
@@ -171,12 +171,12 @@ def upgrade_subscription():
     
     if tier not in ['founder_plus']:
         flash('Invalid subscription tier', 'error')
-        return redirect(url_for('auth_routes.pricing'))
+        return redirect('/pricing')
     
     try:
         # Create Stripe checkout session
-        success_url = url_for('dashboard', _external=True)
-        cancel_url = url_for('auth_routes.pricing', _external=True)
+        success_url = request.host_url.rstrip('/') + '/dashboard'
+        cancel_url = request.host_url.rstrip('/') + '/pricing'
         
         checkout_session = auth_routes.stripe_manager.create_checkout_session(
             user_id=user_id,
@@ -195,7 +195,7 @@ def upgrade_subscription():
         logging.error(f"Upgrade error: {e}")
         flash('An error occurred during upgrade', 'error')
     
-    return redirect(url_for('auth_routes.pricing'))
+    return redirect('/pricing')
 
 @auth_bp.route('/stripe/webhook', methods=['POST'])
 def stripe_webhook():
