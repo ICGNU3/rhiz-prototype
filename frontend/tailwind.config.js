@@ -27,10 +27,22 @@ export default {
           600: '#059669',
         },
         dark: {
-          primary: '#0a0a0f',
-          secondary: '#0f0f1a',
-          card: 'rgba(255, 255, 255, 0.03)',
-          border: 'rgba(255, 255, 255, 0.08)',
+          primary: '#0A0A0F',
+          secondary: '#1A1A24',
+          card: 'rgba(255, 255, 255, 0.05)',
+          border: 'rgba(255, 255, 255, 0.1)',
+        },
+        gray: {
+          50: '#f8fafc',
+          100: '#f1f5f9',
+          200: '#e2e8f0',
+          300: '#cbd5e1',
+          400: '#94a3b8',
+          500: '#64748b',
+          600: '#475569',
+          700: '#334155',
+          800: '#1e293b',
+          900: '#0f172a',
         }
       },
       backdropBlur: {

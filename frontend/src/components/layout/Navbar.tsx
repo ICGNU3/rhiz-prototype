@@ -21,15 +21,15 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="glass-card border-0 border-b border-dark-border rounded-none backdrop-blur-xl bg-dark-card/50">
+    <nav className="backdrop-blur-xl border-b border-white/10" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-primary-500 to-purple-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
               <span className="text-white font-bold text-sm">R</span>
             </div>
-            <span className="font-bold text-xl gradient-text">Rhiz</span>
+            <span className="font-bold text-xl" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>Rhiz</span>
           </Link>
 
           {/* Navigation Items */}
@@ -40,9 +40,13 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                 to={path}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
                   isActive(path)
-                    ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
-                    : 'text-gray-300 hover:text-white hover:bg-dark-border/50'
+                    ? 'text-white border border-white/30'
+                    : 'hover:text-white hover:border-white/20'
                 }`}
+                style={isActive(path) 
+                  ? { backgroundColor: 'rgba(255, 255, 255, 0.1)' }
+                  : { color: 'var(--text-secondary)' }
+                }
               >
                 <Icon size={16} />
                 <span>{label}</span>

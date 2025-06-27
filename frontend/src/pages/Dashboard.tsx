@@ -64,7 +64,7 @@ const Dashboard: React.FC = () => {
       label: 'Active Goals',
       value: goals.length,
       icon: Target,
-      color: 'from-blue-500 to-cyan-500',
+      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       action: () => window.location.href = '/goals',
       actionLabel: 'View Goals'
     },
@@ -72,7 +72,7 @@ const Dashboard: React.FC = () => {
       label: 'Total Contacts',
       value: contacts.length,
       icon: Users,
-      color: 'from-green-500 to-emerald-500',
+      gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
       action: () => window.location.href = '/contacts',
       actionLabel: 'View Contacts'
     },
@@ -80,7 +80,7 @@ const Dashboard: React.FC = () => {
       label: 'AI Suggestions',
       value: suggestions.length,
       icon: Brain,
-      color: 'from-purple-500 to-pink-500',
+      gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
       action: () => window.location.href = '/intelligence',
       actionLabel: 'View Intelligence'
     },
@@ -88,7 +88,7 @@ const Dashboard: React.FC = () => {
       label: 'Network Score',
       value: Math.round((contacts.length * 2.5) + (goals.length * 10)),
       icon: TrendingUp,
-      color: 'from-orange-500 to-red-500',
+      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       action: () => window.location.href = '/intelligence',
       actionLabel: 'View Analytics'
     },
