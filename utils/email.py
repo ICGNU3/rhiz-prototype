@@ -1,5 +1,5 @@
 """
-Resend Email Service for OuRhizome
+Resend Email Service for Rhiz
 Handles all transactional emails using Resend API
 """
 import os
@@ -41,7 +41,7 @@ class ResendEmailService:
         
         try:
             email_data = {
-                "from": f"OuRhizome <{self.from_email}>",
+                "from": f"Rhiz <{self.from_email}>",
                 "to": [to_email],
                 "subject": subject,
                 "html": html_content
@@ -97,7 +97,7 @@ class ResendEmailService:
             magic_link = f"{base_url}/auth/verify?token={magic_token}"
             
             # Create email content
-            subject = "Sign in to OuRhizome"
+            subject = "Sign in to Rhiz"
             
             html_content = f"""
             <!DOCTYPE html>
@@ -105,7 +105,7 @@ class ResendEmailService:
             <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Sign in to OuRhizome</title>
+                <title>Sign in to Rhiz</title>
                 <style>
                     body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 0; background: #0a0a0f; color: #ffffff; }}
                     .container {{ max-width: 600px; margin: 0 auto; padding: 40px 20px; }}
@@ -120,12 +120,12 @@ class ResendEmailService:
                 <div class="container">
                     <div class="header">
                         <div class="logo">🌱</div>
-                        <h1>OuRhizome</h1>
+                        <h1>Rhiz</h1>
                     </div>
                     <div class="content">
                         <h2>Welcome to Root Membership</h2>
-                        <p>Click the button below to sign in to your OuRhizome account:</p>
-                        <a href="{magic_link}" class="button">Sign In to OuRhizome</a>
+                        <p>Click the button below to sign in to your Rhiz account:</p>
+                        <a href="{magic_link}" class="button">Sign In to Rhiz</a>
                         <p><small>This link will expire in 1 hour for security.</small></p>
                     </div>
                     <div class="footer">
@@ -138,7 +138,7 @@ class ResendEmailService:
             """
             
             text_content = f"""
-            Welcome to OuRhizome Root Membership
+            Welcome to Rhiz Root Membership
             
             Click this link to sign in: {magic_link}
             
@@ -162,7 +162,7 @@ class ResendEmailService:
             return False
             
         try:
-            subject = "Welcome to OuRhizome Root Membership"
+            subject = "Welcome to Rhiz Root Membership"
             greeting = f"Welcome {user_name}!" if user_name else "Welcome to Root Membership!"
             
             html_content = f"""
@@ -171,7 +171,7 @@ class ResendEmailService:
             <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Welcome to OuRhizome</title>
+                <title>Welcome to Rhiz</title>
                 <style>
                     body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 0; background: #0a0a0f; color: #ffffff; }}
                     .container {{ max-width: 600px; margin: 0 auto; padding: 40px 20px; }}
@@ -184,7 +184,7 @@ class ResendEmailService:
                 <div class="container">
                     <div class="header">
                         <div class="logo">🌱</div>
-                        <h1>OuRhizome</h1>
+                        <h1>Rhiz</h1>
                     </div>
                     <div class="content">
                         <h2>{greeting}</h2>
@@ -232,7 +232,7 @@ class ResendEmailService:
             <html>
             <head>
                 <meta charset="utf-8">
-                <title>Goal Created - OuRhizome</title>
+                <title>Goal Created - Rhiz</title>
                 <style>
                     body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 0; background: #0a0a0f; color: #ffffff; }}
                     .container {{ max-width: 600px; margin: 0 auto; padding: 40px 20px; }}
@@ -244,7 +244,7 @@ class ResendEmailService:
                 <div class="container">
                     <div class="content">
                         <h2>🎯 Your Goal is Set!</h2>
-                        <p>You've successfully created a new goal in OuRhizome. Our AI is now analyzing your network to find relevant connections.</p>
+                        <p>You've successfully created a new goal in Rhiz. Our AI is now analyzing your network to find relevant connections.</p>
                         
                         <div class="goal-box">
                             <h3>{goal_title}</h3>
@@ -258,7 +258,7 @@ class ResendEmailService:
                             <li>Smart recommendations will appear in your dashboard</li>
                         </ul>
                         
-                        <p>Check your OuRhizome dashboard for AI-powered insights!</p>
+                        <p>Check your Rhiz dashboard for AI-powered insights!</p>
                     </div>
                 </div>
             </body>
@@ -304,7 +304,7 @@ class ResendEmailService:
                         {message_body.replace(chr(10), '<br>')}
                     </div>
                     <div class="footer">
-                        Sent via OuRhizome - Connecting founders with the right people
+                        Sent via Rhiz - Connecting founders with the right people
                     </div>
                 </div>
             </body>
@@ -359,7 +359,7 @@ class ResendEmailService:
     def send_application_confirmation(self, to_email: str, first_name: str) -> bool:
         """Send application confirmation email for Root Membership"""
         try:
-            subject = "Root Membership Application Received - OuRhizome"
+            subject = "Root Membership Application Received - Rhiz"
             
             html_content = f"""
             <!DOCTYPE html>
@@ -399,10 +399,10 @@ class ResendEmailService:
                         
                         <p>We're building something special together - a deep, connected community of ambitious founders who believe in collaboration over competition.</p>
                         
-                        <p>Best,<br>The OuRhizome Team</p>
+                        <p>Best,<br>The Rhiz Team</p>
                     </div>
                     <div class="footer">
-                        OuRhizome - Connecting founders with the right people
+                        Rhiz - Connecting founders with the right people
                     </div>
                 </div>
             </body>
@@ -423,9 +423,9 @@ class ResendEmailService:
             We're building something special together - a deep, connected community of ambitious founders who believe in collaboration over competition.
 
             Best,
-            The OuRhizome Team
+            The Rhiz Team
 
-            OuRhizome - Connecting founders with the right people
+            Rhiz - Connecting founders with the right people
             """
             
             result = self.send_email(to_email, subject, html_content, text_content)
