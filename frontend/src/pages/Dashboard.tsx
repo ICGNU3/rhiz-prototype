@@ -109,14 +109,22 @@ const Dashboard: React.FC = () => {
         <div className="flex space-x-3">
           <button
             onClick={() => window.location.href = '/goals'}
-            className="glass-button-primary flex items-center space-x-2"
+            className="px-6 py-3 rounded-xl backdrop-blur-xl border border-white/20 flex items-center space-x-2 transition-all duration-300 hover:border-white/40 hover:shadow-lg"
+            style={{ 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white'
+            }}
           >
             <Plus size={18} />
             <span>New Goal</span>
           </button>
           <button
             onClick={() => window.location.href = '/contacts'}
-            className="glass-button-secondary flex items-center space-x-2"
+            className="px-6 py-3 rounded-xl backdrop-blur-xl border border-white/20 flex items-center space-x-2 transition-all duration-300 hover:border-white/40 hover:shadow-lg"
+            style={{ 
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              color: 'var(--text-primary)'
+            }}
           >
             <Users size={18} />
             <span>Add Contact</span>
@@ -126,21 +134,29 @@ const Dashboard: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map(({ label, value, icon: Icon, color, action, actionLabel }) => (
-          <div key={label} className="glass-card p-6 group hover:border-primary-500 transition-all">
+        {stats.map(({ label, value, icon: Icon, gradient, action, actionLabel }) => (
+          <div 
+            key={label} 
+            className="backdrop-blur-xl border border-white/10 rounded-2xl p-6 group hover:border-white/30 transition-all duration-300 cursor-pointer"
+            style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)' }}
+            onClick={action}
+          >
             <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-lg bg-gradient-to-r ${color}`}>
+              <div 
+                className="p-3 rounded-lg flex items-center justify-center w-12 h-12"
+                style={{ background: gradient }}
+              >
                 <Icon size={24} className="text-white" />
               </div>
               <button
-                onClick={action}
-                className="text-xs text-primary-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ color: 'var(--text-secondary)' }}
               >
                 {actionLabel} →
               </button>
             </div>
-            <div className="text-2xl font-bold text-white mb-1">{value}</div>
-            <div className="text-sm text-gray-400">{label}</div>
+            <div className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{value}</div>
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>{label}</div>
           </div>
         ))}
       </div>
@@ -148,12 +164,16 @@ const Dashboard: React.FC = () => {
       {/* Main Content Grid */}
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Recent Goals */}
-        <div className="glass-card p-6">
+        <div 
+          className="backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+          style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)' }}
+        >
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-white">Recent Goals</h3>
+            <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Recent Goals</h3>
             <button
               onClick={() => window.location.href = '/goals'}
-              className="text-sm text-primary-400 hover:text-primary-300"
+              className="text-sm hover:underline transition-all duration-200"
+              style={{ color: 'var(--text-secondary)' }}
             >
               View all →
             </button>
@@ -161,11 +181,15 @@ const Dashboard: React.FC = () => {
           {recentGoals.length > 0 ? (
             <div className="space-y-4">
               {recentGoals.map((goal) => (
-                <div key={goal.id} className="p-4 rounded-lg bg-gray-800/50 border border-gray-700">
-                  <h4 className="font-medium text-white mb-2">{goal.title}</h4>
-                  <p className="text-sm text-gray-400 line-clamp-2">{goal.description}</p>
+                <div 
+                  key={goal.id} 
+                  className="p-4 rounded-lg border border-white/10 backdrop-blur-sm"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}
+                >
+                  <h4 className="font-medium mb-2" style={{ color: 'var(--text-primary)' }}>{goal.title}</h4>
+                  <p className="text-sm line-clamp-2" style={{ color: 'var(--text-secondary)' }}>{goal.description}</p>
                   <div className="flex items-center justify-between mt-3">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                       {new Date(goal.created_at).toLocaleDateString()}
                     </span>
                     <div className="flex items-center space-x-1">
@@ -193,12 +217,16 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Warm Contacts */}
-        <div className="glass-card p-6">
+        <div 
+          className="backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+          style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)' }}
+        >
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-white">Warm Contacts</h3>
+            <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Warm Contacts</h3>
             <button
               onClick={() => window.location.href = '/contacts'}
-              className="text-sm text-primary-400 hover:text-primary-300"
+              className="text-sm hover:underline transition-all duration-200"
+              style={{ color: 'var(--text-secondary)' }}
             >
               View all →
             </button>
@@ -206,11 +234,15 @@ const Dashboard: React.FC = () => {
           {warmContacts.length > 0 ? (
             <div className="space-y-4">
               {warmContacts.map((contact) => (
-                <div key={contact.id} className="p-4 rounded-lg bg-gray-800/50 border border-gray-700">
+                <div 
+                  key={contact.id} 
+                  className="p-4 rounded-lg border border-white/10 backdrop-blur-sm"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}
+                >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-medium text-white">{contact.name}</h4>
-                      <p className="text-sm text-gray-400">{contact.company} {contact.title && `• ${contact.title}`}</p>
+                      <h4 className="font-medium" style={{ color: 'var(--text-primary)' }}>{contact.name}</h4>
+                      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{contact.company} {contact.title && `• ${contact.title}`}</p>
                     </div>
                     <div className="flex items-center space-x-1">
                       <div className="w-2 h-2 bg-green-400 rounded-full"></div>
@@ -222,11 +254,12 @@ const Dashboard: React.FC = () => {
             </div>
           ) : (
             <div className="text-center py-8">
-              <Users className="mx-auto h-8 w-8 text-gray-500 mb-3" />
-              <p className="text-gray-400 mb-4">No warm contacts yet</p>
+              <Users className="mx-auto h-8 w-8 mb-3" style={{ color: 'var(--text-secondary)' }} />
+              <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>No warm contacts yet</p>
               <button
                 onClick={() => window.location.href = '/contacts'}
-                className="text-sm text-primary-400 hover:text-primary-300"
+                className="text-sm hover:underline transition-all duration-200"
+                style={{ color: 'var(--text-secondary)' }}
               >
                 Add contacts →
               </button>
@@ -235,12 +268,16 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* AI Suggestions */}
-        <div className="glass-card p-6">
+        <div 
+          className="backdrop-blur-xl border border-white/10 rounded-2xl p-6"
+          style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)' }}
+        >
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-white">AI Suggestions</h3>
+            <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>AI Suggestions</h3>
             <button
               onClick={() => window.location.href = '/intelligence'}
-              className="text-sm text-primary-400 hover:text-primary-300"
+              className="text-sm hover:underline transition-all duration-200"
+              style={{ color: 'var(--text-secondary)' }}
             >
               View all →
             </button>
@@ -251,26 +288,31 @@ const Dashboard: React.FC = () => {
                 const contact = contacts.find(c => c.id === suggestion.contact_id);
                 const goal = goals.find(g => g.id === suggestion.goal_id);
                 return (
-                  <div key={suggestion.id} className="p-4 rounded-lg bg-gray-800/50 border border-gray-700">
+                  <div 
+                    key={suggestion.id} 
+                    className="p-4 rounded-lg border border-white/10 backdrop-blur-sm"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}
+                  >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-white">{contact?.name || 'Unknown Contact'}</span>
+                      <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{contact?.name || 'Unknown Contact'}</span>
                       <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
                         {Math.round(suggestion.confidence * 100)}% match
                       </span>
                     </div>
-                    <p className="text-xs text-gray-400 mb-2">For: {goal?.title || 'Unknown Goal'}</p>
-                    <p className="text-xs text-gray-300">{suggestion.suggestion}</p>
+                    <p className="text-xs mb-2" style={{ color: 'var(--text-secondary)' }}>For: {goal?.title || 'Unknown Goal'}</p>
+                    <p className="text-xs" style={{ color: 'var(--text-primary)' }}>{suggestion.suggestion}</p>
                   </div>
                 );
               })}
             </div>
           ) : (
             <div className="text-center py-8">
-              <Brain className="mx-auto h-8 w-8 text-gray-500 mb-3" />
-              <p className="text-gray-400 mb-4">No AI suggestions yet</p>
+              <Brain className="mx-auto h-8 w-8 mb-3" style={{ color: 'var(--text-secondary)' }} />
+              <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>No AI suggestions yet</p>
               <button
                 onClick={() => window.location.href = '/intelligence'}
-                className="text-sm text-primary-400 hover:text-primary-300"
+                className="text-sm hover:underline transition-all duration-200"
+                style={{ color: 'var(--text-secondary)' }}
               >
                 Explore intelligence →
               </button>
