@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Rhiz - Relationship Intelligence{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        body { 
+            background: #1a1a1a; 
+            color: white; 
+            font-family: 'Inter', sans-serif; 
+        }
+        .navbar-brand { 
+            font-weight: bold; 
+            color: #8b5cf6 !important; 
+        }
+        .btn-primary { 
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6); 
+            border: none; 
+        }
+        .btn-primary:hover { 
+            transform: translateY(-1px); 
+            box-shadow: 0 8px 15px rgba(59,130,246,0.3); 
+        }
+    </style>
+</head>
+<body>
+    <!-- Minimal Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
+        <div class="container">
+            <a class="navbar-brand text-light d-flex align-items-center" href="/">
+                <span class="fw-bold">Rhiz</span>
+            </a>
+            
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link text-light" href="/">Home</a>
+                <a class="nav-link text-light" href="/signup">Join</a>
+                <a class="nav-link text-light" href="/health">Status</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

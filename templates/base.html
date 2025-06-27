@@ -222,21 +222,21 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><h6 class="dropdown-header">AI Assistance</h6></li>
-                            <li><a class="dropdown-item" href="{{ url_for('ai_assistant_dashboard') }}">
+                            <li><a class="dropdown-item" href="{{ url_for('intelligence_routes.ai_assistant') }}">
                                 <i class="bi bi-magic me-2"></i>Smart Assistant
                                 <small class="text-muted d-block">Daily insights & connections</small>
                             </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('crm_dashboard') }}">
+                            <li><a class="dropdown-item" href="{{ url_for('intelligence_routes.ai_suggestions') }}">
                                 <i class="bi bi-lightbulb me-2"></i>Suggestions
                                 <small class="text-muted d-block">AI-powered recommendations</small>
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><h6 class="dropdown-header">Analysis</h6></li>
-                            <li><a class="dropdown-item" href="{{ url_for('network_intelligence') }}">
+                            <li><a class="dropdown-item" href="{{ url_for('intelligence_routes.smart_networking') }}">
                                 <i class="bi bi-graph-up-arrow me-2"></i>Network Health
                                 <small class="text-muted d-block">Relationship insights</small>
                             </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('analytics_dashboard') }}">
+                            <li><a class="dropdown-item" href="{{ url_for('core_routes.analytics_dashboard') }}">
                                 <i class="bi bi-bar-chart me-2"></i>Analytics
                                 <small class="text-muted d-block">Progress & metrics</small>
                             </a></li>

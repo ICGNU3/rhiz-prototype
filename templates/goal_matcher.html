@@ -27,7 +27,7 @@
                     </h4>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('index') }}">
+                    <form method="POST" action="{{ url_for('core_routes.dashboard') }}">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="goal_title" class="form-label">Goal Title</label>
@@ -146,7 +146,7 @@
                 <div>
                     <strong>Goal Created Successfully!</strong> Found {{ matches|length }} matching contacts with AI-generated messages.
                 </div>
-                <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-success ms-auto">
+                <a href="{{ url_for('core_routes.dashboard') }}" class="btn btn-sm btn-outline-success ms-auto">
                     <i class="bi bi-plus me-1"></i>Create Another Goal
                 </a>
             </div>
@@ -350,7 +350,7 @@
                     <i class="bi bi-search display-1 text-muted mb-3"></i>
                     <h4>No matches found</h4>
                     <p class="text-muted">Try creating a more detailed goal description or adding more contacts to your network.</p>
-                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <a href="{{ url_for('core_routes.dashboard') }}" class="btn btn-primary">
                         <i class="bi bi-plus me-1"></i>Create Another Goal
                     </a>
                 </div>
