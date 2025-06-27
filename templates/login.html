@@ -26,7 +26,7 @@
                     {% endif %}
                 {% endwith %}
 
-                <form action="/login" method="POST">
+                <form action="/auth/magic-link" method="POST" id="magicLinkForm">
                     <div class="mb-3">
                         <label for="email" class="form-label">Email Address</label>
                         <input type="email" class="form-control" id="email" name="email" required 
@@ -37,6 +37,13 @@
                         <i class="bi bi-envelope me-2"></i>Send Magic Link
                     </button>
                 </form>
+
+                <div class="text-center mb-3">
+                    <div class="small text-muted mb-2">or</div>
+                    <a href="/demo-login" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-play-circle me-1"></i>Quick Demo Access
+                    </a>
+                </div>
 
                 <div class="text-center">
                     <p class="small text-muted mb-2">Don't have an account?</p>
@@ -55,4 +62,71 @@
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('magicLinkForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Show loading state
+    submitBtn.innerHTML = '<i class="bi bi-hourglass me-2"></i>Sending...';
+    submitBtn.disabled = true;
+    
+    try {
+        const formData = new FormData(this);
+        const response = await fetch('/auth/magic-link', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            // Show success message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                <i class="bi bi-check-circle me-2"></i>
+                ${result.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            this.parentNode.insertBefore(alertDiv, this);
+            
+            // Reset form
+            this.reset();
+            
+            // Redirect to demo login after 3 seconds
+            setTimeout(() => {
+                window.location.href = '/demo-login';
+            }, 3000);
+        } else {
+            // Show error message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                ${result.error || 'Failed to send magic link'}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            this.parentNode.insertBefore(alertDiv, this);
+        }
+    } catch (error) {
+        // Show error message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+        alertDiv.innerHTML = `
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Network error. Please try again.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        this.parentNode.insertBefore(alertDiv, this);
+    } finally {
+        // Reset button
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+});
+</script>
 {% endblock %}
