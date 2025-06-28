@@ -54,15 +54,55 @@ const GoalsPage: React.FC = () => {
     retry: 2,
   });
 
-  // Create goal mutation
+  // Auto-scroll effect for new content
+  useEffect(() => {
+    if (recentlyCreatedGoalId && newGoalRef.current) {
+      setTimeout(() => {
+        newGoalRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+        // Add highlight effect
+        newGoalRef.current?.classList.add('auto-scroll-highlight');
+        setTimeout(() => {
+          newGoalRef.current?.classList.remove('auto-scroll-highlight');
+          setRecentlyCreatedGoalId(null);
+        }, 2000);
+      }, 300);
+    }
+  }, [recentlyCreatedGoalId]);
+
+  // Create goal mutation with micro-interactions
   const createGoalMutation = useMutation({
-    mutationFn: goalsAPI.create,
-    onSuccess: () => {
+    mutationFn: async (goalData: { title: string; description: string }) => {
+      setCreateButtonState('loading');
+      const response = await goalsAPI.create(goalData);
+      return response;
+    },
+    onSuccess: (data) => {
+      setCreateButtonState('success');
       queryClient.invalidateQueries({ queryKey: ['goals'] });
       setShowCreateModal(false);
+      setNewGoalData({ title: '', description: '' });
+      
+      // Mark the newly created goal for auto-scroll and pulse effect
+      if (data?.data?.id) {
+        setRecentlyCreatedGoalId(data.data.id);
+      }
+      
+      // Reset button state after animation
+      setTimeout(() => {
+        setCreateButtonState('idle');
+      }, 2000);
     },
     onError: (error) => {
       console.error('Failed to create goal:', error);
+      setCreateButtonState('error');
+      
+      // Reset button state after error display
+      setTimeout(() => {
+        setCreateButtonState('idle');
+      }, 3000);
     },
   });
 
@@ -84,60 +124,55 @@ const GoalsPage: React.FC = () => {
     setSelectedGoal(goal);
   };
 
-  const GoalCard: React.FC<{ goal: Goal }> = ({ goal }) => (
-    <div 
-      className={`glass-card p-6 cursor-pointer transition-all duration-300 hover:scale-105 ${
-        selectedGoal?.id === goal.id ? 'border-blue-400/50' : 'border-white/10'
-      }`}
-      onClick={() => handleGoalSelect(goal)}
-    >
-      <div className="flex items-start justify-between mb-4">
-        <div className={`p-2 rounded-lg ${
-          goal.category === 'fundraising' ? 'bg-green-500/20 text-green-400' :
-          goal.category === 'hiring' ? 'bg-blue-500/20 text-blue-400' :
-          goal.category === 'partnerships' ? 'bg-purple-500/20 text-purple-400' :
-          'bg-gray-500/20 text-gray-400'
-        }`}>
-          <Target className="w-5 h-5" />
+  const EnhancedGoalCard: React.FC<{ goal: Goal }> = ({ goal }) => {
+    const isNewlyCreated = recentlyCreatedGoalId === goal.id;
+    
+    return (
+      <div 
+        ref={isNewlyCreated ? newGoalRef : undefined}
+        className={`glass-card p-6 cursor-pointer transition-all duration-300 hover:scale-105 slide-in ${
+          selectedGoal?.id === goal.id ? 'border-blue-400/50' : 'border-white/10'
+        } ${isNewlyCreated ? 'pulse-success confetti-burst' : ''}`}
+        onClick={() => handleGoalSelect(goal)}
+      >
+        <div className="flex items-start justify-between mb-4">
+          <div className="p-2 rounded-lg bg-blue-500/20 text-blue-400">
+            <Target className="w-5 h-5" />
+          </div>
+          <span className="px-3 py-1 rounded-full text-xs bg-green-500/20 text-green-400">
+            ACTIVE
+          </span>
         </div>
-        <span className={`px-3 py-1 rounded-full text-xs ${
-          goal.status === 'active' ? 'bg-green-500/20 text-green-400' :
-          goal.status === 'completed' ? 'bg-blue-500/20 text-blue-400' :
-          'bg-yellow-500/20 text-yellow-400'
-        }`}>
-          {goal.status.toUpperCase()}
-        </span>
-      </div>
-      
-      <h3 className="text-white font-semibold mb-2">{goal.title}</h3>
-      <p className="text-gray-400 text-sm mb-4 line-clamp-2">{goal.description}</p>
-      
-      <div className="mb-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-gray-400 text-sm">Progress</span>
-          <span className="text-white text-sm">{goal.progress}%</span>
+        
+        <h3 className="text-white font-semibold mb-2">{goal.title}</h3>
+        <p className="text-gray-400 text-sm mb-4 line-clamp-2">{goal.description}</p>
+        
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-gray-400 text-sm">Progress</span>
+            <span className="text-white text-sm">0%</span>
+          </div>
+          <div className="w-full bg-gray-700 rounded-full h-2">
+            <div 
+              className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-sky-500"
+              style={{ width: '0%' }}
+            />
+          </div>
         </div>
-        <div className="w-full bg-gray-700 rounded-full h-2">
-          <div 
-            className={`h-2 rounded-full ${
-              goal.category === 'fundraising' ? 'bg-green-400' :
-              goal.category === 'hiring' ? 'bg-blue-400' :
-              goal.category === 'partnerships' ? 'bg-purple-400' :
-              'bg-gray-400'
-            }`}
-            style={{ width: `${goal.progress}%` }}
-          />
-        </div>
-      </div>
-      
-      {goal.target_date && (
+        
         <div className="flex items-center text-gray-400 text-sm">
           <Calendar className="w-4 h-4 mr-2" />
-          Target: {new Date(goal.target_date).toLocaleDateString()}
+          Target: Soon
         </div>
-      )}
-    </div>
-  );
+        
+        {isNewlyCreated && (
+          <div className="absolute -top-2 -right-2 animate-bounce">
+            <Sparkles className="w-6 h-6 text-yellow-400" />
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Loading and error states
   if (goalsLoading) {
@@ -202,7 +237,7 @@ const GoalsPage: React.FC = () => {
               {goals.length > 0 ? (
                 <div className="grid gap-6">
                   {goals.map(goal => (
-                    <GoalCard key={goal.id} goal={goal} />
+                    <EnhancedGoalCard key={goal.id} goal={goal} />
                   ))}
                 </div>
               ) : (
@@ -272,52 +307,62 @@ const GoalsPage: React.FC = () => {
         {/* Create Goal Modal */}
         {showCreateModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="glass-card p-6 m-4 max-w-md w-full">
+            <div className="glass-card p-6 m-4 max-w-md w-full slide-in">
               <h3 className="text-white text-lg font-semibold mb-4">Create New Goal</h3>
               
-              <form className="space-y-4">
+              <form 
+                className="space-y-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  createGoalMutation.mutate(newGoalData);
+                }}
+              >
                 <div>
                   <label className="block text-gray-300 text-sm mb-2">Goal Title</label>
                   <input 
                     type="text" 
-                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-400"
+                    value={newGoalData.title}
+                    onChange={(e) => setNewGoalData(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-400 transition-colors"
                     placeholder="e.g., Raise $250k angel round"
+                    required
                   />
                 </div>
                 
                 <div>
                   <label className="block text-gray-300 text-sm mb-2">Description</label>
                   <textarea 
-                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-400 h-24"
+                    value={newGoalData.description}
+                    onChange={(e) => setNewGoalData(prev => ({ ...prev, description: e.target.value }))}
+                    className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-400 h-24 transition-colors"
                     placeholder="Describe your goal in detail..."
+                    required
                   />
-                </div>
-                
-                <div>
-                  <label className="block text-gray-300 text-sm mb-2">Category</label>
-                  <select className="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-400">
-                    <option value="fundraising">Fundraising</option>
-                    <option value="hiring">Hiring</option>
-                    <option value="partnerships">Partnerships</option>
-                    <option value="sales">Sales</option>
-                    <option value="networking">Networking</option>
-                  </select>
                 </div>
                 
                 <div className="flex gap-3 pt-4">
                   <button 
                     type="button"
-                    className="flex-1 glass-button px-4 py-2 rounded-lg text-gray-400 border border-gray-600 hover:bg-gray-700/30"
-                    onClick={() => setShowCreateModal(false)}
+                    className="flex-1 glass-button px-4 py-2 rounded-lg text-gray-400 border border-gray-600 hover:bg-gray-700/30 transition-all"
+                    onClick={() => {
+                      setShowCreateModal(false);
+                      setNewGoalData({ title: '', description: '' });
+                      setCreateButtonState('idle');
+                    }}
                   >
                     Cancel
                   </button>
-                  <button 
-                    type="submit"
-                    className="flex-1 glass-button px-4 py-2 rounded-lg text-blue-400 border border-blue-400/30 hover:bg-blue-400/10"
+                  <AnimatedButton
+                    variant="primary"
+                    size="md"
+                    state={createButtonState}
+                    loadingText="Creating..."
+                    successText="Created!"
+                    errorText="Failed"
+                    className="flex-1"
                   >
                     Create Goal
-                  </button>
+                  </AnimatedButton>
                 </div>
               </form>
             </div>
@@ -349,6 +394,81 @@ const GoalsPage: React.FC = () => {
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
+        }
+
+        /* Micro-interaction animations */
+        .slide-in {
+          animation: slideIn 0.3s ease-out;
+        }
+        
+        .pulse-success {
+          animation: pulseSuccess 1.5s ease-out;
+        }
+        
+        .confetti-burst {
+          position: relative;
+        }
+        
+        .confetti-burst::after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 100px;
+          height: 100px;
+          background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%);
+          border-radius: 50%;
+          transform: translate(-50%, -50%) scale(0);
+          animation: confetti 0.8s ease-out;
+        }
+        
+        .auto-scroll-highlight {
+          animation: highlight 2s ease-out;
+        }
+        
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes pulseSuccess {
+          0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+          }
+          50% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 20px rgba(34, 197, 94, 0);
+          }
+        }
+        
+        @keyframes confetti {
+          0% {
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 1;
+          }
+          100% {
+            transform: translate(-50%, -50%) scale(2);
+            opacity: 0;
+          }
+        }
+        
+        @keyframes highlight {
+          0% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+          }
+          50% {
+            box-shadow: 0 0 0 20px rgba(59, 130, 246, 0.3);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+          }
         }
       `}</style>
     </div>
