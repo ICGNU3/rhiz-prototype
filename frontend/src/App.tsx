@@ -7,7 +7,8 @@ import DashboardPage from './pages/DashboardPage';
 import GoalsPage from './pages/GoalsPage';
 import ContactsPage from './pages/ContactsPage';
 import IntelligencePage from './pages/IntelligencePage';
-import TrustInsights from './pages/TrustInsights';
+import TrustPage from './pages/TrustPage';
+import CrmPage from './pages/CrmPage';
 import Settings from './pages/Settings';
 import OnboardingPage from './pages/OnboardingPage';
 import Login from './components/auth/Login';
@@ -51,7 +52,8 @@ function AppContent() {
             <Route path="/app/goals" element={<GoalsPage />} />
             <Route path="/app/contacts" element={<ContactsPage />} />
             <Route path="/app/intelligence" element={<IntelligencePage />} />
-            <Route path="/app/intelligence/trust-insights" element={<TrustInsights />} />
+            <Route path="/app/trust" element={<TrustPage />} />
+            <Route path="/app/crm" element={<CrmPage />} />
             <Route path="/app/settings" element={<Settings />} />
             <Route path="/onboarding" element={<Navigate to="/app/onboarding" replace />} />
             <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
