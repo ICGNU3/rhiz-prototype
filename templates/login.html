@@ -1,15 +1,24 @@
 {% extends "base_minimal.html" %}
 
-{% block title %}Login - OuRhizome{% endblock %}
+{% block title %}Login - Rhiz{% endblock %}
 
 {% block content %}
+<!-- Background Orbs -->
+<div class="background-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+</div>
+
 <div class="container">
-    <div class="row justify-content-center">
+    <div class="row justify-content-center min-vh-100 align-items-center">
         <div class="col-md-6 col-lg-4">
-            <div class="glass-card mt-5" style="padding: 40px;">
+            <div class="glass-card p-5">
                 <div class="text-center mb-4">
-                    <img src="/static/images/ourhizome-logo.png" alt="OuRhizome" style="height: 48px; width: auto; margin-bottom: 16px;">
-                    <h3 class="mb-2">Welcome Back</h3>
+                    <div class="brand-logo mb-3">
+                        <span class="gradient-text h2 fw-bold">Rhiz</span>
+                    </div>
+                    <h3 class="mb-2 gradient-text">Welcome Back</h3>
                     <p class="text-muted">Enter your email to receive a magic link</p>
                 </div>
 
@@ -33,21 +42,23 @@
                                placeholder="founder@example.com" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
                     </div>
                     
-                    <button type="submit" class="btn btn-primary w-100 mb-3">
-                        <i class="bi bi-envelope me-2"></i>Send Magic Link
+                    <button type="submit" class="btn btn-primary w-100 mb-3 position-relative overflow-hidden">
+                        <span class="position-relative z-index-1">
+                            <i class="bi bi-envelope me-2"></i>Send Magic Link
+                        </span>
                     </button>
                 </form>
 
                 <div class="text-center mb-3">
                     <div class="small text-muted mb-2">or</div>
-                    <a href="/demo-login" class="btn btn-outline-light btn-sm">
-                        <i class="bi bi-play-circle me-1"></i>Quick Demo Access
+                    <a href="/demo-login" class="btn btn-glass btn-sm">
+                        <i class="bi bi-play-circle me-2"></i>Quick Demo Access
                     </a>
                 </div>
 
                 <div class="text-center">
                     <p class="small text-muted mb-2">Don't have an account?</p>
-                    <a href="/signup" class="btn btn-outline-light btn-sm">
+                    <a href="/signup" class="btn btn-glass btn-sm">
                         <i class="bi bi-person-plus me-1"></i>Join OuRhizome
                     </a>
                 </div>
