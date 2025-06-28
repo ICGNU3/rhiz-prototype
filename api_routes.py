@@ -293,12 +293,15 @@ def verify_magic_link():
     
     # Find user with valid token
     user = db.execute('''
-        SELECT * FROM users 
-        WHERE magic_link_token = ? 
-        AND magic_link_expires > datetime('now')
+        SELECT *, magic_link_expires, datetime('now') as now_time FROM users 
+        WHERE magic_link_token = ?
     ''', (token,)).fetchone()
     
     if not user:
+        return redirect('/login?error=invalid_token')
+    
+    # Check if token is expired
+    if user['magic_link_expires'] <= user['now_time']:
         return redirect('/login?error=expired_token')
     
     # Clear the token and create session
