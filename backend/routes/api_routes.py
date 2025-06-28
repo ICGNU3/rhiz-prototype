@@ -415,17 +415,22 @@ def create_goal():
     
     title = data.get('title')
     description = data.get('description')
+    priority = data.get('priority', 'medium')
     
     if not title or not description:
         return jsonify({'error': 'Title and description required'}), 400
     
+    # Generate UUID for goal
+    import uuid
+    goal_id = str(uuid.uuid4())
+    
     db = get_db()
     cursor = db.cursor()
-    cursor.execute(
-        'INSERT INTO goals (user_id, title, description, created_at) VALUES (%s, %s, %s, %s) RETURNING id',
-        (user_id, title, description, datetime.now().isoformat())
-    )
-    goal_id = cursor.fetchone()[0]
+    cursor.execute("""
+        INSERT INTO goals (id, user_id, title, description, priority_level, status, created_at) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id
+    """, (goal_id, user_id, title, description, priority, 'Active', datetime.now()))
+    
     db.commit()
     
     # Get the created goal
