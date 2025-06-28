@@ -12,6 +12,7 @@ import logging
 from datetime import datetime, timedelta
 from dataclasses import asdict
 from backend.services.database_helpers import DatabaseHelper
+from services.google_contacts_sync import GoogleContactsSync
 
 # Create API blueprint
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -2769,6 +2770,165 @@ def export_user_data():
     except Exception as e:
         logging.error(f"Error exporting user data: {e}")
         return jsonify({'error': 'Failed to export data'}), 500
+
+# ===== GOOGLE CONTACTS OAUTH2 SYNC ROUTES =====
+
+@api_bp.route('/oauth/google/connect', methods=['POST'])
+@auth_required
+def connect_google_contacts():
+    """Start Google Contacts OAuth2 flow"""
+    try:
+        user_id = session.get('user_id')
+        google_sync = GoogleContactsSync()
+        
+        if not google_sync.check_credentials():
+            return jsonify({
+                'error': 'Google OAuth credentials not configured',
+                'setup_required': True,
+                'message': 'Google OAuth client ID and secret need to be configured in environment'
+            }), 400
+        
+        # Generate OAuth URL
+        auth_url = google_sync.generate_oauth_url(user_id)
+        
+        return jsonify({
+            'auth_url': auth_url,
+            'message': 'Redirect to this URL to authorize Google Contacts access'
+        })
+        
+    except Exception as e:
+        logging.error(f"Error starting Google OAuth flow: {e}")
+        return jsonify({'error': 'Failed to start OAuth flow'}), 500
+
+@api_bp.route('/oauth/google/callback', methods=['GET'])
+def google_oauth_callback():
+    """Handle Google OAuth callback"""
+    try:
+        code = request.args.get('code')
+        state = request.args.get('state')
+        error = request.args.get('error')
+        
+        if error:
+            return jsonify({'error': f'OAuth error: {error}'}), 400
+        
+        if not code or not state:
+            return jsonify({'error': 'Missing OAuth code or state'}), 400
+        
+        google_sync = GoogleContactsSync()
+        result = google_sync.handle_oauth_callback(code, state)
+        
+        # Redirect to settings page with success message
+        from flask import redirect, url_for
+        return redirect(f'/app/settings?tab=integrations&google_connected=true')
+        
+    except ValueError as e:
+        logging.error(f"OAuth callback error: {e}")
+        return redirect(f'/app/settings?tab=integrations&error={str(e)}')
+    except Exception as e:
+        logging.error(f"Unexpected OAuth callback error: {e}")
+        return redirect(f'/app/settings?tab=integrations&error=connection_failed')
+
+@api_bp.route('/contacts/sources/google/sync', methods=['POST'])
+@auth_required
+def sync_google_contacts():
+    """Manually trigger Google Contacts sync"""
+    try:
+        user_id = session.get('user_id')
+        data = request.get_json() or {}
+        source_id = data.get('source_id')
+        
+        if not source_id:
+            return jsonify({'error': 'source_id required'}), 400
+        
+        google_sync = GoogleContactsSync()
+        result = google_sync.sync_contacts(user_id, source_id)
+        
+        return jsonify(result)
+        
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        logging.error(f"Error syncing Google contacts: {e}")
+        return jsonify({'error': 'Sync failed'}), 500
+
+@api_bp.route('/contacts/sources/status', methods=['GET'])
+@auth_required
+def get_contact_sources_status():
+    """Get contact source status for user"""
+    try:
+        user_id = session.get('user_id')
+        google_sync = GoogleContactsSync()
+        
+        # Get Google sources status
+        google_sources = google_sync.get_sync_status(user_id)
+        
+        # TODO: Add other source types (LinkedIn, Twitter, etc.)
+        
+        all_sources = {
+            'google': google_sources,
+            'linkedin': [],  # TODO: Implement LinkedIn
+            'twitter': [],   # TODO: Implement Twitter/X
+            'csv': []        # TODO: Get CSV import history
+        }
+        
+        return jsonify(all_sources)
+        
+    except Exception as e:
+        logging.error(f"Error getting contact sources status: {e}")
+        return jsonify({'error': 'Failed to get status'}), 500
+
+@api_bp.route('/contacts/sync/logs', methods=['GET'])
+@auth_required
+def get_sync_logs():
+    """Get detailed sync logs for transparency"""
+    try:
+        user_id = session.get('user_id')
+        job_id = request.args.get('job_id')
+        
+        google_sync = GoogleContactsSync()
+        logs = google_sync.get_sync_logs(user_id, job_id)
+        
+        return jsonify({
+            'logs': logs,
+            'total': len(logs)
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting sync logs: {e}")
+        return jsonify({'error': 'Failed to get logs'}), 500
+
+@api_bp.route('/oauth/google/status', methods=['GET'])
+@auth_required
+def google_oauth_status():
+    """Check Google OAuth connection status"""
+    try:
+        user_id = session.get('user_id')
+        google_sync = GoogleContactsSync()
+        
+        # Check if credentials are configured
+        credentials_configured = google_sync.check_credentials()
+        
+        if not credentials_configured:
+            return jsonify({
+                'connected': False,
+                'credentials_configured': False,
+                'message': 'Google OAuth credentials not configured'
+            })
+        
+        # Check if user has active Google source
+        sources = google_sync.get_sync_status(user_id)
+        active_sources = [s for s in sources if s['is_active']]
+        
+        return jsonify({
+            'connected': len(active_sources) > 0,
+            'credentials_configured': True,
+            'sources': sources,
+            'active_sources': len(active_sources)
+        })
+        
+    except Exception as e:
+        logging.error(f"Error checking Google OAuth status: {e}")
+        return jsonify({'error': 'Failed to check status'}), 500
 
 def register_api_routes(app):
     """Register API routes with the Flask app"""
