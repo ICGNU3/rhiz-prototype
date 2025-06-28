@@ -360,8 +360,8 @@ def verify_magic_link():
         session['user_id'] = user[0]
         session['authenticated'] = True
         
-        # New user - redirect to React onboarding
-        return redirect('/app/onboarding')
+        # New user - redirect to Flask onboarding for now
+        return redirect('/onboarding/welcome')
         
     except Exception as e:
         logging.error(f"Magic link verification error: {e}")
@@ -1710,13 +1710,30 @@ def register_core_routes(app):
 </body>
 </html>'''
 
-    # Onboarding routes now redirect to React app
+    # Onboarding routes - Flask-based for now
     @app.route('/onboarding')
+    @app.route('/onboarding/welcome')
+    @auth_required
+    def onboarding_welcome():
+        """Show onboarding welcome page"""
+        return render_template('onboarding/welcome.html')
+    
+    @app.route('/onboarding/goals')
+    @auth_required
+    def onboarding_goals():
+        """Redirect to goals page for step 2"""
+        return redirect('/goals')
+    
     @app.route('/onboarding/<path:step>')
     @auth_required
     def onboarding_redirect(step=None):
-        """Redirect onboarding to React app"""
-        return redirect('/app/onboarding')
+        """Handle other onboarding steps"""
+        if step in ['contacts', 'network']:
+            return redirect('/contacts')
+        elif step in ['complete', 'finish']:
+            return redirect('/dashboard')
+        else:
+            return redirect('/onboarding/welcome')
     
     @app.route('/request-invite', methods=['POST'])
     def request_invite():
