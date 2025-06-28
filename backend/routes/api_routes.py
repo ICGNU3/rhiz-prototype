@@ -623,30 +623,160 @@ def get_ai_suggestions():
 @api_bp.route('/insights', methods=['GET'])
 @auth_required
 def get_insights():
+    """Generate AI-powered relationship insights using OpenAI"""
     user_id = session.get('user_id')
-    db = get_db()
     
-    # Get basic network insights
-    stats = {}
-    
-    # Count active goals
-    stats['active_goals'] = db.execute(
-        'SELECT COUNT(*) as count FROM goals WHERE user_id = ?', (user_id,)
-    ).fetchone()['count']
-    
-    # Count contacts by warmth
-    stats['warm_contacts'] = db.execute(
-        'SELECT COUNT(*) as count FROM contacts WHERE user_id = ? AND warmth_status >= 3', (user_id,)
-    ).fetchone()['count']
-    
-    # Count AI suggestions
-    stats['ai_suggestions'] = db.execute(
-        '''SELECT COUNT(*) as count FROM ai_suggestions s
-           JOIN goals g ON s.goal_id = g.id
-           WHERE g.user_id = ?''', (user_id,)
-    ).fetchone()['count']
-    
-    return jsonify(stats)
+    try:
+        from backend.services.database_helpers import DatabaseHelper
+        import openai
+        import os
+        from datetime import datetime, timedelta
+        import json
+        
+        # Initialize OpenAI client
+        api_key = os.environ.get('OPENAI_API_KEY')
+        if not api_key:
+            return jsonify({'error': 'AI insights require OpenAI API key'}), 500
+        
+        openai_client = openai.OpenAI(api_key=api_key)
+        
+        # Get user's contacts and recent interactions
+        contacts_query = """
+            SELECT c.id, c.name, c.email, c.company, c.title, c.warmth_status, 
+                   c.notes, c.source, c.created_at, c.updated_at,
+                   COALESCE(ci.last_interaction, c.updated_at) as last_contact_date,
+                   COUNT(ci.id) as interaction_count
+            FROM contacts c 
+            LEFT JOIN contact_interactions ci ON c.id = ci.contact_id
+            WHERE c.user_id = %s
+            GROUP BY c.id, c.name, c.email, c.company, c.title, c.warmth_status, 
+                     c.notes, c.source, c.created_at, c.updated_at, ci.last_interaction
+            ORDER BY c.updated_at DESC
+            LIMIT 20
+        """
+        contacts = DatabaseHelper.execute_query(contacts_query, (user_id,), fetch_all=True) or []
+        
+        # Get user's goals
+        goals_query = """
+            SELECT id, title, description, priority_level, status, created_at
+            FROM goals 
+            WHERE user_id = %s 
+            ORDER BY created_at DESC
+            LIMIT 10
+        """
+        goals = DatabaseHelper.execute_query(goals_query, (user_id,), fetch_all=True) or []
+        
+        # Prepare context for AI analysis
+        current_date = datetime.now()
+        contact_analysis = []
+        
+        for contact in contacts:
+            last_contact = contact.get('last_contact_date')
+            if isinstance(last_contact, str):
+                try:
+                    last_contact = datetime.fromisoformat(last_contact.replace('Z', '+00:00'))
+                except:
+                    last_contact = current_date
+            elif last_contact is None:
+                last_contact = current_date
+            
+            days_since_contact = (current_date - last_contact).days
+            
+            contact_analysis.append({
+                'name': contact.get('name', 'Unknown'),
+                'company': contact.get('company', ''),
+                'title': contact.get('title', ''),
+                'warmth_status': contact.get('warmth_status', 1),
+                'days_since_contact': days_since_contact,
+                'interaction_count': contact.get('interaction_count', 0),
+                'notes': contact.get('notes', '')[:200] if contact.get('notes') else ''
+            })
+        
+        # Create AI prompt for relationship intelligence
+        prompt = f"""
+        Analyze this professional network data and generate 5-7 actionable relationship insights:
+        
+        GOALS:
+        {[{'title': g.get('title'), 'description': g.get('description')[:100]} for g in goals[:5]]}
+        
+        TOP CONTACTS:
+        {contact_analysis[:10]}
+        
+        Generate insights in JSON format:
+        {{
+            "insights": [
+                {{
+                    "type": "contact_nudge",
+                    "title": "Reconnect with [Name]",
+                    "description": "You haven't contacted [Name] in X days. Send a message?",
+                    "contact_name": "name",
+                    "days_since_contact": number,
+                    "priority": "high|medium|low",
+                    "suggested_action": "specific action to take"
+                }},
+                {{
+                    "type": "relationship_opportunity", 
+                    "title": "relationship insight title",
+                    "description": "actionable insight about strengthening relationships",
+                    "priority": "high|medium|low",
+                    "suggested_action": "specific next step"
+                }},
+                {{
+                    "type": "goal_alignment",
+                    "title": "goal-related insight title", 
+                    "description": "how contacts align with goals",
+                    "priority": "high|medium|low",
+                    "suggested_action": "specific action"
+                }}
+            ]
+        }}
+        
+        Focus on:
+        - Contacts not contacted in 30+ days (high priority nudges)
+        - Warm contacts (warmth 3+) that could help with goals
+        - Relationship maintenance opportunities
+        - Strategic networking suggestions
+        
+        Make insights specific, actionable, and relationship-focused.
+        """
+        
+        # Generate insights using OpenAI
+        response = openai_client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an expert relationship intelligence analyst. Generate practical, actionable insights that help users strengthen their professional relationships and achieve their goals."
+                },
+                {
+                    "role": "user", 
+                    "content": prompt
+                }
+            ],
+            response_format={"type": "json_object"},
+            max_tokens=1000,
+            temperature=0.7
+        )
+        
+        insights_data = json.loads(response.choices[0].message.content)
+        
+        # Add metadata
+        insights_data['generated_at'] = current_date.isoformat()
+        insights_data['stats'] = {
+            'total_contacts': len(contacts),
+            'active_goals': len(goals),
+            'warm_contacts': len([c for c in contacts if c.get('warmth_status', 0) >= 3]),
+            'overdue_contacts': len([c for c in contact_analysis if c['days_since_contact'] > 30])
+        }
+        
+        return jsonify(insights_data)
+        
+    except json.JSONDecodeError as e:
+        logging.error(f"Error parsing OpenAI response: {e}")
+        return jsonify({'error': 'Failed to parse AI insights'}), 500
+    except Exception as e:
+        logging.error(f"Error generating insights: {e}")
+        return jsonify({'error': 'Failed to generate insights'}), 500
 
 
 
@@ -1619,26 +1749,182 @@ def process_vcf_file(user_id, file_content, source):
 @api_bp.route('/trust', methods=['GET'])
 @auth_required
 def get_trust():
-    """Get comprehensive trust data for current user"""
+    """Generate AI-powered trust insights using OpenAI"""
     user_id = session.get('user_id')
+    
     try:
-        import services.trust_insights as trust_insights_module
-        trust_engine = trust_insights_module.TrustInsights()
-        trust_engine.db = get_db()
+        from backend.services.database_helpers import DatabaseHelper
+        import openai
+        import os
+        from datetime import datetime, timedelta
+        import json
         
-        trust_data = trust_engine.get_trust_insights(user_id)
-        health_data = trust_engine.get_trust_health(user_id)
+        # Initialize OpenAI client
+        api_key = os.environ.get('OPENAI_API_KEY')
+        if not api_key:
+            return jsonify({'error': 'Trust insights require OpenAI API key'}), 500
+        
+        openai_client = openai.OpenAI(api_key=api_key)
+        
+        # Get detailed contact interaction data
+        contacts_query = """
+            SELECT c.id, c.name, c.email, c.company, c.title, c.warmth_status, 
+                   c.notes, c.source, c.created_at, c.updated_at,
+                   COUNT(ci.id) as interaction_count,
+                   MAX(ci.interaction_date) as last_interaction_date,
+                   AVG(CASE WHEN ci.interaction_type = 'email_sent' THEN 1 ELSE 0 END) as email_frequency,
+                   AVG(CASE WHEN ci.interaction_type = 'meeting' THEN 1 ELSE 0 END) as meeting_frequency
+            FROM contacts c 
+            LEFT JOIN contact_interactions ci ON c.id = ci.contact_id
+            WHERE c.user_id = %s
+            GROUP BY c.id, c.name, c.email, c.company, c.title, c.warmth_status, 
+                     c.notes, c.source, c.created_at, c.updated_at
+            ORDER BY interaction_count DESC, c.warmth_status DESC
+            LIMIT 30
+        """
+        contacts = DatabaseHelper.execute_query(contacts_query, (user_id,), fetch_all=True) or []
+        
+        # Prepare trust analysis data
+        current_date = datetime.now()
+        trust_analysis = []
+        
+        for contact in contacts:
+            last_interaction = contact.get('last_interaction_date')
+            if isinstance(last_interaction, str):
+                try:
+                    last_interaction = datetime.fromisoformat(last_interaction.replace('Z', '+00:00'))
+                except:
+                    last_interaction = None
+            
+            days_since_interaction = None
+            if last_interaction:
+                days_since_interaction = (current_date - last_interaction).days
+            
+            # Calculate trust metrics
+            warmth = contact.get('warmth_status', 1)
+            interaction_count = contact.get('interaction_count', 0)
+            
+            # Trust tier classification
+            if warmth >= 4 and interaction_count >= 5:
+                trust_tier = 'rooted'
+            elif warmth >= 3 and interaction_count >= 2:
+                trust_tier = 'growing'
+            elif warmth >= 2 or interaction_count >= 1:
+                trust_tier = 'dormant'
+            else:
+                trust_tier = 'frayed'
+            
+            trust_analysis.append({
+                'name': contact.get('name', 'Unknown'),
+                'company': contact.get('company', ''),
+                'title': contact.get('title', ''),
+                'warmth_status': warmth,
+                'interaction_count': interaction_count,
+                'days_since_interaction': days_since_interaction,
+                'trust_tier': trust_tier,
+                'email_frequency': contact.get('email_frequency', 0),
+                'meeting_frequency': contact.get('meeting_frequency', 0),
+                'notes_snippet': contact.get('notes', '')[:100] if contact.get('notes') else ''
+            })
+        
+        # Create AI prompt for trust intelligence
+        prompt = f"""
+        Analyze this relationship trust data and generate comprehensive trust insights:
+        
+        CONTACT TRUST DATA:
+        {trust_analysis[:15]}
+        
+        Generate trust insights in JSON format:
+        {{
+            "trust_summary": {{
+                "total_contacts": {len(contacts)},
+                "rooted_count": number,
+                "growing_count": number,
+                "dormant_count": number,
+                "frayed_count": number,
+                "trust_health_score": 0-100
+            }},
+            "top_contacts": [
+                {{
+                    "name": "contact name",
+                    "trust_score": 0-100,
+                    "trust_tier": "rooted|growing|dormant|frayed",
+                    "relationship_strength": "strong|moderate|weak",
+                    "last_interaction_days": number,
+                    "trust_indicators": ["indicator1", "indicator2"],
+                    "suggested_actions": ["action1", "action2"]
+                }}
+            ],
+            "trust_insights": [
+                {{
+                    "type": "trust_health",
+                    "title": "insight title",
+                    "description": "detailed insight about trust patterns",
+                    "priority": "high|medium|low",
+                    "actionable_steps": ["step1", "step2"]
+                }}
+            ],
+            "relationship_maintenance": [
+                {{
+                    "contact_name": "name",
+                    "priority": "urgent|important|routine",
+                    "recommended_action": "specific action",
+                    "reason": "why this action is needed"
+                }}
+            ]
+        }}
+        
+        Focus on:
+        - Relationship trust tiers (rooted, growing, dormant, frayed)
+        - Trust-building opportunities
+        - Maintenance priorities based on interaction patterns
+        - Proactive relationship nurturing suggestions
+        - Trust health indicators and warning signs
+        
+        Provide actionable, relationship-focused recommendations.
+        """
+        
+        # Generate trust insights using OpenAI
+        response = openai_client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a relationship trust expert. Analyze trust patterns in professional networks and provide actionable insights for strengthening relationships and building trust. Focus on authentic relationship building, not manipulation."
+                },
+                {
+                    "role": "user", 
+                    "content": prompt
+                }
+            ],
+            response_format={"type": "json_object"},
+            max_tokens=1200,
+            temperature=0.6
+        )
+        
+        trust_data = json.loads(response.choices[0].message.content)
+        
+        # Add metadata
+        trust_data['generated_at'] = current_date.isoformat()
+        trust_data['user_id'] = user_id
+        trust_data['analysis_period'] = '30_days'
         
         return jsonify({
             'success': True,
-            'insights': trust_data,
-            'health': health_data,
-            'user_id': user_id
+            'trust_data': trust_data,
+            'stats': {
+                'total_contacts_analyzed': len(contacts),
+                'contacts_with_interactions': len([c for c in trust_analysis if c['interaction_count'] > 0]),
+                'average_warmth': sum(c['warmth_status'] for c in trust_analysis) / len(trust_analysis) if trust_analysis else 0
+            }
         })
         
+    except json.JSONDecodeError as e:
+        logging.error(f"Error parsing OpenAI trust response: {e}")
+        return jsonify({'error': 'Failed to parse trust insights'}), 500
     except Exception as e:
-        logging.error(f"Trust data error: {e}")
-        return jsonify({'error': str(e)}), 500
+        logging.error(f"Trust insights error: {e}")
+        return jsonify({'error': 'Failed to generate trust insights'}), 500
 
 @api_bp.route('/crm', methods=['GET'])
 @auth_required
