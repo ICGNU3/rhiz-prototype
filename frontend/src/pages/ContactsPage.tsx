@@ -5,8 +5,8 @@
 import React, { useState, useEffect } from 'react';
 import { useContacts } from '../context/AppContext';
 import { contactsApi } from '../services/api/contactsApi';
-import ContactImportModal from '../components/features/ContactImportModal';
-import TrustPanel from '../components/features/TrustPanel';
+import { UnifiedContactImport } from '../components/contacts/UnifiedContactImport';
+import { UnifiedTrustDashboard } from '../components/trust/UnifiedTrustDashboard';
 import type { Contact, ContactFilters } from '../types';
 
 const ContactsPage: React.FC = () => {

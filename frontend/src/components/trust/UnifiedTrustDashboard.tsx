@@ -296,8 +296,8 @@ export default function UnifiedTrustDashboard({
                   <div className="glass-card p-3">
                     <div className="d-flex justify-content-between align-items-start mb-2">
                       <div>
-                        <h6 className="mb-1">{insight.contact_name}</h6>
-                        <small className="text-muted">{insight.contact_title}</small>
+                        <h6 className="mb-1">{insight.contact_id}</h6>
+                        <small className="text-muted">Contact</small>
                       </div>
                       <div className="trust-score-badge">
                         <span 
@@ -314,10 +314,10 @@ export default function UnifiedTrustDashboard({
                       </div>
                     </div>
                     <div className="trust-summary">
-                      <p className="small text-light mb-2">{insight.summary}</p>
+                      <p className="small text-light mb-2">Trust insight data</p>
                       <div className="trust-factors">
                         <small className="text-muted">
-                          Last contact: {new Date(insight.last_interaction).toLocaleDateString()}
+                          Trust Score: {insight.trust_score}
                         </small>
                       </div>
                     </div>
