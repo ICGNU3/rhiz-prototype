@@ -19,7 +19,25 @@ except ImportError:
 # Simplified authentication for immediate compatibility
 def create_session_user(user_id, email=None, demo_mode=False):
     """Create a user session without complex database operations"""
-    session['user_id'] = user_id
+    # For demo mode, use the actual demo_user ID from database
+    if demo_mode or user_id == 'demo_user':
+        import sqlite3
+        conn = sqlite3.connect('db.sqlite3')
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        demo_user = cursor.execute(
+            'SELECT id FROM users WHERE email = ?', ('demo_user',)
+        ).fetchone()
+        
+        if demo_user:
+            session['user_id'] = demo_user['id']
+        else:
+            session['user_id'] = 11  # fallback to seeded demo user ID
+        conn.close()
+    else:
+        session['user_id'] = user_id
+        
     session['authenticated'] = True
     if email:
         session['user_email'] = email
