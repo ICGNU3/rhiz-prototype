@@ -593,4 +593,276 @@ def network_discovery():
     """Network visualization and discovery"""
     return render_template('discovery/network_visualization.html')
 
+# React Frontend Routes - Redirect legacy authentication to React
+@app.route('/login')
+def login_redirect():
+    """Redirect login to React frontend for modern authentication experience"""
+    # In development, redirect to React dev server
+    if os.environ.get('NODE_ENV') == 'development':
+        return redirect('http://localhost:5173/login')
+    
+    # In production, serve the React app with login route
+    # For now, we'll create a simple React-compatible login experience
+    return '''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhiz - Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        /* Glassmorphism styles for login */
+        :root {
+            --primary-500: #4facfe;
+            --primary-400: #6fbeff;
+            --primary-600: #2e9bfe;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a0b0d 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            color: white;
+            font-family: Inter, system-ui, sans-serif;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .background-orbs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            animation: float-orb 20s ease-in-out infinite;
+            opacity: 0.6;
+        }
+        
+        .orb-1 {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            top: 10%;
+            left: 15%;
+            animation-delay: 0s;
+        }
+        
+        .orb-2 {
+            width: 250px;
+            height: 250px;
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            top: 60%;
+            right: 20%;
+            animation-delay: -7s;
+        }
+        
+        .orb-3 {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            bottom: 20%;
+            left: 50%;
+            animation-delay: -14s;
+        }
+        
+        @keyframes float-orb {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.1); }
+            50% { transform: translate(-20px, 20px) scale(0.9); }
+            75% { transform: translate(20px, 10px) scale(1.05); }
+        }
+        
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary-400), #a855f7, #ec4899);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-600)) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            box-shadow: 0 4px 16px rgba(79, 172, 254, 0.3) !important;
+        }
+        
+        .btn-glass {
+            background: var(--glass-bg) !important;
+            color: rgba(255, 255, 255, 0.9) !important;
+            border: 1px solid var(--glass-border) !important;
+        }
+        
+        .form-control {
+            background: var(--glass-bg) !important;
+            border: 1px solid var(--glass-border) !important;
+            color: white !important;
+        }
+        
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border-color: var(--primary-500) !important;
+            box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25) !important;
+            color: white !important;
+        }
+        
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    
+    <div class="min-vh-100 d-flex align-items-center justify-content-center">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-5">
+                        <div class="text-center mb-4">
+                            <div class="brand-logo mb-3">
+                                <span class="gradient-text h2 fw-bold">Rhiz</span>
+                            </div>
+                            <h3 class="mb-2 gradient-text">Welcome Back</h3>
+                            <p class="text-muted">Enter your email to receive a magic link</p>
+                        </div>
+                        
+                        <div id="message-area"></div>
+                        
+                        <form id="loginForm">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="email" required placeholder="founder@example.com">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100 mb-3" id="sendButton">
+                                <i class="bi bi-envelope me-2"></i>Send Magic Link
+                            </button>
+                        </form>
+                        
+                        <div class="text-center mb-3">
+                            <div class="small text-muted mb-2">or</div>
+                            <button onclick="demoLogin()" class="btn btn-glass btn-sm">
+                                <i class="bi bi-play-circle me-2"></i>Quick Demo Access
+                            </button>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <small class="text-muted">
+                                <i class="bi bi-shield-check me-1"></i>
+                                Secure passwordless authentication
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const sendButton = document.getElementById('sendButton');
+            const messageArea = document.getElementById('message-area');
+            
+            sendButton.innerHTML = '<i class="bi bi-hourglass me-2"></i>Sending...';
+            sendButton.disabled = true;
+            
+            try {
+                const response = await fetch('/auth/magic-link', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    messageArea.innerHTML = `
+                        <div class="alert alert-success alert-dismissible fade show">
+                            <i class="bi bi-check-circle me-2"></i>
+                            ${result.message || 'Magic link sent! Check your email.'}
+                        </div>
+                    `;
+                    
+                    // Auto-redirect to demo after 3 seconds
+                    setTimeout(() => {
+                        demoLogin();
+                    }, 3000);
+                } else {
+                    messageArea.innerHTML = `
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            ${result.error || 'Failed to send magic link'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                messageArea.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Network error. Please try again.
+                    </div>
+                `;
+            } finally {
+                sendButton.innerHTML = '<i class="bi bi-envelope me-2"></i>Send Magic Link';
+                sendButton.disabled = false;
+            }
+        });
+        
+        async function demoLogin() {
+            try {
+                const response = await fetch('/demo-login', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    window.location.href = '/dashboard';
+                } else {
+                    document.getElementById('message-area').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Demo login failed. Please try again.
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('message-area').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Demo login error. Please try again.
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>'''
+
 print("Clean future-forward routes loaded successfully")
