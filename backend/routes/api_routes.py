@@ -11,7 +11,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 from dataclasses import asdict
-from database_helpers import DatabaseHelper
+from backend.services.database_helpers import DatabaseHelper
 
 # Create API blueprint
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -397,7 +397,7 @@ def logout():
 def get_goals():
     user_id = session.get('user_id')
     
-    from database_helpers import DatabaseHelper
+    from backend.services.database_helpers import DatabaseHelper
     
     goals = DatabaseHelper.execute_query(
         'SELECT * FROM goals WHERE user_id = %s ORDER BY created_at DESC',
@@ -661,7 +661,7 @@ def get_network_graph():
     
     try:
         # Using database helpers for PostgreSQL
-        from database_helpers import DatabaseHelper
+        from backend.services.database_helpers import DatabaseHelper
         
         # Get contacts with trust data
         contacts_query = """
@@ -854,7 +854,7 @@ def get_trust_metrics(contact_id):
 @api_bp.route('/health', methods=['GET'])
 def health_check():
     try:
-        from database_helpers import DatabaseHelper
+        from backend.services.database_helpers import DatabaseHelper
         
         # Test database connection
         db_health = DatabaseHelper.health_check()
@@ -1245,7 +1245,7 @@ def scrape_linkedin_connections():
     
     try:
         # Import the scraper
-        from linkedin_scraper import LinkedInConnectionsScraper
+        from backend.utils.linkedin_scraper import LinkedInConnectionsScraper
         
         # Get parameters
         data = request.get_json() or {}

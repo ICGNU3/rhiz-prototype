@@ -8,7 +8,6 @@ from backend.routes.api_routes import register_api_routes
 
 # Register API routes for React frontend
 register_api_routes(app)
-register_mobile_api_routes(app)
 
 # Trust Insights system removed during cleanup
 
