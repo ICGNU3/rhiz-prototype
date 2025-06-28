@@ -1772,16 +1772,13 @@ def register_core_routes(app):
             return render_template('invite_error.html', 
                                 error="Something went wrong. Please try again."), 500
 
+    @app.route('/app')
+    @app.route('/app/')
     @app.route('/app/<path:route>')
-    def serve_react_app(route):
+    def serve_react_app(route=""):
         """Serve React frontend for app routes"""
-        try:
-            # For now, serve the static fallback index.html
-            with open('static/dist/index.html', 'r') as f:
-                return f.read()
-        except FileNotFoundError:
-            # Fallback if file doesn't exist
-            return '''<!DOCTYPE html>
+        # For React SPA, always serve the main index.html and let React handle routing
+        return '''<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -1790,51 +1787,321 @@ def register_core_routes(app):
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
     <style>
+        :root {
+            --bs-dark: #1a1a2e;
+            --bs-primary: #4facfe;
+            --bs-secondary: #8b5cf6;
+        }
+        
         body {
-            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
             color: white;
             min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
         }
+        
         .glass-card {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border-radius: 16px;
         }
+        
+        .glass-button {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
     </style>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
-    <div class="container-fluid h-100">
-        <div class="glass-card p-5 text-center m-5">
-            <h2 class="text-primary mb-4">Rhiz - ''' + route.title() + '''</h2>
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="glass-card p-4 h-100">
-                        <i class="bi bi-people text-info" style="font-size: 2rem;"></i>
-                        <h5 class="mt-3">Contacts</h5>
-                        <p class="text-muted">Manage your network</p>
-                        <a href="/contacts" class="btn btn-outline-info">View Contacts</a>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // Simple router for React app
+        function App() {
+            const [currentPath, setCurrentPath] = useState(window.location.pathname);
+            
+            useEffect(() => {
+                const handlePopState = () => setCurrentPath(window.location.pathname);
+                window.addEventListener('popstate', handlePopState);
+                return () => window.removeEventListener('popstate', handlePopState);
+            }, []);
+            
+            const navigate = (path) => {
+                window.history.pushState({}, '', path);
+                setCurrentPath(path);
+            };
+            
+            if (currentPath.includes('onboarding')) {
+                return <OnboardingPage navigate={navigate} />;
+            } else if (currentPath.includes('dashboard')) {
+                return <DashboardPage navigate={navigate} />;
+            } else {
+                return <DashboardPage navigate={navigate} />;
+            }
+        }
+        
+        // Onboarding Page Component
+        function OnboardingPage({ navigate }) {
+            const [currentStep, setCurrentStep] = useState(1);
+            const [selectedIntent, setSelectedIntent] = useState('');
+            
+            const intents = [
+                { value: 'fundraising', label: '💰 Fundraising', description: 'Connect with investors and raise capital' },
+                { value: 'hiring', label: '👥 Hiring', description: 'Find and recruit talented team members' },
+                { value: 'partnerships', label: '🤝 Partnerships', description: 'Build strategic business partnerships' },
+                { value: 'community', label: '🌟 Community Building', description: 'Build and engage your professional community' }
+            ];
+            
+            const handleNext = () => {
+                if (currentStep < 4) {
+                    setCurrentStep(currentStep + 1);
+                } else {
+                    navigate('/app/dashboard');
+                }
+            };
+            
+            const handleIntentSelect = (intent) => {
+                setSelectedIntent(intent);
+            };
+            
+            return (
+                <div className="container py-5">
+                    <div className="row justify-content-center">
+                        <div className="col-lg-8">
+                            <div className="glass-card p-5">
+                                {/* Progress Bar */}
+                                <div className="mb-5">
+                                    <div className="d-flex justify-content-between align-items-center mb-3">
+                                        <h2 className="h4 mb-0">Welcome to Rhiz</h2>
+                                        <span className="badge bg-primary">Step {currentStep} of 4</span>
+                                    </div>
+                                    <div className="progress" style={{height: '4px'}}>
+                                        <div className="progress-bar bg-primary" style={{width: `${(currentStep / 4) * 100}%`}}></div>
+                                    </div>
+                                </div>
+                                
+                                {/* Step 1: Intent Selection */}
+                                {currentStep === 1 && (
+                                    <div className="text-center">
+                                        <h3 className="mb-4">What's your primary goal?</h3>
+                                        <p className="text-muted mb-5">Choose the main objective for your relationship intelligence</p>
+                                        
+                                        <div className="row g-3 mb-5">
+                                            {intents.map((intent) => (
+                                                <div key={intent.value} className="col-md-6">
+                                                    <div 
+                                                        className={`glass-card p-4 cursor-pointer transition-all ${selectedIntent === intent.value ? 'border border-primary' : ''}`}
+                                                        onClick={() => handleIntentSelect(intent.value)}
+                                                        style={{cursor: 'pointer'}}
+                                                    >
+                                                        <h5 className="mb-2">{intent.label}</h5>
+                                                        <p className="text-muted small mb-0">{intent.description}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        
+                                        <button 
+                                            className="btn btn-primary btn-lg px-5"
+                                            disabled={!selectedIntent}
+                                            onClick={handleNext}
+                                        >
+                                            Continue
+                                        </button>
+                                    </div>
+                                )}
+                                
+                                {/* Step 2: Goal Details */}
+                                {currentStep === 2 && (
+                                    <div>
+                                        <h3 className="mb-4">Tell us more about your {selectedIntent} goal</h3>
+                                        <div className="mb-4">
+                                            <label className="form-label">Goal Description</label>
+                                            <textarea 
+                                                className="form-control bg-dark border-secondary text-white"
+                                                rows="4"
+                                                placeholder="Describe your specific goal in detail..."
+                                            />
+                                        </div>
+                                        <div className="mb-4">
+                                            <label className="form-label">Timeline</label>
+                                            <select className="form-select bg-dark border-secondary text-white">
+                                                <option>3 months</option>
+                                                <option>6 months</option>
+                                                <option>1 year</option>
+                                                <option>Ongoing</option>
+                                            </select>
+                                        </div>
+                                        <button className="btn btn-primary" onClick={handleNext}>
+                                            Continue
+                                        </button>
+                                    </div>
+                                )}
+                                
+                                {/* Step 3: Contact Import */}
+                                {currentStep === 3 && (
+                                    <div>
+                                        <h3 className="mb-4">Import Your Contacts</h3>
+                                        <p className="text-muted mb-4">Connect your existing networks to get AI-powered insights</p>
+                                        
+                                        <div className="row g-3 mb-4">
+                                            <div className="col-md-4">
+                                                <div className="glass-card p-4 text-center">
+                                                    <i className="bi bi-google fs-2 text-primary mb-3"></i>
+                                                    <h6>Google Contacts</h6>
+                                                    <button className="btn btn-outline-primary btn-sm mt-2">Connect</button>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <div className="glass-card p-4 text-center">
+                                                    <i className="bi bi-linkedin fs-2 text-info mb-3"></i>
+                                                    <h6>LinkedIn</h6>
+                                                    <button className="btn btn-outline-info btn-sm mt-2">Connect</button>
+                                                </div>
+                                            </div>
+                                            <div className="col-md-4">
+                                                <div className="glass-card p-4 text-center">
+                                                    <i className="bi bi-file-earmark-text fs-2 text-success mb-3"></i>
+                                                    <h6>CSV Upload</h6>
+                                                    <button className="btn btn-outline-success btn-sm mt-2">Upload</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="text-center">
+                                            <button className="btn btn-outline-secondary me-3" onClick={handleNext}>
+                                                Skip for now
+                                            </button>
+                                            <button className="btn btn-primary" onClick={handleNext}>
+                                                Continue
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Step 4: Complete */}
+                                {currentStep === 4 && (
+                                    <div className="text-center">
+                                        <i className="bi bi-check-circle fs-1 text-success mb-4"></i>
+                                        <h3 className="mb-4">You're all set!</h3>
+                                        <p className="text-muted mb-5">Your relationship intelligence platform is ready to use</p>
+                                        
+                                        <button className="btn btn-primary btn-lg px-5" onClick={handleNext}>
+                                            Go to Dashboard
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="glass-card p-4 h-100">
-                        <i class="bi bi-target text-success" style="font-size: 2rem;"></i>
-                        <h5 class="mt-3">Goals</h5>
-                        <p class="text-muted">Track your objectives</p>
-                        <a href="/goals" class="btn btn-outline-success">View Goals</a>
+            );
+        }
+        
+        // Dashboard Page Component
+        function DashboardPage({ navigate }) {
+            return (
+                <div className="container py-4">
+                    <div className="row mb-4">
+                        <div className="col">
+                            <h1 className="text-white mb-2">Dashboard</h1>
+                            <p className="text-muted">Your relationship intelligence overview</p>
+                        </div>
+                    </div>
+                    
+                    <div className="row g-4 mb-4">
+                        <div className="col-md-3">
+                            <div className="glass-card p-4">
+                                <div className="d-flex align-items-center">
+                                    <i className="bi bi-people text-info me-3 fs-2"></i>
+                                    <div>
+                                        <h3 className="text-white mb-0">24</h3>
+                                        <small className="text-muted">Contacts</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-3">
+                            <div className="glass-card p-4">
+                                <div className="d-flex align-items-center">
+                                    <i className="bi bi-target text-success me-3 fs-2"></i>
+                                    <div>
+                                        <h3 className="text-white mb-0">3</h3>
+                                        <small className="text-muted">Active Goals</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-3">
+                            <div className="glass-card p-4">
+                                <div className="d-flex align-items-center">
+                                    <i className="bi bi-lightbulb text-warning me-3 fs-2"></i>
+                                    <div>
+                                        <h3 className="text-white mb-0">7</h3>
+                                        <small className="text-muted">AI Suggestions</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-3">
+                            <div className="glass-card p-4">
+                                <div className="d-flex align-items-center">
+                                    <i className="bi bi-graph-up text-primary me-3 fs-2"></i>
+                                    <div>
+                                        <h3 className="text-white mb-0">89%</h3>
+                                        <small className="text-muted">Trust Score</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="row g-4">
+                        <div className="col-md-4">
+                            <div className="glass-card p-4 h-100">
+                                <i className="bi bi-people text-info fs-2"></i>
+                                <h5 className="mt-3">Contacts</h5>
+                                <p className="text-muted">Manage your network</p>
+                                <a href="/contacts" className="btn btn-outline-info">View Contacts</a>
+                            </div>
+                        </div>
+                        <div className="col-md-4">
+                            <div className="glass-card p-4 h-100">
+                                <i className="bi bi-target text-success fs-2"></i>
+                                <h5 className="mt-3">Goals</h5>
+                                <p className="text-muted">Track your objectives</p>
+                                <a href="/goals" className="btn btn-outline-success">View Goals</a>
+                            </div>
+                        </div>
+                        <div className="col-md-4">
+                            <div className="glass-card p-4 h-100">
+                                <i className="bi bi-cpu text-warning fs-2"></i>
+                                <h5 class="mt-3">AI Insights</h5>
+                                <p className="text-muted">Smart recommendations</p>
+                                <a href="/intelligence" className="btn btn-outline-warning">View Intelligence</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="glass-card p-4 h-100">
-                        <i class="bi bi-cpu text-warning" style="font-size: 2rem;"></i>
-                        <h5 class="mt-3">AI Insights</h5>
-                        <p class="text-muted">Smart recommendations</p>
-                        <a href="/intelligence" class="btn btn-outline-warning">View Intelligence</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+            );
+        }
+        
+        // Render the app
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
 </body>
 </html>'''
 
