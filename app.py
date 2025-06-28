@@ -358,11 +358,15 @@ def upload_contacts():
                     failed_imports += 1
                     continue
                 
+                # Generate UUID for contact ID
+                import uuid
+                contact_id = str(uuid.uuid4())
+                
                 # Insert contact into database - using the existing table structure
                 cursor.execute('''
-                    INSERT INTO contacts (user_id, name, email, phone, company, title, notes, source, linkedin)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ''', (user_id, name.strip(), email, phone, company, title, notes, 'csv_upload', linkedin))
+                    INSERT INTO contacts (id, user_id, name, email, phone, company, title, notes, source, linkedin)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ''', (contact_id, user_id, name.strip(), email, phone, company, title, notes, 'csv_upload', linkedin))
                 
                 contacts_imported += 1
                 
