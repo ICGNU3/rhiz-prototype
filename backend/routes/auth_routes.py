@@ -23,13 +23,7 @@ def signup():
             return jsonify({'error': 'User already exists'}), 409
         
         # Create new user
-        user = User(
-            email=data['email'],
-            first_name=data.get('first_name'),
-            last_name=data.get('last_name'),
-            company=data.get('company'),
-            title=data.get('title')
-        )
+        user = User(email=data['email'])
         
         db.session.add(user)
         db.session.commit()

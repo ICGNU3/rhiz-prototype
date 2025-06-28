@@ -77,6 +77,7 @@ def register_blueprints(app):
     from backend.routes.trust_routes import trust_bp
     from backend.routes.dashboard_routes import dashboard_bp
     from backend.routes.core_routes import core_bp
+    from backend.routes.simple_health_routes import health_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(contact_bp, url_prefix='/api/contacts')

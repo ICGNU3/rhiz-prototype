@@ -42,13 +42,20 @@ class User(db.Model):
         return {
             'id': str(self.id),
             'email': self.email,
+            'google_id': self.google_id,
             'subscription_tier': self.subscription_tier,
+            'stripe_customer_id': self.stripe_customer_id,
+            'stripe_subscription_id': self.stripe_subscription_id,
+            'subscription_status': self.subscription_status,
+            'subscription_expires': self.subscription_expires.isoformat() if self.subscription_expires else None,
+            'goals_count': self.goals_count,
+            'contacts_count': self.contacts_count,
+            'ai_suggestions_used': self.ai_suggestions_used,
+            'is_guest': self.is_guest,
+            'guest_actions_count': self.guest_actions_count,
+            'onboarding_completed': self.onboarding_completed,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'first_name': self.first_name,
-            'last_name': self.last_name,
-            'company': self.company,
-            'title': self.title,
-            'timezone': self.timezone
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
 
 
