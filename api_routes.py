@@ -3,7 +3,7 @@ API Routes for React Frontend Integration
 Provides RESTful endpoints to support the React frontend with existing Flask backend functionality
 """
 
-from flask import Blueprint, request, jsonify, session, redirect
+from flask import Blueprint, request, jsonify, session, redirect, render_template
 from functools import wraps
 import sqlite3
 import os
@@ -28,7 +28,12 @@ def auth_required(f):
         # Simple session-based auth for now
         user_id = session.get('user_id')
         if not user_id:
-            return jsonify({'error': 'Authentication required'}), 401
+            # Check if this is an API request (expects JSON) or a page request (expects HTML)
+            if request.path.startswith('/api/') or request.headers.get('Content-Type') == 'application/json':
+                return jsonify({'error': 'Authentication required'}), 401
+            else:
+                # Render beautiful authentication required page
+                return render_template('auth_required.html'), 401
         return f(*args, **kwargs)
     return decorated_function
 
