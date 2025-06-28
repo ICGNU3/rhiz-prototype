@@ -1000,10 +1000,69 @@ def get_oauth_url(source):
         logging.error(f"OAuth URL error: {e}")
         return jsonify({'error': str(e)}), 500
 
+@api_bp.route('/contacts/upload', methods=['POST'])
+@auth_required
+def upload_contacts():
+    """Modern contact upload endpoint with better validation and React Query support"""
+    user_id = session.get('user_id')
+    
+    try:
+        # Handle both file upload and JSON data
+        if request.content_type and 'application/json' in request.content_type:
+            # Handle parsed CSV data from React frontend
+            data = request.get_json()
+            contacts_data = data.get('contacts', [])
+            source = data.get('source', 'csv')
+            
+            if not contacts_data:
+                return jsonify({'error': 'No contact data provided'}), 400
+            
+            imported_contacts = process_parsed_contacts(user_id, contacts_data, source)
+            
+        else:
+            # Handle file upload (legacy support)
+            if 'file' not in request.files:
+                return jsonify({'error': 'No file uploaded'}), 400
+            
+            file = request.files['file']
+            source = request.form.get('source', 'csv')
+            
+            if file.filename == '':
+                return jsonify({'error': 'No file selected'}), 400
+            
+            # Validate file type
+            if not file.filename or not file.filename.lower().endswith(('.csv', '.vcf')):
+                return jsonify({'error': 'Only CSV and VCF files are supported'}), 400
+            
+            # Read file content
+            file_content = file.read().decode('utf-8')
+            logging.info(f"Processing {file.filename} ({len(file_content)} chars) for user {user_id}")
+            
+            # Process the file based on type
+            if file.filename.lower().endswith('.csv'):
+                imported_contacts = process_csv_file(user_id, file_content, source)
+            elif file.filename.lower().endswith('.vcf'):
+                imported_contacts = process_vcf_file(user_id, file_content, source)
+            else:
+                return jsonify({'error': 'Unsupported file type'}), 400
+        
+        logging.info(f"Upload completed: {len(imported_contacts)} contacts imported")
+        
+        return jsonify({
+            'success': True,
+            'contacts_imported': len(imported_contacts),
+            'contacts': imported_contacts,  # Return all contacts for frontend state update
+            'message': f'Successfully imported {len(imported_contacts)} contacts'
+        })
+        
+    except Exception as e:
+        logging.error(f"Contact upload error: {e}")
+        return jsonify({'error': f'Upload failed: {str(e)}'}), 500
+
 @api_bp.route('/contacts/import-csv', methods=['POST'])
 @auth_required
 def import_csv_contacts():
-    """Import contacts from CSV file upload"""
+    """Import contacts from CSV file upload (legacy endpoint)"""
     user_id = session.get('user_id')
     
     # Check if file was uploaded
@@ -1112,6 +1171,97 @@ def scrape_linkedin_connections():
             }
         }), 500
 
+
+def process_parsed_contacts(user_id, contacts_data, source):
+    """Process pre-parsed contact data from React frontend"""
+    import uuid
+    from datetime import datetime
+    
+    contacts = []
+    db = get_db()
+    
+    for contact_data in contacts_data:
+        try:
+            # Extract contact information with validation
+            first_name = contact_data.get('first_name', '').strip()
+            last_name = contact_data.get('last_name', '').strip()
+            email = contact_data.get('email', '').strip()
+            phone = contact_data.get('phone', '').strip()
+            company = contact_data.get('company', '').strip()
+            title = contact_data.get('title', '').strip()
+            notes = contact_data.get('notes', '').strip()
+            
+            # Create full name
+            if first_name and last_name:
+                full_name = f"{first_name} {last_name}"
+            elif first_name:
+                full_name = first_name
+            elif last_name:
+                full_name = last_name
+            elif email:
+                full_name = email.split('@')[0]  # Use email prefix if no name
+            else:
+                continue  # Skip contacts without identifiable information
+            
+            # Validate required fields
+            if not full_name and not email:
+                continue
+            
+            # Set warmth based on source
+            if source == 'linkedin':
+                warmth_status = 3  # Warm
+                warmth_label = 'Warm'
+            else:
+                warmth_status = 1  # Cold  
+                warmth_label = 'Cold'
+            
+            # Generate unique contact ID
+            contact_id = str(uuid.uuid4())
+            
+            # Create import notes
+            import_notes = f"Imported from {source}"
+            if notes:
+                import_notes += f". Notes: {notes}"
+            
+            # Insert into database using PostgreSQL
+            with db.cursor() as cursor:
+                cursor.execute('''
+                    INSERT INTO contacts (id, user_id, name, email, phone, company, title, 
+                                        notes, warmth_status, warmth_label, source, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ''', (
+                    contact_id,
+                    user_id,
+                    full_name,
+                    email if email else None,
+                    phone if phone else None,
+                    company if company else None,
+                    title if title else None,
+                    import_notes,
+                    warmth_status,
+                    warmth_label,
+                    source,
+                    datetime.now().isoformat()
+                ))
+            
+            contacts.append({
+                'id': contact_id,
+                'name': full_name,
+                'email': email if email else None,
+                'phone': phone if phone else None,
+                'company': company if company else None,
+                'title': title if title else None,
+                'warmth_status': warmth_status,
+                'warmth_label': warmth_label,
+                'source': source
+            })
+            
+        except Exception as e:
+            logging.warning(f"Skipping contact due to error: {e}")
+            continue
+    
+    db.commit()
+    return contacts
 
 def process_csv_file(user_id, file_content, source):
     """Process CSV file and import contacts"""

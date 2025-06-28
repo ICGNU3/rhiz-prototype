@@ -1,4 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
+import Papa from 'papaparse';
+import { useMutation } from '@tanstack/react-query';
 import type { Contact } from '../../types/api';
 
 interface UnifiedContactImportProps {
@@ -168,6 +170,39 @@ export default function UnifiedContactImport({
     }
   };
 
+  // React Query mutation for contact upload
+  const uploadContactsMutation = useMutation({
+    mutationFn: async ({ contacts, source }: { contacts: any[], source: string }) => {
+      const response = await fetch('/api/contacts/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ contacts, source })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      updateProgress(100, 'Import complete!', `Successfully imported ${data.contacts_imported} contacts`);
+      
+      setTimeout(() => {
+        resetProgress();
+        onImportComplete?.(data.contacts, selectedSource!);
+      }, 1500);
+    },
+    onError: (error: Error) => {
+      resetProgress();
+      alert(`Upload failed: ${error.message}`);
+    }
+  });
+
   const handleCSVUpload = () => {
     if (fileInputRef.current) {
       fileInputRef.current.accept = '.csv';
@@ -184,28 +219,98 @@ export default function UnifiedContactImport({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('source', selectedSource === 'apple' ? 'apple' : 'csv');
-
-    updateProgress(20, 'Uploading file...', 'Processing your contacts file');
+    updateProgress(10, 'Reading file...', 'Processing your CSV file');
 
     try {
-      const response = await fetch('/api/contacts/import-csv', {
-        method: 'POST',
-        body: formData
-      });
+      if (file.name.toLowerCase().endsWith('.csv')) {
+        // Use papaparse to parse CSV
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            updateProgress(50, 'Parsing contacts...', `Found ${results.data.length} potential contacts`);
+            
+            // Map CSV data to contact format
+            const contacts = results.data.map((row: any) => {
+              // Handle various CSV formats
+              const contact: any = {};
+              
+              // Try to map common field names
+              Object.keys(row).forEach(key => {
+                const value = row[key]?.trim();
+                if (!value) return;
+                
+                const lowerKey = key.toLowerCase();
+                
+                if (lowerKey.includes('first') && lowerKey.includes('name')) {
+                  contact.first_name = value;
+                } else if (lowerKey.includes('last') && lowerKey.includes('name')) {
+                  contact.last_name = value;
+                } else if (lowerKey === 'name' || lowerKey === 'full name') {
+                  const nameParts = value.split(' ');
+                  contact.first_name = nameParts[0];
+                  if (nameParts.length > 1) {
+                    contact.last_name = nameParts.slice(1).join(' ');
+                  }
+                } else if (lowerKey.includes('email')) {
+                  contact.email = value;
+                } else if (lowerKey.includes('phone')) {
+                  contact.phone = value;
+                } else if (lowerKey.includes('company') || lowerKey.includes('organization')) {
+                  contact.company = value;
+                } else if (lowerKey.includes('title') || lowerKey.includes('position')) {
+                  contact.title = value;
+                } else if (lowerKey.includes('note')) {
+                  contact.notes = value;
+                }
+              });
+              
+              return contact;
+            }).filter(contact => 
+              // Only include contacts with at least a name or email
+              contact.first_name || contact.email
+            );
 
-      if (response.ok) {
-        const data = await response.json();
-        updateProgress(100, 'Import complete!', `Successfully imported ${data.contacts_imported} contacts`);
-        
-        setTimeout(() => {
-          resetProgress();
-          onImportComplete?.(data.contacts || [], selectedSource!);
-        }, 1500);
+            updateProgress(75, 'Uploading contacts...', `Uploading ${contacts.length} valid contacts`);
+            
+            // Upload via React Query mutation
+            uploadContactsMutation.mutate({
+              contacts,
+              source: selectedSource === 'apple' ? 'apple' : 'csv'
+            });
+          },
+          error: (error) => {
+            resetProgress();
+            alert('Failed to parse CSV file. Please check the file format.');
+          }
+        });
+      } else if (file.name.toLowerCase().endsWith('.vcf')) {
+        // Handle VCF files with FormData (legacy approach)
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('source', 'apple');
+
+        updateProgress(50, 'Uploading file...', 'Processing VCF file');
+
+        const response = await fetch('/api/contacts/upload', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          updateProgress(100, 'Import complete!', `Successfully imported ${data.contacts_imported} contacts`);
+          
+          setTimeout(() => {
+            resetProgress();
+            onImportComplete?.(data.contacts || [], 'apple');
+          }, 1500);
+        } else {
+          throw new Error('VCF import failed');
+        }
       } else {
-        throw new Error('Import failed');
+        throw new Error('Unsupported file type');
       }
     } catch (error) {
       resetProgress();
