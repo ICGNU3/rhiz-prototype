@@ -69,6 +69,25 @@ def initialize_extensions(app):
         db.create_all()
 
 
+def register_blueprints(app):
+    """Register all application blueprints"""
+    from backend.routes.auth_routes import auth_bp
+    from backend.routes.contact_routes import contact_bp
+    from backend.routes.goal_routes import goal_bp
+    from backend.routes.trust_routes import trust_bp
+    from backend.routes.dashboard_routes import dashboard_bp
+    from backend.routes.core_routes import core_bp
+    
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(contact_bp, url_prefix='/api/contacts')
+    app.register_blueprint(goal_bp, url_prefix='/api/goals')
+    app.register_blueprint(trust_bp, url_prefix='/api/trust')
+    app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
+    
+    # Register core routes without prefix for compatibility
+    app.register_blueprint(core_bp)
+
+
 def configure_logging(app):
     """Configure application logging"""
     if not app.debug:

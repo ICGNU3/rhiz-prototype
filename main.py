@@ -1,4 +1,6 @@
-from app import app
+from backend import create_app
+
+app = create_app()
 from flask import jsonify
 import os
 import logging
