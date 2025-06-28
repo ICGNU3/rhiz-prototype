@@ -19,11 +19,18 @@ def get_db():
         g.db.row_factory = sqlite3.Row
     return g.db
 
+# Redirect /app/dashboard to functional dashboard
+@react_bp.route('/app/dashboard')
+def redirect_dashboard():
+    """Redirect to functional dashboard"""
+    from flask import redirect
+    return redirect('/dashboard')
+
 @react_bp.route('/app')
 @react_bp.route('/app/')
 @react_bp.route('/app/<path:route>')
 def serve_react(route=''):
-    """Serve the React frontend for all app routes"""
+    """Serve the React frontend for other app routes"""
     try:
         # Route-specific content
         page_content = get_page_content(route)

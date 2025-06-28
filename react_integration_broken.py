@@ -19,16 +19,21 @@ def get_db():
     db.row_factory = sqlite3.Row
     return db
 
-# Serve React static files
+# Redirect app routes to functional dashboard  
 @react_bp.route('/app')
 @react_bp.route('/app/')
 @react_bp.route('/app/dashboard')
+def redirect_to_dashboard():
+    """Redirect app routes to functional dashboard"""
+    from flask import redirect
+    return redirect('/dashboard')
+
 @react_bp.route('/app/goals')
-@react_bp.route('/app/contacts')
+@react_bp.route('/app/contacts') 
 @react_bp.route('/app/intelligence')
 @react_bp.route('/app/settings')
 def serve_react():
-    """Serve the React frontend for all app routes"""
+    """Serve the React frontend for other app routes"""
     try:
         # Get the current route to determine content
         route = request.path
