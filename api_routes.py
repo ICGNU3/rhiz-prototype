@@ -360,8 +360,8 @@ def verify_magic_link():
         session['user_id'] = user[0]
         session['authenticated'] = True
         
-        # New user - redirect to Flask onboarding for now
-        return redirect('/onboarding/welcome')
+        # New user - redirect to React onboarding
+        return redirect('/app/onboarding')
         
     except Exception as e:
         logging.error(f"Magic link verification error: {e}")
@@ -399,15 +399,17 @@ def create_goal():
         return jsonify({'error': 'Title and description required'}), 400
     
     db = get_db()
-    cursor = db.execute(
-        'INSERT INTO goals (user_id, title, description, created_at) VALUES (?, ?, ?, ?)',
+    cursor = db.cursor()
+    cursor.execute(
+        'INSERT INTO goals (user_id, title, description, created_at) VALUES (%s, %s, %s, %s) RETURNING id',
         (user_id, title, description, datetime.now().isoformat())
     )
-    goal_id = cursor.lastrowid
+    goal_id = cursor.fetchone()[0]
     db.commit()
     
     # Get the created goal
-    goal = db.execute('SELECT * FROM goals WHERE id = ?', (goal_id,)).fetchone()
+    cursor.execute('SELECT * FROM goals WHERE id = %s', (goal_id,))
+    goal = cursor.fetchone()
     
     return jsonify(dict(goal)), 201
 

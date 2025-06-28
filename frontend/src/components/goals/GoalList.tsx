@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Goal, AISuggestion } from '../../services/api';
+import type { Goal, AISuggestion } from '../../services/api';
 import { Target, Users, Plus, Sparkles, Calendar } from 'lucide-react';
 
 interface GoalListProps {

@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { User, Contact, Goal, TrustInsight, NetworkGraph } from '../types';
+import type { User, Contact, Goal, TrustInsight, NetworkGraph } from '../types';
 
 // State interface
 interface AppState {
