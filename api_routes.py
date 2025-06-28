@@ -70,6 +70,27 @@ def get_current_user():
         'created_at': user['created_at']
     })
 
+@api_bp.route('/auth/me', methods=['GET'])
+@auth_required
+def get_auth_me():
+    """Get current authenticated user for React frontend compatibility"""
+    user_id = session.get('user_id')
+    db = get_db()
+    
+    with db.cursor() as cursor:
+        cursor.execute('SELECT * FROM users WHERE id = %s', (user_id,))
+        user = cursor.fetchone()
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    return jsonify({
+        'id': user[0],  # PostgreSQL returns tuples, user[0] is the id
+        'email': user[1],  # user[1] is the email
+        'subscription_tier': user[6] if len(user) > 6 else 'explorer',  # Default tier
+        'created_at': user[-2] if len(user) >= 2 else None  # created_at
+    })
+
 @api_bp.route('/auth/login', methods=['POST'])
 def login():
     data = request.get_json()
