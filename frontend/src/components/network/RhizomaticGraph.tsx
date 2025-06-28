@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
-import { NetworkNode, NetworkEdge } from '../../services/api';
+import { NetworkNode, NetworkEdge } from '../../types/api';
 
 interface RhizomaticGraphProps {
   nodes: NetworkNode[];
@@ -16,166 +16,175 @@ const RhizomaticGraph: React.FC<RhizomaticGraphProps> = ({
   edges,
   onNodeClick,
   onNodeHover,
-  height = 600,
-  width = 800,
+  height = 400,
+  width = 800
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
   useEffect(() => {
     if (!svgRef.current || !nodes.length) return;
 
+    // Clear previous content
+    d3.select(svgRef.current).selectAll('*').remove();
+
     const svg = d3.select(svgRef.current);
-    svg.selectAll('*').remove();
+    const container = svg.append('g');
 
-    // Create responsive dimensions
-    const container = svg.node()?.parentElement;
-    const containerWidth = container?.clientWidth || width;
-    const containerHeight = height;
-
-    svg.attr('width', containerWidth).attr('height', containerHeight);
-
-    // Create simulation
-    const simulation = d3
-      .forceSimulation(nodes as any)
-      .force('link', d3.forceLink(edges).id((d: any) => d.id).distance(100))
-      .force('charge', d3.forceManyBody().strength(-300))
-      .force('center', d3.forceCenter(containerWidth / 2, containerHeight / 2))
-      .force('collision', d3.forceCollide().radius(30));
-
-    // Create gradient definitions
-    const defs = svg.append('defs');
-    
-    // Node gradients by type
-    const nodeGradients = {
-      contact: ['#4facfe', '#00f2fe'],
-      goal: ['#8b5cf6', '#a855f7'],
-      user: ['#ec4899', '#f97316'],
-    };
-
-    Object.entries(nodeGradients).forEach(([type, colors]) => {
-      const gradient = defs
-        .append('radialGradient')
-        .attr('id', `gradient-${type}`)
-        .attr('cx', '30%')
-        .attr('cy', '30%');
-      
-      gradient.append('stop').attr('offset', '0%').attr('stop-color', colors[0]);
-      gradient.append('stop').attr('offset', '100%').attr('stop-color', colors[1]);
-    });
-
-    // Edge gradient for connections
-    const edgeGradient = defs
-      .append('linearGradient')
-      .attr('id', 'edge-gradient')
-      .attr('gradientUnits', 'userSpaceOnUse');
-    
-    edgeGradient.append('stop').attr('offset', '0%').attr('stop-color', '#4facfe').attr('stop-opacity', 0.8);
-    edgeGradient.append('stop').attr('offset', '100%').attr('stop-color', '#8b5cf6').attr('stop-opacity', 0.3);
-
-    // Create container groups
-    const linkGroup = svg.append('g').attr('class', 'links');
-    const nodeGroup = svg.append('g').attr('class', 'nodes');
-
-    // Create links
-    const link = linkGroup
-      .selectAll('line')
-      .data(edges)
-      .enter()
-      .append('line')
-      .attr('class', 'connection-line')
-      .attr('stroke', 'url(#edge-gradient)')
-      .attr('stroke-width', (d) => Math.max(1, d.strength * 3))
-      .attr('stroke-opacity', 0.6);
-
-    // Create nodes
-    const node = nodeGroup
-      .selectAll('g')
-      .data(nodes)
-      .enter()
-      .append('g')
-      .attr('class', 'rhizomatic-node')
-      .style('cursor', 'pointer')
-      .call(d3.drag<any, any>()
-        .on('start', dragstarted)
-        .on('drag', dragged)
-        .on('end', dragended)
-      );
-
-    // Node circles with glassmorphism effect
-    node
-      .append('circle')
-      .attr('r', (d) => {
-        switch (d.type) {
-          case 'user': return 25;
-          case 'goal': return 20;
-          case 'contact': return 15;
-          default: return 15;
-        }
-      })
-      .attr('fill', (d) => `url(#gradient-${d.type})`)
-      .attr('stroke', 'rgba(255, 255, 255, 0.2)')
-      .attr('stroke-width', 2)
-      .attr('filter', 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))');
-
-    // Node labels
-    node
-      .append('text')
-      .attr('dy', (d) => {
-        switch (d.type) {
-          case 'user': return 35;
-          case 'goal': return 30;
-          default: return 25;
-        }
-      })
-      .attr('text-anchor', 'middle')
-      .attr('fill', 'white')
-      .attr('font-size', '12px')
-      .attr('font-weight', '500')
-      .attr('text-shadow', '0 1px 2px rgba(0, 0, 0, 0.8)')
-      .text((d) => {
-        const name = d.name || (d.data as any).title || (d.data as any).email || 'Unknown';
-        return name.length > 15 ? name.substring(0, 15) + '...' : name;
+    // Set up zoom
+    const zoom = d3.zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.1, 4])
+      .on('zoom', (event) => {
+        container.attr('transform', event.transform);
       });
 
-    // Node interaction handlers
+    svg.call(zoom);
+
+    // Define color scales for different trust tiers
+    const getTrustColor = (tier: string) => {
+      switch (tier) {
+        case 'rooted': return '#10b981'; // green-500
+        case 'growing': return '#3b82f6'; // blue-500
+        case 'dormant': return '#f59e0b'; // amber-500
+        case 'frayed': return '#ef4444'; // red-500
+        default: return '#6b7280'; // gray-500
+      }
+    };
+
+    const getNodeColor = (node: NetworkNode) => {
+      if (node.type === 'user') return '#8b5cf6'; // purple-500
+      if (node.type === 'goal') return '#ec4899'; // pink-500
+      return getTrustColor(node.trust_tier || 'growing');
+    };
+
+    const getNodeSize = (node: NetworkNode) => {
+      if (node.type === 'user') return 12;
+      if (node.type === 'goal') return 8;
+      return Math.max(6, (node.trust_score || 0) / 10); // Scale based on trust score
+    };
+
+    // Create simulation
+    const simulation = d3.forceSimulation(nodes as any)
+      .force('link', d3.forceLink(edges).id((d: any) => d.id).distance(80))
+      .force('charge', d3.forceManyBody().strength(-200))
+      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('collision', d3.forceCollide().radius((d: any) => getNodeSize(d) + 2));
+
+    // Create gradient definitions for enhanced visual effects
+    const defs = svg.append('defs');
+    
+    // Gradient for user node
+    const userGradient = defs.append('radialGradient')
+      .attr('id', 'userGradient');
+    userGradient.append('stop')
+      .attr('offset', '0%')
+      .attr('stop-color', '#c084fc')
+      .attr('stop-opacity', 1);
+    userGradient.append('stop')
+      .attr('offset', '100%')
+      .attr('stop-color', '#7c3aed')
+      .attr('stop-opacity', 1);
+
+    // Draw edges
+    const link = container.append('g')
+      .selectAll('line')
+      .data(edges)
+      .join('line')
+      .attr('stroke', '#374151')
+      .attr('stroke-opacity', 0.6)
+      .attr('stroke-width', (d: NetworkEdge) => Math.sqrt(d.strength || 1));
+
+    // Draw nodes
+    const node = container.append('g')
+      .selectAll('circle')
+      .data(nodes)
+      .join('circle')
+      .attr('r', getNodeSize)
+      .attr('fill', (d: NetworkNode) => {
+        if (d.type === 'user') return 'url(#userGradient)';
+        return getNodeColor(d);
+      })
+      .attr('stroke', '#ffffff')
+      .attr('stroke-width', 2)
+      .style('cursor', 'pointer')
+      .style('filter', 'drop-shadow(0px 2px 4px rgba(0,0,0,0.3))')
+      .call(d3.drag<SVGCircleElement, NetworkNode>()
+        .on('start', dragstarted)
+        .on('drag', dragged)
+        .on('end', dragended));
+
+    // Add labels
+    const labels = container.append('g')
+      .selectAll('text')
+      .data(nodes)
+      .join('text')
+      .text((d: NetworkNode) => d.name)
+      .attr('font-size', 12)
+      .attr('font-family', 'system-ui, sans-serif')
+      .attr('fill', '#ffffff')
+      .attr('text-anchor', 'middle')
+      .attr('dy', (d: NetworkNode) => getNodeSize(d) + 16)
+      .style('pointer-events', 'none')
+      .style('text-shadow', '1px 1px 2px rgba(0,0,0,0.8)');
+
+    // Add trust score indicators for contacts
+    const trustIndicators = container.append('g')
+      .selectAll('text')
+      .data(nodes.filter(n => n.type === 'contact' && n.trust_score))
+      .join('text')
+      .text((d: NetworkNode) => `${Math.round(d.trust_score || 0)}%`)
+      .attr('font-size', 8)
+      .attr('font-family', 'system-ui, sans-serif')
+      .attr('fill', '#ffffff')
+      .attr('text-anchor', 'middle')
+      .attr('dy', 3)
+      .style('pointer-events', 'none')
+      .style('font-weight', 'bold')
+      .style('text-shadow', '1px 1px 2px rgba(0,0,0,0.8)');
+
+    // Handle interactions
     node
       .on('click', (event, d) => {
-        setSelectedNode(selectedNode === d.id ? null : d.id);
+        event.stopPropagation();
         onNodeClick?.(d);
       })
-      .on('mouseenter', (event, d) => {
-        setHoveredNode(d.id);
+      .on('mouseover', (event, d) => {
         onNodeHover?.(d);
         
         // Highlight connected nodes and edges
-        link
-          .attr('stroke-opacity', (l) => 
-            l.source === d.id || l.target === d.id ? 1 : 0.1
-          )
-          .attr('stroke-width', (l) =>
-            l.source === d.id || l.target === d.id ? Math.max(2, l.strength * 4) : 1
-          );
+        const connectedNodes = new Set();
+        const connectedEdges = new Set();
         
-        node.select('circle')
-          .attr('stroke-width', (n) => n.id === d.id ? 4 : 2)
-          .attr('stroke', (n) => 
-            n.id === d.id ? '#4facfe' : 'rgba(255, 255, 255, 0.2)'
-          );
+        edges.forEach(edge => {
+          if (edge.source === d.id) {
+            connectedNodes.add(edge.target);
+            connectedEdges.add(edge.id);
+          }
+          if (edge.target === d.id) {
+            connectedNodes.add(edge.source);
+            connectedEdges.add(edge.id);
+          }
+        });
+
+        // Fade non-connected elements
+        node.style('opacity', (n: NetworkNode) => 
+          n.id === d.id || connectedNodes.has(n.id) ? 1 : 0.3
+        );
+        
+        link.style('opacity', (e: NetworkEdge) => 
+          connectedEdges.has(e.id) ? 1 : 0.1
+        );
+        
+        labels.style('opacity', (n: NetworkNode) => 
+          n.id === d.id || connectedNodes.has(n.id) ? 1 : 0.3
+        );
       })
-      .on('mouseleave', () => {
-        setHoveredNode(null);
+      .on('mouseout', () => {
         onNodeHover?.(null);
         
-        // Reset highlights
-        link
-          .attr('stroke-opacity', 0.6)
-          .attr('stroke-width', (d) => Math.max(1, d.strength * 3));
-        
-        node.select('circle')
-          .attr('stroke-width', 2)
-          .attr('stroke', 'rgba(255, 255, 255, 0.2)');
+        // Reset opacity
+        node.style('opacity', 1);
+        link.style('opacity', 0.6);
+        labels.style('opacity', 1);
       });
 
     // Update positions on simulation tick
@@ -186,7 +195,17 @@ const RhizomaticGraph: React.FC<RhizomaticGraphProps> = ({
         .attr('x2', (d: any) => d.target.x)
         .attr('y2', (d: any) => d.target.y);
 
-      node.attr('transform', (d: any) => `translate(${d.x},${d.y})`);
+      node
+        .attr('cx', (d: any) => d.x)
+        .attr('cy', (d: any) => d.y);
+
+      labels
+        .attr('x', (d: any) => d.x)
+        .attr('y', (d: any) => d.y);
+
+      trustIndicators
+        .attr('x', (d: any) => d.x)
+        .attr('y', (d: any) => d.y);
     });
 
     // Drag functions
@@ -211,43 +230,62 @@ const RhizomaticGraph: React.FC<RhizomaticGraphProps> = ({
     return () => {
       simulation.stop();
     };
-  }, [nodes, edges, width, height]);
 
-  return (
-    <div className="relative w-full">
-      <svg
-        ref={svgRef}
-        className="w-full border border-dark-border rounded-xl bg-dark-card/20 backdrop-blur-sm"
-        style={{ height }}
-      />
-      
-      {/* Network Statistics Overlay */}
-      <div className="absolute top-4 left-4 glass-card p-3 space-y-1">
-        <div className="text-xs text-gray-400">Network Stats</div>
-        <div className="text-sm text-white">
-          <div>{nodes.length} nodes</div>
-          <div>{edges.length} connections</div>
-          <div className="text-xs text-gray-400 mt-1">
-            {nodes.filter(n => n.type === 'contact').length} contacts
+  }, [nodes, edges, onNodeClick, onNodeHover, height, width]);
+
+  if (!nodes.length) {
+    return (
+      <div className="flex items-center justify-center h-96 text-gray-400">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-700/50 flex items-center justify-center">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
           </div>
+          <p className="text-lg font-medium">No network data available</p>
+          <p className="text-sm">Add some contacts and goals to see your relationship network</p>
         </div>
       </div>
+    );
+  }
 
+  return (
+    <div className="relative">
+      <svg
+        ref={svgRef}
+        width="100%"
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        className="bg-gray-900/20 rounded-lg border border-gray-700/30"
+      >
+      </svg>
+      
       {/* Legend */}
-      <div className="absolute top-4 right-4 glass-card p-3 space-y-2">
-        <div className="text-xs text-gray-400">Node Types</div>
-        <div className="space-y-1">
+      <div className="absolute top-4 right-4 bg-gray-900/80 backdrop-blur-sm rounded-lg p-3 text-xs">
+        <div className="space-y-2">
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-gradient-to-r from-primary-500 to-blue-400"></div>
-            <span className="text-xs text-white">Contacts</span>
+            <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+            <span className="text-gray-300">You</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-purple-400"></div>
-            <span className="text-xs text-white">Goals</span>
+            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+            <span className="text-gray-300">Rooted</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-gradient-to-r from-pink-500 to-orange-400"></div>
-            <span className="text-xs text-white">You</span>
+            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+            <span className="text-gray-300">Growing</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+            <span className="text-gray-300">Dormant</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+            <span className="text-gray-300">Frayed</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 rounded-full bg-pink-500"></div>
+            <span className="text-gray-300">Goals</span>
           </div>
         </div>
       </div>

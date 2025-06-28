@@ -643,86 +643,154 @@ def get_insights():
 @auth_required
 def get_network_graph():
     user_id = session.get('user_id')
-    db = get_db()
     
-    # Get contacts as nodes
-    contacts = db.execute(
-        'SELECT id, name, company, title, relationship_type FROM contacts WHERE user_id = ?',
-        (user_id,)
-    ).fetchall()
-    
-    # Get goals as nodes
-    goals = db.execute(
-        'SELECT id, title, description FROM goals WHERE user_id = ?',
-        (user_id,)
-    ).fetchall()
-    
-    # Build nodes
-    nodes = []
-    
-    # Add user node
-    user = db.execute('SELECT id, email FROM users WHERE id = ?', (user_id,)).fetchone()
-    if user:
+    try:
+        # Using database helpers for PostgreSQL
+        from database_helpers import DatabaseHelper
+        
+        # Get contacts with trust data
+        contacts_query = """
+            SELECT c.id, c.name, c.email, c.company, c.title, c.warmth_status, 
+                   c.notes, c.source, c.created_at, c.updated_at
+            FROM contacts c 
+            WHERE c.user_id = %s
+        """
+        contacts = DatabaseHelper.execute_query(contacts_query, (user_id,), fetch_all=True) or []
+        
+        # Get goals
+        goals_query = """
+            SELECT id, title, description, category, priority, status, target_date
+            FROM goals 
+            WHERE user_id = %s
+        """
+        goals = DatabaseHelper.execute_query(goals_query, (user_id,), fetch_all=True) or []
+        
+        # Get trust insights for contacts
+        try:
+            from services.trust_insights import TrustInsights
+            trust_insights = TrustInsights()
+            trust_data = trust_insights.get_trust_insights(user_id)
+        except:
+            trust_data = {'top_contacts': [], 'trust_tiers': {}}
+        
+        # Build trust lookup
+        trust_lookup = {}
+        if trust_data.get('top_contacts'):
+            for contact in trust_data['top_contacts']:
+                trust_lookup[contact.get('id', '')] = {
+                    'trust_tier': contact.get('trust_tier', 'growing'),
+                    'trust_score': contact.get('warmth_status', 0) * 20
+                }
+        
+        # Build nodes array
+        nodes = []
+        
+        # Add user node (central node)
         nodes.append({
-            'id': f'user_{user["id"]}',
-            'name': user['email'],
+            'id': f'user_{user_id}',
+            'name': 'You',
             'type': 'user',
-            'data': dict(user)
+            'data': {'user_id': user_id}
         })
-    
-    # Add contact nodes
-    for contact in contacts:
-        nodes.append({
-            'id': f'contact_{contact["id"]}',
-            'name': contact['name'],
-            'type': 'contact',
-            'data': dict(contact)
+        
+        # Add contact nodes with trust data
+        for contact in contacts:
+            contact_id = str(contact['id'])
+            trust_info = trust_lookup.get(contact_id, {})
+            trust_score = contact.get('warmth_status', 1) * 20  # Convert 1-5 to percentage
+            
+            # Determine trust tier based on warmth status
+            warmth = contact.get('warmth_status', 1)
+            if warmth >= 4:
+                trust_tier = 'rooted'
+            elif warmth >= 3:
+                trust_tier = 'growing'
+            elif warmth >= 2:
+                trust_tier = 'dormant'
+            else:
+                trust_tier = 'frayed'
+            
+            nodes.append({
+                'id': contact_id,
+                'name': contact['name'],
+                'type': 'contact',
+                'trust_score': trust_score,
+                'trust_tier': trust_tier,
+                'last_interaction': contact.get('updated_at'),
+                'tags': [contact.get('company', ''), contact.get('title', '')],
+                'data': dict(contact)
+            })
+        
+        # Add goal nodes
+        for goal in goals:
+            nodes.append({
+                'id': f'goal_{goal["id"]}',
+                'name': goal['title'],
+                'type': 'goal',
+                'data': dict(goal)
+            })
+        
+        # Build edges (relationships)
+        edges = []
+        
+        # Connect user to all contacts
+        for contact in contacts:
+            edges.append({
+                'id': f'edge_user_{contact["id"]}',
+                'source': f'user_{user_id}',
+                'target': str(contact['id']),
+                'strength': contact.get('warmth_status', 1),
+                'type': 'relationship'
+            })
+        
+        # Connect user to all goals
+        for goal in goals:
+            edges.append({
+                'id': f'edge_user_goal_{goal["id"]}',
+                'source': f'user_{user_id}',
+                'target': f'goal_{goal["id"]}',
+                'strength': 3,
+                'type': 'goal_connection'
+            })
+        
+        # Connect goals to contacts via AI suggestions (if available)
+        try:
+            suggestions_query = """
+                SELECT s.goal_id, s.contact_id, s.confidence 
+                FROM ai_suggestions s
+                JOIN goals g ON s.goal_id = g.id
+                WHERE g.user_id = %s
+                LIMIT 50
+            """
+            suggestions = DatabaseHelper.execute_query(suggestions_query, (user_id,), fetch_all=True) or []
+            
+            for suggestion in suggestions:
+                edges.append({
+                    'id': f'suggestion_{suggestion["goal_id"]}_{suggestion["contact_id"]}',
+                    'source': f'goal_{suggestion["goal_id"]}',
+                    'target': str(suggestion["contact_id"]),
+                    'type': 'goal_match',
+                    'strength': suggestion['confidence']
+                })
+        except:
+            pass  # Skip if AI suggestions not available
+        
+        # Build network stats
+        stats = {
+            'total_contacts': len(contacts),
+            'total_relationships': len(edges),
+            'avg_connections': len(edges) / len(nodes) if len(nodes) > 0 else 0
+        }
+        
+        return jsonify({
+            'nodes': nodes,
+            'edges': edges,
+            'stats': stats
         })
-    
-    # Add goal nodes
-    for goal in goals:
-        nodes.append({
-            'id': f'goal_{goal["id"]}',
-            'name': goal['title'],
-            'type': 'goal',
-            'data': dict(goal)
-        })
-    
-    # Build edges (simplified)
-    edges = []
-    
-    # Connect user to all goals
-    for goal in goals:
-        edges.append({
-            'id': f'user_goal_{goal["id"]}',
-            'source': f'user_{user_id}',
-            'target': f'goal_{goal["id"]}',
-            'type': 'goal_match',
-            'strength': 1
-        })
-    
-    # Connect goals to contacts via AI suggestions
-    suggestions = db.execute(
-        '''SELECT goal_id, contact_id, confidence 
-           FROM ai_suggestions s
-           JOIN goals g ON s.goal_id = g.id
-           WHERE g.user_id = ?''',
-        (user_id,)
-    ).fetchall()
-    
-    for suggestion in suggestions:
-        edges.append({
-            'id': f'suggestion_{suggestion["goal_id"]}_{suggestion["contact_id"]}',
-            'source': f'goal_{suggestion["goal_id"]}',
-            'target': f'contact_{suggestion["contact_id"]}',
-            'type': 'goal_match',
-            'strength': suggestion['confidence']
-        })
-    
-    return jsonify({
-        'nodes': nodes,
-        'edges': edges
-    })
+        
+    except Exception as e:
+        logging.error(f"Error getting network graph: {e}")
+        return jsonify({'error': 'Failed to load network data'}), 500
 
 # Health check endpoint
 @api_bp.route('/health', methods=['GET'])

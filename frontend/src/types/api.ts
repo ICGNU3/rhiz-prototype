@@ -75,3 +75,45 @@ export interface ContactImportData {
   title?: string;
   notes?: string;
 }
+
+// Network visualization types
+export interface NetworkNode {
+  id: string;
+  name: string;
+  type: 'contact' | 'goal' | 'user';
+  trust_score?: number;
+  trust_tier?: 'rooted' | 'growing' | 'dormant' | 'frayed';
+  last_interaction?: string;
+  tags?: string[];
+  data?: any;
+}
+
+export interface NetworkEdge {
+  id: string;
+  source: string;
+  target: string;
+  strength: number;
+  type?: string;
+  label?: string;
+}
+
+export interface NetworkGraph {
+  nodes: NetworkNode[];
+  edges: NetworkEdge[];
+  stats: {
+    total_contacts: number;
+    total_relationships: number;
+    avg_connections: number;
+  };
+}
+
+export interface TrustMetrics {
+  contact_id: string;
+  metrics: {
+    trust_score: number;
+    response_time: number;
+    interaction_frequency: number;
+    reciprocity_score: number;
+  }[];
+  timestamps: string[];
+}
