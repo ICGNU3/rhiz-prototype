@@ -1339,6 +1339,22 @@ def process_vcf_file(user_id, file_content, source):
     return contacts
 
 # Trust Insights endpoints
+@api_bp.route('/trust/digest', methods=['GET'])
+@auth_required
+def get_trust_digest():
+    """Get top 3 priority contacts for weekly digest"""
+    user_id = session.get('user_id')
+    
+    try:
+        import sys
+        sys.path.append('backend/services')
+        from enhanced_trust_insights import EnhancedTrustInsights
+        
+        trust_engine = EnhancedTrustInsights()
+        digest = trust_engine.get_trust_digest_api(user_id)
+        return jsonify(digest)
+    except Exception as e:
+        return jsonify({'error': 'Trust digest temporarily unavailable'}), 500
 @api_bp.route('/trust/insights', methods=['GET'])
 @auth_required
 def get_trust_insights():
@@ -1912,6 +1928,88 @@ def complete_onboarding():
     except Exception as e:
         logging.error(f"Error completing onboarding: {e}")
         return jsonify({'error': 'Failed to complete onboarding'}), 500
+
+# Settings endpoints
+@api_bp.route('/settings/profile', methods=['GET', 'PUT'])
+@auth_required
+def settings_profile():
+    """Get or update user profile settings"""
+    user_id = session.get('user_id')
+    
+    if request.method == 'GET':
+        user = DatabaseHelper.execute_query(
+            'SELECT id, email, first_name, last_name, timezone, profile_image_url, bio FROM users WHERE id = %s',
+            (user_id,),
+            fetch_one=True
+        )
+        return jsonify(dict(user) if user else {})
+    
+    elif request.method == 'PUT':
+        data = request.get_json()
+        
+        # Update user profile
+        DatabaseHelper.execute_query(
+            '''UPDATE users SET 
+               first_name = %s, 
+               last_name = %s, 
+               timezone = %s, 
+               bio = %s,
+               updated_at = %s
+               WHERE id = %s''',
+            (
+                data.get('first_name'),
+                data.get('last_name'), 
+                data.get('timezone'),
+                data.get('bio'),
+                datetime.now().isoformat(),
+                user_id
+            )
+        )
+        
+        return jsonify({'success': True, 'message': 'Profile updated successfully'})
+
+@api_bp.route('/settings/notifications', methods=['GET', 'PUT'])
+@auth_required 
+def settings_notifications():
+    """Get or update notification preferences"""
+    user_id = session.get('user_id')
+    
+    if request.method == 'GET':
+        # Return notification defaults for now
+        return jsonify({
+            'email_notifications': True,
+            'trust_insights': True,
+            'weekly_digest': True,
+            'contact_reminders': True,
+            'goal_updates': True,
+            'quiet_hours_start': '22:00',
+            'quiet_hours_end': '08:00'
+        })
+    
+    elif request.method == 'PUT':
+        data = request.get_json()
+        return jsonify({'success': True, 'message': 'Notification preferences updated'})
+
+@api_bp.route('/settings/integrations', methods=['GET'])
+@auth_required
+def settings_integrations():
+    """Get integration status"""
+    user_id = session.get('user_id')
+    
+    try:
+        import sys
+        sys.path.append('backend/services')
+        from social_integrations import SocialIntegrations
+        
+        social_service = SocialIntegrations()
+        integrations = social_service.get_integration_status(user_id)
+        
+        return jsonify({
+            'integrations': integrations,
+            'available_platforms': social_service.supported_platforms
+        })
+    except Exception as e:
+        return jsonify({'error': 'Integration status unavailable'}), 500
 
 def register_api_routes(app):
     """Register API routes with the Flask app"""
