@@ -300,6 +300,32 @@ class SocialIntegrations:
         }
         
         return features.get(platform, [])
+    
+    def get_integration_status(self, user_id: str) -> Dict[str, Any]:
+        """Get integration status for a specific user"""
+        try:
+            logger.info(f"Getting integration status for user {user_id}")
+            
+            # Get platform configurations
+            platform_status = self.get_platform_status()
+            
+            # Return integration status per platform
+            integrations = {}
+            for platform in self.supported_platforms:
+                integrations[platform] = {
+                    'connected': False,  # Would check user-specific tokens in real implementation
+                    'available': platform_status.get(platform, {}).get('available', False),
+                    'configured': platform_status.get(platform, {}).get('configured', False),
+                    'features': platform_status.get(platform, {}).get('features', []),
+                    'last_sync': None,
+                    'contact_count': 0
+                }
+            
+            return integrations
+            
+        except Exception as e:
+            logger.error(f"Error getting integration status: {e}")
+            return {platform: {'connected': False, 'available': False} for platform in self.supported_platforms}
 
 # Global instance
 social_integrations = SocialIntegrations()

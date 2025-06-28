@@ -111,7 +111,7 @@ try:
     
     # Initialize sync tables for multi-source contact management
     try:
-        from contact_sync_engine import ContactSyncEngine
+        from services.contact_sync_engine import ContactSyncEngine
         sync_engine = ContactSyncEngine()
         sync_engine.init_sync_tables()
         logging.info("Multi-source contact sync tables initialized")

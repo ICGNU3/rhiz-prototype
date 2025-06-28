@@ -356,6 +356,85 @@ class ContactSyncEngine:
                 'error': f'Unsupported OAuth source: {source}',
                 'status': 'error'
             }
+    
+    def init_sync_tables(self):
+        """Initialize tables for contact syncing"""
+        import sqlite3
+        
+        try:
+            # Use SQLite connection
+            db = sqlite3.connect('db.sqlite3')
+            cursor = db.cursor()
+            
+            # Contact sources table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS contact_sources (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    contact_id TEXT,
+                    source TEXT NOT NULL,
+                    source_id TEXT,
+                    raw_data TEXT,
+                    sync_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    is_primary BOOLEAN DEFAULT FALSE,
+                    FOREIGN KEY (contact_id) REFERENCES contacts (id)
+                )
+            ''')
+            
+            # Sync jobs table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS sync_jobs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT,
+                    source TEXT NOT NULL,
+                    status TEXT DEFAULT 'pending',
+                    total_contacts INTEGER DEFAULT 0,
+                    processed_contacts INTEGER DEFAULT 0,
+                    errors TEXT,
+                    started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    completed_at DATETIME,
+                    FOREIGN KEY (user_id) REFERENCES users (id)
+                )
+            ''')
+            
+            # Merge candidates table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS merge_candidates (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT,
+                    contact_id_1 TEXT,
+                    contact_id_2 TEXT,
+                    confidence_score REAL,
+                    matching_fields TEXT,
+                    conflicts TEXT,
+                    status TEXT DEFAULT 'pending',
+                    reviewed_at DATETIME,
+                    action_taken TEXT,
+                    FOREIGN KEY (user_id) REFERENCES users (id),
+                    FOREIGN KEY (contact_id_1) REFERENCES contacts (id),
+                    FOREIGN KEY (contact_id_2) REFERENCES contacts (id)
+                )
+            ''')
+            
+            # Contact enrichment table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS contact_enrichment (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    contact_id TEXT,
+                    enrichment_type TEXT,
+                    data TEXT,
+                    confidence_score REAL,
+                    source TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (contact_id) REFERENCES contacts (id)
+                )
+            ''')
+            
+            db.commit()
+            db.close()
+            logger.info("Sync tables initialized successfully")
+            
+        except Exception as e:
+            logger.error(f"Error initializing sync tables: {e}")
 
 # Global instance
 contact_sync_engine = ContactSyncEngine()
