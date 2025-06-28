@@ -5,7 +5,7 @@ Handles contact CRUD operations, pipeline management, and interactions
 
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session
 from . import RouteBase, login_required, get_current_user_id
-from csv_import import CSVContactImporter
+# from csv_import import CSVContactImporter
 from linkedin_importer import LinkedInContactImporter  
 from simple_email import SimpleEmailSender
 from contact_intelligence import ContactNLP

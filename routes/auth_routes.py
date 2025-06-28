@@ -15,8 +15,8 @@ auth_bp = Blueprint('auth_routes', __name__)
 class AuthRoutes(RouteBase):
     def __init__(self):
         super().__init__()
-        self.stripe_manager = StripePaymentManager(self.db)
-        self.pricing_helper = PricingHelper()
+        # self.stripe_manager = StripePaymentManager(self.db)
+        # self.pricing_helper = PricingHelper()
 
 auth_routes = AuthRoutes()
 

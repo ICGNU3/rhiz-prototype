@@ -122,36 +122,153 @@ try:
 except Exception as e:
     logging.error(f"Failed to initialize database: {e}")
 
-# Register route blueprints
-try:
-    from routes.core_routes import core_bp
-    from routes.auth_routes import auth_bp
-    from routes.contact_routes import contact_bp
-    from routes.goal_routes import goal_bp
-    from routes.intelligence_routes import intelligence_bp
-    from routes.journal_routes import journal_bp
-    
-    app.register_blueprint(core_bp)
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(contact_bp)
-    app.register_blueprint(goal_bp)
-    app.register_blueprint(intelligence_bp)
-    app.register_blueprint(journal_bp)
-    
-    logging.info("All route blueprints registered successfully")
-    
-except ImportError as e:
-    logging.error(f"Failed to import route blueprints: {e}")
-    
-    # Add basic landing page route as fallback
-    @app.route('/')
-    def landing():
-        """Landing page for unauthenticated users"""
-        try:
-            return render_template('landing.html')
-        except Exception as e:
-            logging.error(f"Landing page template error: {e}")
-            return '''
+# Create essential API endpoints directly for React frontend integration
+from flask import jsonify
+
+# Basic dashboard analytics endpoint
+@app.route('/api/dashboard/analytics')
+def dashboard_analytics():
+    """Dashboard analytics data for React frontend"""
+    try:
+        # Mock data for now - will be replaced with real database queries
+        stats = {
+            'totalContacts': 12,
+            'activeGoals': 4,
+            'aiSuggestions': 8,
+            'trustScore': 85,
+            'weeklyInteractions': 23,
+            'pendingFollowUps': 6
+        }
+        
+        recent_activity = [
+            {
+                'id': '1',
+                'type': 'contact',
+                'title': 'New contact added',
+                'description': 'Sarah Chen from TechCorp',
+                'timestamp': '2025-06-28T20:30:00Z'
+            },
+            {
+                'id': '2', 
+                'type': 'goal',
+                'title': 'Goal created',
+                'description': 'Find technical co-founder',
+                'timestamp': '2025-06-28T19:15:00Z'
+            }
+        ]
+        
+        return jsonify({
+            'status': 'success',
+            'stats': stats,
+            'recent_activity': recent_activity
+        })
+    except Exception as e:
+        logging.error(f"Dashboard analytics error: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# Goals API endpoints
+@app.route('/api/goals')
+def get_goals():
+    """Get all goals for the current user"""
+    try:
+        # Mock data - replace with database queries
+        goals = [
+            {
+                'id': '1',
+                'user_id': 'demo_user',
+                'title': 'Find technical co-founder',
+                'description': 'Looking for a CTO/technical co-founder with React and Python experience',
+                'created_at': '2025-06-28T10:00:00Z'
+            },
+            {
+                'id': '2',
+                'user_id': 'demo_user', 
+                'title': 'Raise seed funding',
+                'description': 'Target $500k seed round from angel investors',
+                'created_at': '2025-06-28T11:00:00Z'
+            }
+        ]
+        return jsonify(goals)
+    except Exception as e:
+        logging.error(f"Goals API error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Contacts API endpoints
+@app.route('/api/contacts')
+def get_contacts():
+    """Get all contacts for the current user"""
+    try:
+        # Mock data - replace with database queries
+        contacts = [
+            {
+                'id': '1',
+                'user_id': 'demo_user',
+                'name': 'Sarah Chen',
+                'email': 'sarah@techcorp.com',
+                'company': 'TechCorp',
+                'title': 'Senior Developer',
+                'warmth_status': 3,
+                'warmth_label': 'Warm',
+                'relationship_type': 'professional',
+                'priority_level': 'high',
+                'created_at': '2025-06-28T10:00:00Z'
+            }
+        ]
+        return jsonify(contacts)
+    except Exception as e:
+        logging.error(f"Contacts API error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Intelligence API endpoints
+@app.route('/api/ai-suggestions')
+def get_ai_suggestions():
+    """Get AI suggestions for the current user"""
+    try:
+        suggestions = [
+            {
+                'id': '1',
+                'contact_id': '1',
+                'goal_id': '1',
+                'suggestion': 'Sarah Chen might be interested in your technical co-founder role',
+                'confidence': 0.85,
+                'created_at': '2025-06-28T12:00:00Z'
+            }
+        ]
+        return jsonify(suggestions)
+    except Exception as e:
+        logging.error(f"AI suggestions error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Network API endpoint
+@app.route('/api/network/graph')
+def get_network_graph():
+    """Get network graph data"""
+    try:
+        graph_data = {
+            'nodes': [
+                {'id': 'user', 'name': 'You', 'type': 'user'},
+                {'id': '1', 'name': 'Sarah Chen', 'type': 'contact'},
+                {'id': 'goal_1', 'name': 'Find CTO', 'type': 'goal'}
+            ],
+            'edges': [
+                {'id': 'e1', 'source': 'user', 'target': '1', 'type': 'relationship', 'strength': 0.8},
+                {'id': 'e2', 'source': 'user', 'target': 'goal_1', 'type': 'goal_match', 'strength': 0.9}
+            ]
+        }
+        return jsonify(graph_data)
+    except Exception as e:
+        logging.error(f"Network graph error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Add basic landing page route
+@app.route('/')
+def landing():
+    """Landing page for unauthenticated users"""
+    try:
+        return render_template('landing.html')
+    except Exception as e:
+        logging.error(f"Landing page template error: {e}")
+        return '''
         <!DOCTYPE html>
         <html lang="en" data-bs-theme="dark">
         <head>

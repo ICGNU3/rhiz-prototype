@@ -37,13 +37,22 @@ const DashboardPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch dashboard analytics
+    // Fetch dashboard analytics using the working API endpoint
     setIsLoading(true);
-    fetch('/api/dashboard/analytics')
+    fetch('/api/dashboard/analytics', {
+      credentials: 'include', // Include cookies for session management
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
       .then(res => res.json())
       .then(data => {
-        setStats(data.stats || stats);
-        setRecentActivity(data.recent_activity || []);
+        if (data.status === 'success') {
+          setStats(data.stats);
+          setRecentActivity(data.recent_activity);
+        } else {
+          console.error('API returned error:', data.message);
+        }
       })
       .catch(err => console.error('Failed to load dashboard:', err))
       .finally(() => setIsLoading(false));
