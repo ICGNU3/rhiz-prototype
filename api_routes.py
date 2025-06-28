@@ -1376,6 +1376,41 @@ def register_core_routes(app):
     def onboarding_network():
         """Onboarding network mapping page"""
         return render_template('onboarding/network.html')
+    
+    @app.route('/request-invite', methods=['POST'])
+    def request_invite():
+        """Handle invite request form submission"""
+        try:
+            db = get_db()
+            
+            # Extract form data
+            first_name = request.form.get('firstName', '').strip()
+            last_name = request.form.get('lastName', '').strip()
+            email = request.form.get('email', '').strip()
+            company = request.form.get('company', '').strip()
+            stage = request.form.get('stage', '').strip()
+            goals = request.form.get('goals', '').strip()
+            
+            # Basic validation
+            if not all([first_name, last_name, email, company, stage, goals]):
+                return render_template('invite_error.html', 
+                                    error="All fields are required for invite consideration."), 400
+            
+            # Store invite request in database
+            db.execute('''
+                INSERT INTO invite_requests (first_name, last_name, email, company, stage, goals, requested_at, status)
+                VALUES (?, ?, ?, ?, ?, ?, datetime('now'), 'pending')
+            ''', (first_name, last_name, email, company, stage, goals))
+            db.commit()
+            db.close()
+            
+            # Simple confirmation without email for now
+            return render_template('invite_confirmation.html', name=first_name)
+            
+        except Exception as e:
+            logging.error(f"Invite request error: {e}")
+            return render_template('invite_error.html', 
+                                error="Something went wrong. Please try again."), 500
 
     @app.route('/app/<path:route>')
     def serve_react_app(route):
