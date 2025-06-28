@@ -1763,20 +1763,17 @@ def get_trust():
         
         openai_client = openai.OpenAI(api_key=api_key)
         
-        # Get detailed contact interaction data
+        # Get detailed contact data
         contacts_query = """
             SELECT c.id, c.name, c.email, c.company, c.title, c.warmth_status, 
                    c.notes, c.source, c.created_at, c.updated_at,
-                   COUNT(ci.id) as interaction_count,
-                   MAX(ci.timestamp) as last_interaction_date,
-                   AVG(CASE WHEN ci.interaction_type = 'email_sent' THEN 1 ELSE 0 END) as email_frequency,
-                   AVG(CASE WHEN ci.interaction_type = 'meeting' THEN 1 ELSE 0 END) as meeting_frequency
+                   0 as interaction_count,
+                   c.updated_at as last_interaction_date,
+                   0 as email_frequency,
+                   0 as meeting_frequency
             FROM contacts c 
-            LEFT JOIN contact_interactions ci ON c.id = ci.contact_id
             WHERE c.user_id = %s
-            GROUP BY c.id, c.name, c.email, c.company, c.title, c.warmth_status, 
-                     c.notes, c.source, c.created_at, c.updated_at
-            ORDER BY interaction_count DESC, c.warmth_status DESC
+            ORDER BY c.warmth_status DESC, c.updated_at DESC
             LIMIT 30
         """
         contacts = DatabaseHelper.execute_query(contacts_query, (user_id,), fetch_all=True) or []
@@ -1881,23 +1878,28 @@ def get_trust():
         Provide actionable, relationship-focused recommendations.
         """
         
-        # Generate trust insights using OpenAI
-        response = openai_client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a relationship trust expert. Analyze trust patterns in professional networks and provide actionable insights for strengthening relationships and building trust. Focus on authentic relationship building, not manipulation."
-                },
-                {
-                    "role": "user", 
-                    "content": prompt
-                }
-            ],
-            response_format={"type": "json_object"},
-            max_tokens=1200,
-            temperature=0.6
-        )
+        # Generate trust insights using OpenAI with timeout
+        try:
+            response = openai_client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a relationship trust expert. Analyze trust patterns in professional networks and provide actionable insights for strengthening relationships and building trust. Focus on authentic relationship building, not manipulation."
+                    },
+                    {
+                        "role": "user", 
+                        "content": prompt
+                    }
+                ],
+                response_format={"type": "json_object"},
+                max_tokens=1200,
+                temperature=0.6,
+                timeout=30  # 30 second timeout
+            )
+        except Exception as openai_error:
+            logging.error(f"OpenAI API error: {openai_error}")
+            return jsonify({'error': f'OpenAI API error: {str(openai_error)}'}), 500
         
         trust_data = json.loads(response.choices[0].message.content)
         
