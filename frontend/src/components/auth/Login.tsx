@@ -65,7 +65,7 @@ const Login: React.FC<LoginProps> = ({ onSuccess }) => {
         if (onSuccess) {
           onSuccess();
         } else {
-          navigate('/dashboard');
+          navigate('/app/dashboard');
         }
       } else {
         setMessage({
@@ -160,7 +160,7 @@ const Login: React.FC<LoginProps> = ({ onSuccess }) => {
               <div className="text-center">
                 <p className="small text-muted mb-2">Don't have an account?</p>
                 <button
-                  onClick={() => navigate('/signup')}
+                  onClick={() => navigate('/')}
                   className="btn btn-glass btn-sm"
                 >
                   <i className="bi bi-person-plus me-1"></i>Join Rhiz
