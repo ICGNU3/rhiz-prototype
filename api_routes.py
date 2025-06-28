@@ -1760,6 +1760,12 @@ def register_core_routes(app):
         else:
             return redirect('/onboarding/welcome')
     
+    @app.route('/test-form')
+    def test_form():
+        """Test form page"""
+        with open('test_form.html', 'r') as f:
+            return f.read()
+    
     @app.route('/request-invite', methods=['POST'])
     def request_invite():
         """Handle invite request form submission"""
