@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Target, Plus, Brain, Users, Calendar, TrendingUp, Loader2, AlertCircle } from 'lucide-react';
+import { Target, Plus, Brain, Users, Calendar, TrendingUp, Loader2, AlertCircle, Sparkles } from 'lucide-react';
 import { goalsAPI, Goal, AISuggestion } from '../services/api';
+import { GoalCardSkeleton, AIInsightSkeleton } from '../components/common/SkeletonLoader';
+import AnimatedButton, { ButtonState } from '../components/common/AnimatedButton';
 
 interface GoalMatch {
   contact_id: string;
@@ -14,6 +16,10 @@ interface GoalMatch {
 const GoalsPage: React.FC = () => {
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createButtonState, setCreateButtonState] = useState<ButtonState>('idle');
+  const [newGoalData, setNewGoalData] = useState({ title: '', description: '' });
+  const [recentlyCreatedGoalId, setRecentlyCreatedGoalId] = useState<string | null>(null);
+  const newGoalRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   // Fetch goals with React Query
