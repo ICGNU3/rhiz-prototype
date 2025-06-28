@@ -24,4 +24,6 @@ dependencies = [
     "pyjwt>=2.10.1",
     "requests>=2.32.4",
     "flask-dance>=7.1.0",
+    "selenium>=4.33.0",
+    "zulip>=0.9.0",
 ]

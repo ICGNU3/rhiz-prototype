@@ -1004,6 +1004,73 @@ def import_csv_contacts():
         logging.error(f"File import error: {e}")
         return jsonify({'error': f'Import failed: {str(e)}'}), 500
 
+
+@api_bp.route('/scrape-linkedin-connections', methods=['POST'])
+@auth_required
+def scrape_linkedin_connections():
+    """Scrape LinkedIn connections using automated browser"""
+    user_id = session.get('user_id')
+    
+    try:
+        # Import the scraper
+        from linkedin_scraper import LinkedInConnectionsScraper
+        
+        # Get parameters
+        data = request.get_json() or {}
+        max_connections = data.get('max_connections', 500)
+        headless = data.get('headless', True)  # Run headless by default
+        
+        # Initialize scraper
+        scraper = LinkedInConnectionsScraper(headless=headless)
+        
+        # Run the scraping process
+        result = scraper.scrape_connections(user_id, max_connections)
+        
+        if result:
+            return jsonify({
+                'success': True,
+                'message': f'Successfully scraped {result["total_scraped"]} LinkedIn connections',
+                'total_scraped': result['total_scraped'],
+                'imported_to_db': result['imported_to_db'],
+                'instructions': {
+                    'step1': 'Make sure you are logged into LinkedIn',
+                    'step2': 'Visit: https://www.linkedin.com/mynetwork/invite-connect/connections/',
+                    'step3': 'The scraper will automatically extract your connections'
+                }
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to scrape LinkedIn connections. Please ensure you are logged into LinkedIn.',
+                'instructions': {
+                    'step1': 'Log into LinkedIn in your browser',
+                    'step2': 'Navigate to: https://www.linkedin.com/mynetwork/invite-connect/connections/',
+                    'step3': 'Make sure the page loads completely before trying again'
+                }
+            }), 400
+            
+    except ImportError:
+        return jsonify({
+            'success': False,
+            'error': 'LinkedIn scraper not available. Selenium may not be installed.',
+            'fallback': 'Please use CSV import instead'
+        }), 500
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Scraping failed: {str(e)}',
+            'instructions': {
+                'troubleshooting': [
+                    'Ensure you are logged into LinkedIn',
+                    'Check your internet connection',
+                    'Try refreshing the LinkedIn connections page',
+                    'Use CSV import as an alternative'
+                ]
+            }
+        }), 500
+
+
 def process_csv_file(user_id, file_content, source):
     """Process CSV file and import contacts"""
     import csv
