@@ -220,11 +220,8 @@ def send_magic_link():
         
         magic_link = f"{base_url}/api/auth/verify?token={token}"
         
-        # Debug: Log the magic link being generated
-        print(f"Generated magic link: {magic_link}")
-        print(f"Base URL: {base_url}")
-        print(f"Request host: {host}")
-        print(f"Token: {token}")
+        # Log magic link generation for monitoring
+        logging.info(f"Magic link generated for {email} with token length: {len(token)}")
         
         # Send email using Resend REST API
         response = requests.post(
@@ -331,8 +328,8 @@ def verify_magic_link():
         session['user_id'] = user['id']
         session['authenticated'] = True
         
-        # Redirect to dashboard
-        return redirect('/app/dashboard')
+        # Redirect to landing page with success message
+        return redirect('/?login=success')
         
     except Exception as e:
         return redirect('/login?error=authentication_failed')
@@ -1337,7 +1334,7 @@ def register_core_routes(app):
                 if (response.ok) {
                     status.innerHTML = '<div class="alert alert-success">Account created! Redirecting to your dashboard...</div>';
                     setTimeout(() => {
-                        window.location.href = '/app/dashboard';
+                        window.location.href = '/?login=success';
                     }, 1500);
                 } else {
                     status.innerHTML = `<div class="alert alert-danger">${result.error || 'Registration failed. Please try again.'}</div>`;

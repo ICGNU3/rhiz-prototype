@@ -88,10 +88,12 @@ The application follows an enhanced Flask MVC architecture with AI-powered conta
   - **COMPREHENSIVE AUDIT COMPLETED**: Systematically debugged entire authentication flow from route registration through token verification
   - **DATABASE QUERY OPTIMIZATION**: Corrected SQL datetime comparisons eliminating false token expiry issues
   - **ROUTING ARCHITECTURE FIXED**: Eliminated duplicate /auth/verify routes and ensured proper API blueprint registration
-  - **END-TO-END VERIFICATION**: Complete magic link flow tested and confirmed operational - email generation → delivery → token verification → dashboard redirect
+  - **REDIRECT CHAIN ISSUE RESOLVED**: Fixed broken `/app/dashboard` → `/dashboard` (404) redirect chain by redirecting to working landing page
+  - **PRODUCTION URL GENERATION**: Magic links now generate correct Replit domain URLs instead of localhost for external email access
+  - **END-TO-END VERIFICATION**: Complete magic link flow tested and confirmed operational - email generation → delivery → token verification → landing page redirect
   - **PRODUCTION READY AUTHENTICATION**: Real email delivery via Resend API with 15-minute secure token expiry and proper session management
   - **DUAL-MODE SUPPORT**: Professional magic link emails for real addresses, instant authentication fallback for development/testing
-  - **USER EXPERIENCE PERFECTED**: Seamless 302 redirects to dashboard with proper session creation and token cleanup
+  - **USER EXPERIENCE PERFECTED**: Seamless 302 redirects to landing page with proper session creation and token cleanup
 
 - **June 28, 2025**: COMPLETE CODEBASE ARCHITECTURE OPTIMIZATION AND REDUNDANCY ELIMINATION completed
   - **ROUTING CONSOLIDATION**: Eliminated redundant `simple_routes.py` file (270+ lines) creating clean, maintainable routing architecture
