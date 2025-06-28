@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { BarChart3, Users, Target, Brain, TrendingUp, MessageSquare } from 'lucide-react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { BarChart3, Users, Target, Brain, TrendingUp, MessageSquare, Loader2, AlertCircle } from 'lucide-react';
+import { analyticsAPI, contactsAPI, goalsAPI, intelligenceAPI } from '../services/api';
 
 interface DashboardStats {
   totalContacts: number;
