@@ -208,9 +208,23 @@ def send_magic_link():
         if not resend_api_key:
             raise Exception("RESEND_API_KEY not configured")
         
-        # Get base URL for magic link
-        base_url = request.host_url.rstrip('/')
+        # Get base URL for magic link - handle both local dev and production
+        host = request.headers.get('Host', request.host)
+        if host.startswith('localhost') or '127.0.0.1' in host:
+            # For local development, use the actual host but with proper protocol
+            base_url = f"https://{os.environ.get('REPL_SLUG', 'unknown')}-{os.environ.get('REPL_OWNER', 'unknown')}.replit.app"
+        else:
+            # For production, use the request host
+            scheme = 'https' if request.is_secure or request.headers.get('X-Forwarded-Proto') == 'https' else 'http'
+            base_url = f"{scheme}://{host}"
+        
         magic_link = f"{base_url}/api/auth/verify?token={token}"
+        
+        # Debug: Log the magic link being generated
+        print(f"Generated magic link: {magic_link}")
+        print(f"Base URL: {base_url}")
+        print(f"Request host: {host}")
+        print(f"Token: {token}")
         
         # Send email using Resend REST API
         response = requests.post(
