@@ -1,140 +1,68 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-
 :root {
-  /* Rhiz Homepage Glassmorphism Color System */
-  --bg-primary: #0A0A0F;
-  --bg-secondary: #1A1A24;
-  --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-accent: #E2E8F0;
-  --accent-purple: #8B5CF6;
-  --accent-blue: #06B6D4;
-  --accent-pink: #EC4899;
-  --accent-emerald: #10B981;
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.3);
-  --shadow-intense: 0 20px 60px rgba(0, 0, 0, 0.4);
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Global styles */
-* {
-  box-sizing: border-box;
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
 }
 
-html, body {
+body {
   margin: 0;
-  padding: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--bg-primary);
-  background-image: 
-    radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
-  color: var(--text-primary);
-  overflow-x: hidden;
-  min-height: 100vh;
-  line-height: 1.6;
-}
-
-#root {
-  min-height: 100vh;
   display: flex;
-  flex-direction: column;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
 }
 
-/* Glassmorphism Components */
-@layer components {
-  .glass-card {
-    @apply bg-dark-card backdrop-blur-xl border border-dark-border rounded-2xl shadow-2xl transition-all duration-300 ease-out;
-  }
-  
-  .glass-card:hover {
-    @apply transform -translate-y-1 shadow-2xl;
-  }
-  
-  .glass-button {
-    @apply px-6 py-3 rounded-xl font-medium transition-all duration-300 backdrop-blur-sm border;
-  }
-  
-  .glass-button-primary {
-    @apply glass-button bg-gradient-to-r from-primary-500 to-purple-500 text-white border-transparent hover:shadow-lg hover:scale-105;
-  }
-  
-  .glass-button-secondary {
-    @apply glass-button bg-dark-card border-dark-border text-white hover:border-primary-500;
-  }
-  
-  .glass-input {
-    @apply bg-dark-card backdrop-blur-xl border border-dark-border rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200;
-  }
-  
-  .gradient-text {
-    @apply bg-gradient-to-r from-primary-500 to-purple-500 bg-clip-text text-transparent;
-  }
-  
-  .rhizomatic-node {
-    @apply glass-card p-4 cursor-pointer hover:border-primary-500 transition-all duration-300;
-  }
-  
-  .connection-line {
-    stroke: var(--accent-blue);
-    stroke-width: 2;
-    opacity: 0.6;
-    transition: all 0.3s ease;
-  }
-  
-  .connection-line:hover {
-    stroke-width: 3;
-    opacity: 1;
-  }
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--glass-border);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-blue);
-}
-
-/* Loading states */
-.loading-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Animation utilities */
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-.animate-glow {
-  animation: glow 2s ease-in-out infinite alternate;
-}
-
-@keyframes glow {
-  from { box-shadow: 0 0 20px rgba(79, 172, 254, 0.2); }
-  to { box-shadow: 0 0 30px rgba(79, 172, 254, 0.4); }
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
 }
