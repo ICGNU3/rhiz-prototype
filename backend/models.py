@@ -261,6 +261,34 @@ class AISuggestion(db.Model):
         }
 
 
+class AuthToken(db.Model):
+    """Authentication tokens for magic link login"""
+    __tablename__ = 'user_auth_tokens'
+    
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    email = Column(String(255), nullable=False)
+    token = Column(String(255), nullable=False, unique=True)
+    expires = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    used_at = Column(DateTime)
+    
+    def is_expired(self):
+        return datetime.utcnow() > self.expires
+    
+    def mark_used(self):
+        self.used_at = datetime.utcnow()
+    
+    def to_dict(self):
+        return {
+            'id': str(self.id),
+            'email': self.email,
+            'token': self.token,
+            'expires': self.expires.isoformat() if self.expires else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'used_at': self.used_at.isoformat() if self.used_at else None
+        }
+
+
 class JournalEntry(db.Model):
     """Journal entries for reflection and insights"""
     __tablename__ = 'journal_entries'
