@@ -246,8 +246,8 @@ def send_magic_link():
         # Get base URL for magic link - handle both local dev and production
         host = request.headers.get('Host', request.host)
         if host.startswith('localhost') or '127.0.0.1' in host:
-            # For local development, use the actual host but with proper protocol
-            base_url = f"https://{os.environ.get('REPL_SLUG', 'unknown')}-{os.environ.get('REPL_OWNER', 'unknown')}.replit.app"
+            # For local development, detect the correct replit domain
+            base_url = f"https://workspace-{os.environ.get('REPL_OWNER', 'wefreeminds')}.replit.app"
         else:
             # For production, use the request host
             scheme = 'https' if request.is_secure or request.headers.get('X-Forwarded-Proto') == 'https' else 'http'
