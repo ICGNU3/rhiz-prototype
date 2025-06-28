@@ -515,6 +515,65 @@ def debug_session():
         'session_keys': list(session.keys())
     })
 
+@api_bp.route('/intelligence/chat', methods=['POST'])
+@auth_required
+def intelligence_chat():
+    """AI-powered chat interface for natural language queries"""
+    try:
+        data = request.get_json()
+        user_message = data.get('message', '').strip()
+        
+        if not user_message:
+            return jsonify({'error': 'Message is required'}), 400
+        
+        user_id = session.get('user_id')
+        
+        # Import the ContactNLP class for processing
+        try:
+            from contact_intelligence import ContactNLP
+            nlp_processor = ContactNLP(user_id)
+            response = nlp_processor.process_command(user_message)
+            
+            # Handle string response from ContactNLP
+            if isinstance(response, str):
+                return jsonify({
+                    'response': response,
+                    'suggestions': [
+                        "Show me my warm contacts",
+                        "Who needs a follow-up?",
+                        "What's my network summary?",
+                        "Find contacts in tech"
+                    ]
+                })
+            else:
+                return jsonify({
+                    'response': response.get('response', 'I understand your question, but I need more information to provide a helpful answer.'),
+                    'suggestions': response.get('suggestions', [
+                        "Show me my warm contacts",
+                        "Who needs a follow-up?",
+                        "What's my network summary?",
+                        "Find contacts in tech"
+                    ])
+                })
+            
+        except ImportError:
+            # Fallback response if NLP module not available
+            return jsonify({
+                'response': f"I received your message: '{user_message}'. The intelligence system is currently being enhanced. For now, you can use the dashboard to explore your contacts and goals.",
+                'suggestions': [
+                    "Show me my contacts",
+                    "Display my goals",
+                    "What's my network status?",
+                    "Show recent activities"
+                ]
+            })
+            
+    except Exception as e:
+        return jsonify({
+            'response': "I'm experiencing some technical difficulties. Please try again in a moment.",
+            'error': str(e)
+        }), 500
+
 # Analytics endpoints
 @api_bp.route('/analytics/dashboard', methods=['GET'])
 @auth_required
