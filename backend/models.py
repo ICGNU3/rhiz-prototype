@@ -13,18 +13,24 @@ class User(db.Model):
     """User model for authentication and profile management"""
     __tablename__ = 'users'
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     email = Column(String(255), unique=True, nullable=False)
+    google_id = Column(String(255))
+    magic_link_token = Column(String(255))
+    magic_link_expires = Column(DateTime)
     subscription_tier = Column(String(50), default='free')
+    stripe_customer_id = Column(String(255))
+    stripe_subscription_id = Column(String(255))
+    subscription_status = Column(String(50))
+    subscription_expires = Column(DateTime)
+    goals_count = Column(Integer, default=0)
+    contacts_count = Column(Integer, default=0)
+    ai_suggestions_used = Column(Integer, default=0)
+    is_guest = Column(Boolean, default=False)
+    guest_actions_count = Column(Integer, default=0)
+    onboarding_completed = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Optional profile fields
-    first_name = Column(String(100))
-    last_name = Column(String(100))
-    company = Column(String(255))
-    title = Column(String(255))
-    timezone = Column(String(50), default='UTC')
     
     # Relationships
     contacts = relationship('Contact', back_populates='user', cascade='all, delete-orphan')
