@@ -1,11 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Contact, TrustInsight, TrustMetrics } from '../../types/api';
+import { Contact, TrustInsight, TrustMetric } from '../../types/api';
 import { 
   Heart, TrendingUp, Clock, MessageCircle, Calendar, 
   Mail, Phone, Building, User, X, RefreshCw 
 } from 'lucide-react';
-import Chart from 'chart.js/auto';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface TrustMetricsPanelProps {
   contactId: string | null;
