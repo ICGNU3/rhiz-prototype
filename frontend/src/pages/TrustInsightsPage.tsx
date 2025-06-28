@@ -257,7 +257,7 @@ const TrustInsightsPage: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex items-center space-x-3">
-                        <span className="text-gray-400">{count}</span>
+                        <span className="text-gray-400">{count as number}</span>
                         <div className="w-20 bg-gray-700 rounded-full h-2">
                           <div 
                             className="h-2 rounded-full bg-gradient-to-r from-blue-400 to-purple-400"

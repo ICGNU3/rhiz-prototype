@@ -85,9 +85,9 @@ class TrustAnalyticsRoutes(RouteBase):
                     trust_score = self.calculate_trust_score(
                         contact['warmth_level'] or 'cold',
                         int(contact['total_interactions'] or 0),
-                        float(last_interaction_days_ago),
+                        int(last_interaction_days_ago),
                         float(contact['avg_sentiment'] or 0.5),
-                        float(relationship_duration_days)
+                        int(relationship_duration_days)
                     )
 
                     # Calculate reciprocity metrics
@@ -264,7 +264,8 @@ class TrustAnalyticsRoutes(RouteBase):
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 # Get total relationships count
                 cur.execute("SELECT COUNT(*) as total FROM contacts WHERE user_id = %s", (user_id,))
-                total_relationships = cur.fetchone()['total']
+                result = cur.fetchone()
+                total_relationships = result['total'] if result else 0
 
                 # Calculate metrics for all contacts
                 metrics = self.calculate_trust_metrics(user_id)
