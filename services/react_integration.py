@@ -19,12 +19,11 @@ def get_db():
         g.db.row_factory = sqlite3.Row
     return g.db
 
-# Redirect /app/dashboard to functional dashboard
+# Handle /app/dashboard directly instead of redirecting
 @react_bp.route('/app/dashboard')
-def redirect_dashboard():
-    """Redirect to functional dashboard"""
-    from flask import redirect
-    return redirect('/dashboard')
+def dashboard():
+    """Serve dashboard directly"""
+    return serve_react('dashboard')
 
 @react_bp.route('/app')
 @react_bp.route('/app/')

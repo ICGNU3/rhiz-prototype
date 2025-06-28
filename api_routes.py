@@ -1761,14 +1761,7 @@ def register_core_routes(app):
             return render_template('invite_error.html', 
                                 error="Something went wrong. Please try again."), 500
 
-    @app.route('/app')
-    @app.route('/app/')
-    @app.route('/app/<path:route>')
-    def serve_react_app(route=""):
-        """Serve React frontend for app routes"""
-        # Redirect to working React integration service or dashboard
-        from flask import redirect
-        return redirect('/dashboard')
+    # React routes removed - handled by services/react_integration.py to avoid conflicts
 # Onboarding API endpoints
 @api_bp.route('/onboarding/welcome', methods=['POST'])
 @auth_required
