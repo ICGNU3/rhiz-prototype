@@ -350,19 +350,19 @@ def upload_contacts():
                 notes = (row.get('Notes') or row.get('notes') or
                         row.get('Description') or row.get('description'))
                 
-                linkedin_url = (row.get('LinkedIn') or row.get('linkedin') or
-                               row.get('LinkedIn URL') or row.get('linkedin_url'))
+                linkedin = (row.get('LinkedIn') or row.get('linkedin') or
+                           row.get('LinkedIn URL') or row.get('linkedin_url'))
                 
                 # Skip if no name
                 if not name or name.strip() == '':
                     failed_imports += 1
                     continue
                 
-                # Insert contact into database
+                # Insert contact into database - using the existing table structure
                 cursor.execute('''
-                    INSERT INTO contacts (user_id, name, email, phone, company, title, notes, source, linkedin_url)
+                    INSERT INTO contacts (user_id, name, email, phone, company, title, notes, source, linkedin)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ''', (user_id, name.strip(), email, phone, company, title, notes, 'csv_upload', linkedin_url))
+                ''', (user_id, name.strip(), email, phone, company, title, notes, 'csv_upload', linkedin))
                 
                 contacts_imported += 1
                 
@@ -371,9 +371,9 @@ def upload_contacts():
                 failed_imports += 1
                 continue
         
-        # Record the import in contact_sources table
+        # Record the import in a simple import_history table
         cursor.execute('''
-            CREATE TABLE IF NOT EXISTS contact_sources (
+            CREATE TABLE IF NOT EXISTS import_history (
                 id SERIAL PRIMARY KEY,
                 user_id VARCHAR(255) NOT NULL,
                 source_type VARCHAR(50) NOT NULL,
@@ -387,7 +387,7 @@ def upload_contacts():
         ''')
         
         cursor.execute('''
-            INSERT INTO contact_sources (user_id, source_type, source_name, total_contacts, successful_imports, failed_imports)
+            INSERT INTO import_history (user_id, source_type, source_name, total_contacts, successful_imports, failed_imports)
             VALUES (%s, %s, %s, %s, %s, %s)
         ''', (user_id, 'csv_upload', file.filename, contacts_imported + failed_imports, contacts_imported, failed_imports))
         
@@ -422,9 +422,9 @@ def get_sync_status():
         )
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        # Create contact_sources table if it doesn't exist
+        # Create import_history table if it doesn't exist
         cursor.execute('''
-            CREATE TABLE IF NOT EXISTS contact_sources (
+            CREATE TABLE IF NOT EXISTS import_history (
                 id SERIAL PRIMARY KEY,
                 user_id VARCHAR(255) NOT NULL,
                 source_type VARCHAR(50) NOT NULL,
@@ -440,7 +440,7 @@ def get_sync_status():
         # Get recent import history
         cursor.execute('''
             SELECT source_type, source_name, import_date, successful_imports, failed_imports, status
-            FROM contact_sources 
+            FROM import_history 
             WHERE user_id = %s 
             ORDER BY import_date DESC 
             LIMIT 10
