@@ -22,12 +22,12 @@ interface OnboardingData {
 }
 
 const INTENT_OPTIONS = [
-  { value: 'fundraising', label: '💰 Fundraising', description: 'Connect with investors and raise capital' },
-  { value: 'hiring', label: '👥 Hiring', description: 'Find and recruit talented team members' },
-  { value: 'partnerships', label: '🤝 Partnerships', description: 'Build strategic business partnerships' },
-  { value: 'customers', label: '🎯 Customer Development', description: 'Find early customers and validate product-market fit' },
-  { value: 'mentorship', label: '🎓 Mentorship', description: 'Connect with experienced mentors and advisors' },
-  { value: 'community', label: '🌟 Community Building', description: 'Build and engage your professional community' }
+  { value: 'fundraising', label: '💰 Fundraising', description: 'Deepen relationships with aligned investors who share your vision' },
+  { value: 'hiring', label: '👥 Hiring', description: 'Find talented people who want to build something meaningful with you' },
+  { value: 'partnerships', label: '🤝 Partnerships', description: 'Cultivate strategic relationships that create mutual value' },
+  { value: 'customers', label: '🎯 Customer Development', description: 'Connect with early adopters who need what you\'re building' },
+  { value: 'mentorship', label: '🎓 Mentorship', description: 'Build relationships with wise guides who\'ve walked similar paths' },
+  { value: 'community', label: '🌟 Community Building', description: 'Strengthen bonds within your professional community' }
 ];
 
 // Step 1: Welcome & Intent Selection
@@ -46,11 +46,11 @@ function WelcomeStep({ onNext, data, setData }: any) {
     <div className="text-center">
       <div className="mb-5">
         <h2 className="h3 mb-3">Welcome to Rhiz</h2>
-        <p className="text-muted">Let's set up your relationship intelligence platform in just a few steps</p>
+        <p className="text-muted">Let's strengthen the relationships that matter most to what you're building</p>
       </div>
 
       <div className="mb-5">
-        <h4 className="mb-4">What's your primary intent right now?</h4>
+        <h4 className="mb-4">What are you working on that could benefit from deeper relationships?</h4>
         <div className="row g-3">
           {INTENT_OPTIONS.map((option) => (
             <div key={option.value} className="col-md-6">
@@ -109,31 +109,31 @@ function GoalStep({ onNext, onBack, data, setData }: any) {
   return (
     <div>
       <div className="text-center mb-5">
-        <h3>Tell us about your {selectedIntent?.label.substring(2)} goal</h3>
-        <p className="text-muted">Be specific - this helps us find the right connections for you</p>
+        <h3>Tell us about your {selectedIntent?.label.substring(2)} vision</h3>
+        <p className="text-muted">The more specific you are, the better we can identify people who could help make this happen</p>
       </div>
 
       <div className="row justify-content-center">
         <div className="col-lg-8">
           <div className="mb-4">
-            <label className="form-label">Goal Title</label>
+            <label className="form-label">What are you working toward?</label>
             <input 
               type="text"
               className="form-control form-control-lg"
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
-              placeholder={`e.g., Raise $500k seed round for AI startup`}
+              placeholder={`e.g., Building sustainable funding for our climate tech startup`}
             />
           </div>
 
           <div className="mb-5">
-            <label className="form-label">Goal Description</label>
+            <label className="form-label">Tell us more about your vision</label>
             <textarea 
               className="form-control"
               rows={4}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Provide more context about what you're looking for, timeline, specific requirements, etc."
+              placeholder="What does success look like? Who might be able to help? What kind of relationships would make the biggest difference?"
             />
           </div>
 
@@ -169,8 +169,8 @@ function ContactStep({ onNext, onBack, setData }: any) {
   return (
     <div>
       <div className="text-center mb-5">
-        <h3>Connect Your Network</h3>
-        <p className="text-muted">Import your contacts to find relevant connections for your goal</p>
+        <h3>Bring Your Relationships Into Rhiz</h3>
+        <p className="text-muted">Import your contacts so we can help you identify the people who might be most aligned with what you're building</p>
       </div>
 
       <UnifiedContactImport 
@@ -240,18 +240,18 @@ function CompletionStep({ onBack, data }: any) {
         <div className="mb-4">
           <i className="bi bi-check-circle-fill text-success display-1"></i>
         </div>
-        <h3>You're all set!</h3>
-        <p className="text-muted">Your Rhiz workspace is ready. Our AI is analyzing your network to find relevant connections.</p>
+        <h3>Your relationship intelligence is ready!</h3>
+        <p className="text-muted">Rhiz is now analyzing your connections to identify the people who could be most valuable to what you're building.</p>
       </div>
 
       <div className="card bg-primary bg-opacity-10 border-primary mb-5">
         <div className="card-body">
           <h5 className="card-title">What happens next?</h5>
           <ul className="list-unstyled text-start">
-            <li className="mb-2"><i className="bi bi-cpu text-primary me-2"></i> AI analyzes your contacts and goal</li>
-            <li className="mb-2"><i className="bi bi-lightbulb text-warning me-2"></i> Smart suggestions appear in your dashboard</li>
-            <li className="mb-2"><i className="bi bi-graph-up text-success me-2"></i> Track progress and relationship insights</li>
-            <li><i className="bi bi-people text-info me-2"></i> Discover new connections through the network</li>
+            <li className="mb-2"><i className="bi bi-cpu text-primary me-2"></i> AI identifies people aligned with your vision</li>
+            <li className="mb-2"><i className="bi bi-lightbulb text-warning me-2"></i> Relationship insights appear in your dashboard</li>
+            <li className="mb-2"><i className="bi bi-graph-up text-success me-2"></i> Track meaningful relationship progress</li>
+            <li><i className="bi bi-people text-info me-2"></i> Discover new relationships through your existing connections</li>
           </ul>
         </div>
       </div>
@@ -307,7 +307,7 @@ export default function OnboardingPage() {
     },
     {
       id: 'contacts',
-      title: 'Network',
+      title: 'Relationships',
       description: 'Import your contacts',
       component: ContactStep
     },
@@ -340,7 +340,7 @@ export default function OnboardingPage() {
         <div className="container py-4">
           <div className="row align-items-center">
             <div className="col-md-6">
-              <h1 className="h4 mb-0">Getting Started</h1>
+              <h1 className="h4 mb-0">Building Your Relationship Intelligence</h1>
               <p className="text-muted mb-0">Step {currentStep + 1} of {steps.length}</p>
             </div>
             <div className="col-md-6">
