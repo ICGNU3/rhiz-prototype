@@ -855,15 +855,15 @@ def sync_contacts():
         return jsonify({'error': 'Source required'}), 400
     
     try:
-        from services.contact_sync_engine import contact_sync_engine
-        contact_sync_engine.db = get_db()
-        # sync_engine.init_sync_tables()  # Not needed with service approach
+        import services.contact_sync_engine as sync_module
+        sync_engine = sync_module.ContactSyncEngine()
+        sync_engine.db = get_db()
         
         # Create sync job
-        job_id = contact_sync_engine.create_sync_job(user_id, source)
+        job_id = sync_engine.create_sync_job(user_id, source)
         
         # For demo purposes, simulate sync completion
-        contact_sync_engine.update_sync_job(job_id, 'completed', {'imported': 10, 'duplicates': 0, 'errors': 0})
+        sync_engine.update_sync_job(job_id, 'completed', {'imported': 10, 'duplicates': 0, 'errors': 0})
         
         return jsonify({
             'success': True,
@@ -898,9 +898,10 @@ def get_merge_candidates():
     user_id = session.get('user_id')
     
     try:
-        from services.contact_sync_engine import contact_sync_engine
-        contact_sync_engine.db = get_db()
-        candidates = contact_sync_engine.get_merge_candidates(user_id)
+        import services.contact_sync_engine as sync_module
+        sync_engine = sync_module.ContactSyncEngine()
+        sync_engine.db = get_db()
+        candidates = sync_engine.get_merge_candidates(user_id)
         return jsonify(candidates)
     except Exception as e:
         logging.error(f"Merge candidates error: {e}")
