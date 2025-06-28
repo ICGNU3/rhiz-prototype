@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Users, Search, Filter, Plus, Mail, Phone, Building, MapPin, Calendar, Loader2, AlertCircle, Edit, Trash2 } from 'lucide-react';
 import { contactsAPI, Contact } from '../services/api';
+import SkeletonLoader, { ContactCardSkeleton } from '../components/common/SkeletonLoader';
+import AnimatedButton from '../components/common/AnimatedButton';
 
 const ContactsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -9,6 +11,8 @@ const ContactsPage: React.FC = () => {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const queryClient = useQueryClient();
+  const contactsGridRef = useRef<HTMLDivElement>(null);
+  const newContactRef = useRef<HTMLDivElement>(null);
 
   // Fetch contacts with React Query
   const { 
@@ -30,12 +34,25 @@ const ContactsPage: React.FC = () => {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
+  // Auto-scroll to new contacts
+  const scrollToNewContact = () => {
+    setTimeout(() => {
+      if (newContactRef.current) {
+        newContactRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest'
+        });
+      }
+    }, 300);
+  };
+
   // Create contact mutation
   const createContactMutation = useMutation({
     mutationFn: contactsAPI.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       setShowCreateModal(false);
+      scrollToNewContact();
     },
     onError: (error) => {
       console.error('Failed to create contact:', error);
@@ -237,27 +254,45 @@ const ContactsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Contacts Grid */}
-        {contacts.length > 0 ? (
+        {/* Loading State */}
+        {contactsLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {contacts.map(contact => (
-              <ContactCard key={contact.id} contact={contact} />
+            {Array.from({ length: 8 }).map((_, index) => (
+              <ContactCardSkeleton key={index} />
             ))}
           </div>
         ) : (
-          <div className="glass-card p-12 text-center">
-            <Users className="w-16 h-16 mx-auto mb-4 text-gray-500" />
-            <h3 className="text-white text-xl mb-2">No Contacts Found</h3>
-            <p className="text-gray-400 mb-6">
-              {searchQuery || filterWarmth ? 'Try adjusting your filters' : 'Add your first contact to get started'}
-            </p>
-            <button 
-              onClick={() => setShowCreateModal(true)}
-              className="glass-button px-6 py-3 rounded-lg text-blue-400 border border-blue-400/30 hover:bg-blue-400/10"
-            >
-              Add Your First Contact
-            </button>
-          </div>
+          /* Contacts Grid */
+          contacts.length > 0 ? (
+            <div ref={contactsGridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {contacts.map((contact, index) => (
+                <div
+                  key={contact.id}
+                  ref={index === 0 ? newContactRef : null}
+                  className="fade-in"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <ContactCard contact={contact} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="glass-card p-12 text-center">
+              <Users className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+              <h3 className="text-white text-xl mb-2">No Contacts Found</h3>
+              <p className="text-gray-400 mb-6">
+                {searchQuery || filterWarmth ? 'Try adjusting your filters' : 'Add your first contact to get started'}
+              </p>
+              <AnimatedButton
+                onClick={() => setShowCreateModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                size="lg"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add Your First Contact
+              </AnimatedButton>
+            </div>
+          )
         )}
       </div>
     </div>

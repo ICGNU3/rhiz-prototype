@@ -93,46 +93,52 @@ const DashboardPage: React.FC = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <StatCard
-            title="Total Contacts"
-            value={stats.totalContacts}
-            icon={<Users className="w-6 h-6 text-blue-400" />}
-            trend="+12% this week"
-            color="from-blue-400 to-blue-600"
-          />
-          <StatCard
-            title="Active Goals"
-            value={stats.activeGoals}
-            icon={<Target className="w-6 h-6 text-purple-400" />}
-            trend="2 new this month"
-            color="from-purple-400 to-purple-600"
-          />
-          <StatCard
-            title="AI Suggestions"
-            value={stats.aiSuggestions}
-            icon={<Brain className="w-6 h-6 text-green-400" />}
-            trend="3 pending review"
-            color="from-green-400 to-green-600"
-          />
-          <StatCard
-            title="Trust Score"
-            value={`${stats.trustScore}%`}
-            icon={<BarChart3 className="w-6 h-6 text-yellow-400" />}
-            trend="+5% this week"
-            color="from-yellow-400 to-yellow-600"
-          />
-          <StatCard
-            title="Weekly Interactions"
-            value={stats.weeklyInteractions}
-            icon={<MessageSquare className="w-6 h-6 text-pink-400" />}
-            color="from-pink-400 to-pink-600"
-          />
-          <StatCard
-            title="Pending Follow-ups"
-            value={stats.pendingFollowUps}
-            icon={<TrendingUp className="w-6 h-6 text-indigo-400" />}
-            color="from-indigo-400 to-indigo-600"
-          />
+          {[
+            {
+              title: "Total Contacts",
+              value: stats.totalContacts,
+              icon: <Users className="w-6 h-6 text-blue-400" />,
+              trend: "+12% this week",
+              color: "from-blue-400 to-blue-600"
+            },
+            {
+              title: "Active Goals",
+              value: stats.activeGoals,
+              icon: <Target className="w-6 h-6 text-purple-400" />,
+              trend: "2 new this month",
+              color: "from-purple-400 to-purple-600"
+            },
+            {
+              title: "AI Suggestions",
+              value: stats.aiSuggestions,
+              icon: <Brain className="w-6 h-6 text-green-400" />,
+              trend: "3 pending review",
+              color: "from-green-400 to-green-600"
+            },
+            {
+              title: "Trust Score",
+              value: `${stats.trustScore}%`,
+              icon: <BarChart3 className="w-6 h-6 text-yellow-400" />,
+              trend: "+5% this week",
+              color: "from-yellow-400 to-yellow-600"
+            },
+            {
+              title: "Weekly Interactions",
+              value: stats.weeklyInteractions,
+              icon: <MessageSquare className="w-6 h-6 text-pink-400" />,
+              color: "from-pink-400 to-pink-600"
+            },
+            {
+              title: "Pending Follow-ups",
+              value: stats.pendingFollowUps,
+              icon: <TrendingUp className="w-6 h-6 text-indigo-400" />,
+              color: "from-indigo-400 to-indigo-600"
+            }
+          ].map((stat, index) => (
+            <div key={stat.title} className={`fade-in`} style={{ animationDelay: `${index * 0.1}s` }}>
+              <StatCard {...stat} />
+            </div>
+          ))}
         </div>
 
         {/* Recent Activity */}
