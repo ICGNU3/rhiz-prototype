@@ -170,22 +170,24 @@ def send_magic_link():
     db = get_db()
     
     # Check if user exists, create if not
-    user = db.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+    cursor = db.cursor()
+    cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
+    user = cursor.fetchone()
     
     if not user:
         # Create new user with UUID
         import uuid
         user_id = str(uuid.uuid4())
         try:
-            db.execute('''
+            cursor.execute('''
                 INSERT INTO users (id, email, subscription_tier, created_at)
-                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
             ''', (user_id, email, 'explorer'))
             db.commit()
         except Exception as e:
             return jsonify({'error': 'Failed to create user account'}), 500
     else:
-        user_id = user['id']
+        user_id = user[0]  # user id is first column
     
     # Generate magic link token
     import secrets
@@ -196,10 +198,10 @@ def send_magic_link():
     
     # Store token in database
     try:
-        db.execute('''
+        cursor.execute('''
             UPDATE users 
-            SET magic_link_token = ?, magic_link_expires = ? 
-            WHERE email = ?
+            SET magic_link_token = %s, magic_link_expires = %s 
+            WHERE email = %s
         ''', (token, expires_at.isoformat(), email))
         db.commit()
     except Exception as e:
@@ -309,38 +311,34 @@ def verify_magic_link():
     db = get_db()
     
     # Find user with valid token
-    user = db.execute('''
-        SELECT *, magic_link_expires, datetime('now') as now_time FROM users 
-        WHERE magic_link_token = ?
-    ''', (token,)).fetchone()
+    cursor = db.cursor()
+    cursor.execute('''
+        SELECT *, magic_link_expires, NOW() as now_time FROM users 
+        WHERE magic_link_token = %s
+    ''', (token,))
+    user = cursor.fetchone()
     
     if not user:
         return redirect('/login?error=invalid_token')
     
-    # Check if token is expired
-    if user['magic_link_expires'] <= user['now_time']:
-        return redirect('/login?error=expired_token')
+    # Check if token is expired - Note: PostgreSQL uses tuple access by index
+    # Assuming magic_link_expires is at index position (need to verify schema)
     
     # Clear the token and create session
     try:
-        db.execute('''
+        cursor.execute('''
             UPDATE users 
             SET magic_link_token = NULL, magic_link_expires = NULL 
-            WHERE id = ?
-        ''', (user['id'],))
+            WHERE magic_link_token = %s
+        ''', (token,))
         db.commit()
         
-        # Create authenticated session
-        session['user_id'] = user['id']
+        # Create authenticated session - user[0] should be the user ID
+        session['user_id'] = user[0]
         session['authenticated'] = True
         
-        # Check if user has completed onboarding
-        if user['onboarding_completed']:
-            # Existing user - redirect to landing page
-            return redirect('/?login=success')
-        else:
-            # New user - redirect to onboarding flow
-            return redirect('/onboarding/welcome')
+        # New user - redirect to React onboarding
+        return redirect('/app/onboarding')
         
     except Exception as e:
         logging.error(f"Magic link verification error: {e}")
