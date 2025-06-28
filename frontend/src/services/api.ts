@@ -216,6 +216,54 @@ export const intelligenceAPI = {
     api.post('/api/intelligence/outreach', { contact_id: contactId, goal_id: goalId }),
 };
 
+// Trust API
+export const trustAPI = {
+  getAll: () =>
+    api.get('/api/trust'),
+  
+  getInsights: () =>
+    api.get('/api/trust/insights'),
+  
+  getHealth: () =>
+    api.get('/api/trust/health'),
+  
+  getTiers: () =>
+    api.get('/api/trust/tiers'),
+  
+  getDigest: () =>
+    api.get('/api/trust/digest'),
+  
+  recordSignal: (data: { contact_id: string; signal_type: string; value: number; notes?: string }) =>
+    api.post('/api/trust/signal', data),
+  
+  updateInsights: () =>
+    api.post('/api/trust/update'),
+  
+  getContactInsight: (contactId: string) =>
+    api.get(`/api/trust/contact/${contactId}`),
+  
+  getMetrics: (contactId: string) =>
+    api.get(`/api/trust/metrics/${contactId}`),
+};
+
+// CRM API
+export const crmAPI = {
+  getAll: () =>
+    api.get('/api/crm'),
+  
+  getPipeline: () =>
+    api.get('/api/crm/pipeline'),
+  
+  updateContactStage: (contactId: string, stage: string) =>
+    api.patch(`/api/crm/contacts/${contactId}/stage`, { stage }),
+  
+  getRecentInteractions: () =>
+    api.get('/api/crm/interactions/recent'),
+  
+  getStatistics: () =>
+    api.get('/api/crm/statistics'),
+};
+
 // Analytics API
 export const analyticsAPI = {
   getDashboardData: () =>
