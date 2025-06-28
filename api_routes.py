@@ -421,20 +421,20 @@ def get_contacts():
     warmth = request.args.get('warmth')
     relationship_type = request.args.get('relationship_type')
     
-    query = 'SELECT * FROM contacts WHERE user_id = ?'
+    query = 'SELECT * FROM contacts WHERE user_id = %s'
     params = [user_id]
     
     if search:
-        query += ' AND (name LIKE ? OR company LIKE ? OR title LIKE ?)'
+        query += ' AND (name ILIKE %s OR company ILIKE %s OR title ILIKE %s)'
         search_term = f'%{search}%'
         params.extend([search_term, search_term, search_term])
     
     if warmth:
-        query += ' AND warmth_status = ?'
+        query += ' AND warmth_status = %s'
         params.append(warmth)
     
     if relationship_type:
-        query += ' AND relationship_type = ?'
+        query += ' AND relationship_type = %s'
         params.append(relationship_type)
     
     query += ' ORDER BY name'
