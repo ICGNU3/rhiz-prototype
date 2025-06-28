@@ -208,19 +208,53 @@ def react_routes(filename):
 @app.route('/intelligence/ai-assistant')
 def ai_assistant():
     """AI Assistant interface"""
-    # Mock assistant data for template rendering
+    # Comprehensive assistant data matching template structure
     assistant_data = {
         'missed_connections': [
             {'name': 'Sarah Chen', 'company': 'TechFlow', 'confidence_score': 0.85, 'reason': 'Similar funding goals'},
             {'name': 'Alex Rodriguez', 'company': 'GrowthLab', 'confidence_score': 0.78, 'reason': 'Shared industry focus'}
         ],
         'daily_actions': [
-            {'title': 'Follow up with investor intro', 'priority': 'high', 'estimated_time': '10 minutes'},
-            {'title': 'Connect with Sarah on LinkedIn', 'priority': 'medium', 'estimated_time': '5 minutes'}
+            {
+                'suggestion': 'Follow up with investor intro from last week',
+                'action_type': 'follow_up',
+                'priority_score': 0.9,
+                'estimated_time': '10 minutes',
+                'context': 'Sarah introduced you to Alex last week - time to follow up on investment discussion',
+                'goal_relevance': 'Directly supports your Series A fundraising goal'
+            },
+            {
+                'suggestion': 'Connect with new fintech founders on LinkedIn',
+                'action_type': 'networking',
+                'priority_score': 0.6,
+                'estimated_time': '15 minutes',
+                'context': 'Found 3 founders in similar space through mutual connections',
+                'goal_relevance': 'Builds network for potential partnerships and knowledge sharing'
+            }
         ],
         'weekly_insights': [
-            {'insight': 'Your network is 30% stronger in fintech connections this week'},
-            {'insight': 'Consider reaching out to 3 dormant connections for reactivation'}
+            {
+                'title': 'Network Growth Acceleration',
+                'insight_type': 'network_growth',
+                'trend_direction': 'up',
+                'impact_level': 'high',
+                'description': 'Your fintech network connections increased by 30% this week through strategic introductions.',
+                'data_points': [
+                    {'metric': 'New connections', 'value': '8'},
+                    {'metric': 'Introduction success rate', 'value': '75%'}
+                ]
+            },
+            {
+                'title': 'Dormant Connection Opportunity',
+                'insight_type': 'relationship_health',
+                'trend_direction': 'stable',
+                'impact_level': 'medium',
+                'description': 'Three high-value connections have been dormant for 90+ days and may benefit from re-engagement.',
+                'data_points': [
+                    {'metric': 'Dormant connections', 'value': '3'},
+                    {'metric': 'Potential reactivation value', 'value': 'High'}
+                ]
+            }
         ]
     }
     return render_template('intelligence/ai_assistant.html', assistant_data=assistant_data)
@@ -228,7 +262,28 @@ def ai_assistant():
 @app.route('/intelligence/crm-pipeline')
 def crm_pipeline():
     """CRM Pipeline kanban interface"""
-    return render_template('intelligence/crm_pipeline.html')
+    # Mock pipeline data for demonstration
+    pipeline_stages = {
+        'cold': [
+            {'name': 'Jennifer Liu', 'company': 'DataFlow Inc', 'title': 'CTO', 'last_contact': '2 weeks ago'},
+            {'name': 'Marcus Thompson', 'company': 'TechVenture', 'title': 'Founder', 'last_contact': '1 month ago'}
+        ],
+        'aware': [
+            {'name': 'Sarah Chen', 'company': 'TechFlow', 'title': 'CEO', 'last_contact': '1 week ago'},
+            {'name': 'David Park', 'company': 'InnovLab', 'title': 'VP Product', 'last_contact': '3 days ago'}
+        ],
+        'warm': [
+            {'name': 'Alex Rodriguez', 'company': 'GrowthLab', 'title': 'Partner', 'last_contact': 'Yesterday'},
+            {'name': 'Lisa Wang', 'company': 'ScaleUp VC', 'title': 'Principal', 'last_contact': '2 days ago'}
+        ],
+        'active': [
+            {'name': 'Michael Kim', 'company': 'Nexus Ventures', 'title': 'Associate', 'last_contact': 'Today'}
+        ],
+        'contributor': [
+            {'name': 'Emma Davis', 'company': 'TechCorp', 'title': 'Director', 'last_contact': 'This morning'}
+        ]
+    }
+    return render_template('intelligence/crm_pipeline.html', pipeline=pipeline_stages)
 
 @app.route('/intelligence/mass-messaging')
 def mass_messaging():
