@@ -380,14 +380,16 @@ def logout():
 @auth_required
 def get_goals():
     user_id = session.get('user_id')
-    db = get_db()
     
-    goals = db.execute(
-        'SELECT * FROM goals WHERE user_id = ? ORDER BY created_at DESC',
-        (user_id,)
-    ).fetchall()
+    from database_helpers import DatabaseHelper
     
-    return jsonify([dict(goal) for goal in goals])
+    goals = DatabaseHelper.execute_query(
+        'SELECT * FROM goals WHERE user_id = %s ORDER BY created_at DESC',
+        (user_id,),
+        fetch_all=True
+    )
+    
+    return jsonify([dict(goal) for goal in goals or []])
 
 @api_bp.route('/goals', methods=['POST'])
 @auth_required
