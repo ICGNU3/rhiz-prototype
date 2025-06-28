@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { BarChart3, Users, Target, Brain, TrendingUp, MessageSquare, Loader2, AlertCircle } from 'lucide-react';
 import { analyticsAPI, contactsAPI, goalsAPI, intelligenceAPI } from '../services/api';
+import SkeletonLoader, { StatCardSkeleton, DashboardSkeleton } from '../components/common/SkeletonLoader';
 
 interface DashboardStats {
   totalContacts: number;
@@ -30,16 +31,19 @@ const DashboardPage: React.FC = () => {
     pendingFollowUps: 0
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Fetch dashboard analytics
+    setIsLoading(true);
     fetch('/api/dashboard/analytics')
       .then(res => res.json())
       .then(data => {
         setStats(data.stats || stats);
         setRecentActivity(data.recent_activity || []);
       })
-      .catch(err => console.error('Failed to load dashboard:', err));
+      .catch(err => console.error('Failed to load dashboard:', err))
+      .finally(() => setIsLoading(false));
   }, []);
 
   const StatCard: React.FC<{
@@ -70,11 +74,15 @@ const DashboardPage: React.FC = () => {
     </div>
   );
 
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-800">
       <div className="container mx-auto px-6 py-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 fade-in">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
             Dashboard
           </h1>

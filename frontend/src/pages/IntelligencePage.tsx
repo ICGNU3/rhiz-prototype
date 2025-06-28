@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Brain, Sparkles, TrendingUp, Users, AlertCircle, ArrowRight } from 'lucide-react';
+import SkeletonLoader, { AIInsightSkeleton } from '../components/common/SkeletonLoader';
 
 interface Insight {
   contact_name?: string;
@@ -94,9 +96,28 @@ const IntelligencePage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto"></div>
-            <p className="text-white/70 mt-4">Generating AI insights...</p>
+          {/* Header Skeleton */}
+          <div className="mb-8 fade-in">
+            <SkeletonLoader variant="text" width="300px" height="40px" className="mb-2" />
+            <SkeletonLoader variant="text" width="500px" height="20px" />
+          </div>
+
+          {/* Tab Navigation Skeleton */}
+          <div className="flex space-x-4 mb-8 fade-in">
+            <SkeletonLoader variant="button" width="120px" height="40px" />
+            <SkeletonLoader variant="button" width="120px" height="40px" />
+          </div>
+
+          {/* Content Skeleton */}
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              {[1, 2, 3].map(i => (
+                <AIInsightSkeleton key={i} />
+              ))}
+            </div>
+            <div className="lg:col-span-1 fade-in">
+              <SkeletonLoader variant="card" width="100%" height="400px" />
+            </div>
           </div>
         </div>
       </div>
