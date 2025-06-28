@@ -3,6 +3,7 @@ from flask import jsonify
 import os
 import logging
 from datetime import datetime
+from flask import request, session, redirect
 from api_routes import register_api_routes
 from api_routes_mobile import register_mobile_api_routes
 
@@ -24,6 +25,52 @@ from react_integration import register_react_integration
 register_react_integration(app)
 
 # Clean routing architecture - all routes now in api_routes.py
+
+@app.route('/auth/verify', methods=['GET'])
+def verify_magic_link():
+    """Verify magic link token and authenticate user"""
+    token = request.args.get('token')
+    
+    if not token:
+        return redirect('/login?error=invalid_token')
+    
+    import sqlite3
+    conn = sqlite3.connect('db.sqlite3')
+    cursor = conn.cursor()
+    
+    # Find user with valid token
+    cursor.execute('''
+        SELECT * FROM users 
+        WHERE magic_link_token = ? 
+        AND datetime(magic_link_expires) > datetime('now')
+    ''', (token,))
+    user = cursor.fetchone()
+    
+    if not user:
+        conn.close()
+        return redirect('/login?error=expired_token')
+    
+    # Clear the token and create session
+    try:
+        cursor.execute('''
+            UPDATE users 
+            SET magic_link_token = NULL, magic_link_expires = NULL 
+            WHERE magic_link_token = ?
+        ''', (token,))
+        conn.commit()
+        conn.close()
+        
+        # Create authenticated session
+        from flask import session
+        session['user_id'] = user[0]  # user ID
+        session['authenticated'] = True
+        
+        # Redirect to dashboard
+        return redirect('/app/dashboard')
+        
+    except Exception as e:
+        conn.close()
+        return redirect('/login?error=authentication_failed')
 
 @app.route('/health')
 def health_check():
