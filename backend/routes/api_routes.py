@@ -15,6 +15,7 @@ from dataclasses import asdict
 from utils.database_helpers import get_db_cursor, execute_query_one, execute_query
 from services.google_contacts_sync import GoogleContactsSync
 from services.linkedin_csv_sync import LinkedInCSVSync, TwitterCSVSync
+from openai import OpenAI
 
 # Create API blueprint
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -3296,6 +3297,256 @@ def get_import_history():
     except Exception as e:
         logging.error(f"Error getting import history: {e}")
         return jsonify({'error': 'Failed to get history'}), 500
+
+# Journal API Endpoints
+@api_bp.route('/journal/entries', methods=['GET'])
+@auth_required
+def get_journal_entries():
+    """Get journal entries for the current user"""
+    user_id = session.get('user_id')
+    limit = request.args.get('limit', 20, type=int)
+    offset = request.args.get('offset', 0, type=int)
+    
+    try:
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute('''
+                SELECT je.*, c.name as contact_name, g.title as goal_title
+                FROM journal_entries je
+                LEFT JOIN contacts c ON je.related_contact_id = c.id
+                LEFT JOIN goals g ON je.related_goal_id = g.id
+                WHERE je.user_id = %s
+                ORDER BY je.created_at DESC
+                LIMIT %s OFFSET %s
+            ''', (user_id, limit, offset))
+            
+            entries = []
+            for row in cursor.fetchall():
+                entry = {
+                    'id': str(row['id']),
+                    'title': row['title'],
+                    'content': row['content'],
+                    'entry_type': row['entry_type'],
+                    'mood_score': row['mood_score'],
+                    'energy_level': row['energy_level'],
+                    'tags': row['tags'] or [],
+                    'ai_reflection': row['ai_reflection'],
+                    'created_at': row['created_at'].isoformat() if row['created_at'] else None,
+                    'related_contact_id': str(row['related_contact_id']) if row['related_contact_id'] else None,
+                    'related_goal_id': str(row['related_goal_id']) if row['related_goal_id'] else None,
+                    'contact_name': row['contact_name'],
+                    'goal_title': row['goal_title']
+                }
+                entries.append(entry)
+            
+        return jsonify({'entries': entries})
+        
+    except Exception as e:
+        logging.error(f"Error fetching journal entries: {e}")
+        return jsonify({'error': 'Failed to fetch journal entries'}), 500
+
+@api_bp.route('/journal/entries', methods=['POST'])
+@auth_required
+def create_journal_entry():
+    """Create a new journal entry"""
+    user_id = session.get('user_id')
+    data = request.get_json()
+    
+    title = data.get('title', '').strip()
+    content = data.get('content', '').strip()
+    entry_type = data.get('entry_type', 'reflection')
+    related_contact_id = data.get('related_contact_id')
+    related_goal_id = data.get('related_goal_id')
+    mood_score = data.get('mood_score')
+    energy_level = data.get('energy_level')
+    tags = data.get('tags', [])
+    
+    if not title or not content:
+        return jsonify({'error': 'Title and content are required'}), 400
+    
+    try:
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute('''
+                INSERT INTO journal_entries (
+                    user_id, title, content, entry_type, related_contact_id, 
+                    related_goal_id, mood_score, energy_level, tags
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id, created_at
+            ''', (
+                user_id, title, content, entry_type, related_contact_id,
+                related_goal_id, mood_score, energy_level, tags
+            ))
+            
+            result = cursor.fetchone()
+            entry_id = str(result['id'])
+            created_at = result['created_at']
+        
+        db.commit()
+        
+        return jsonify({
+            'success': True,
+            'entry': {
+                'id': entry_id,
+                'title': title,
+                'content': content,
+                'entry_type': entry_type,
+                'created_at': created_at.isoformat() if created_at else None,
+                'mood_score': mood_score,
+                'energy_level': energy_level,
+                'tags': tags
+            }
+        })
+        
+    except Exception as e:
+        logging.error(f"Error creating journal entry: {e}")
+        return jsonify({'error': 'Failed to create journal entry'}), 500
+
+@api_bp.route('/journal/entries/<entry_id>/reflect', methods=['POST'])
+@auth_required
+def reflect_with_ai(entry_id):
+    """Generate AI reflection on a journal entry"""
+    user_id = session.get('user_id')
+    data = request.get_json()
+    user_question = data.get('question', 'What insights can you share about this journal entry?')
+    reflection_type = data.get('type', 'general')
+    
+    try:
+        # Get the journal entry
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute('''
+                SELECT * FROM journal_entries 
+                WHERE id = %s AND user_id = %s
+            ''', (entry_id, user_id))
+            
+            entry = cursor.fetchone()
+            if not entry:
+                return jsonify({'error': 'Journal entry not found'}), 404
+            
+            # Generate AI reflection using OpenAI
+            openai_client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+            
+            system_prompt = f"""You are a thoughtful journaling assistant. You help users reflect on their journal entries to deepen their self-awareness and relationship insights.
+
+The user has written a journal entry titled "{entry['title']}" with the following content:
+
+{entry['content']}
+
+The user is asking: {user_question}
+
+Please provide a thoughtful, empathetic reflection that:
+1. Acknowledges the user's experience
+2. Offers gentle insights or observations
+3. Suggests questions for further reflection
+4. Connects to relationship patterns if relevant
+
+Keep your response between 150-300 words and make it personal and actionable.
+"""
+            
+            response = openai_client.chat.completions.create(
+                model="gpt-4o",  # the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_question}
+                ],
+                max_tokens=400,
+                temperature=0.7
+            )
+            
+            ai_response = response.choices[0].message.content
+            
+            # Save the reflection to the database
+            cursor.execute('''
+                UPDATE journal_entries 
+                SET ai_reflection = %s, updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s AND user_id = %s
+            ''', (ai_response, entry_id, user_id))
+        
+        db.commit()
+        
+        return jsonify({
+            'success': True,
+            'reflection': ai_response
+        })
+        
+    except Exception as e:
+        logging.error(f"Error generating AI reflection: {e}")
+        return jsonify({'error': 'Failed to generate reflection'}), 500
+
+@api_bp.route('/journal/weekly-prompt', methods=['GET'])
+@auth_required  
+def get_weekly_prompt():
+    """Get weekly journaling prompt"""
+    user_id = session.get('user_id')
+    
+    try:
+        db = get_db()
+        
+        # Get weekly insights
+        with db.cursor() as cursor:
+            # Get entries from last 7 days
+            cursor.execute('''
+                SELECT COUNT(*) as entry_count,
+                       AVG(mood_score) as avg_mood,
+                       AVG(energy_level) as avg_energy
+                FROM journal_entries 
+                WHERE user_id = %s 
+                AND created_at >= CURRENT_DATE - INTERVAL '7 days'
+            ''', (user_id,))
+            
+            stats = cursor.fetchone()
+            
+            # Get top mentioned contacts
+            cursor.execute('''
+                SELECT c.name, COUNT(*) as mention_count
+                FROM journal_entries je
+                JOIN contacts c ON je.related_contact_id = c.id
+                WHERE je.user_id = %s 
+                AND je.created_at >= CURRENT_DATE - INTERVAL '7 days'
+                GROUP BY c.name
+                ORDER BY mention_count DESC
+                LIMIT 3
+            ''', (user_id,))
+            
+            top_contacts = [{'name': row['name'], 'mention_count': row['mention_count']} 
+                          for row in cursor.fetchall()]
+        
+        weekly_insights = {
+            'weekly_stats': {
+                'entry_count': stats['entry_count'] or 0,
+                'avg_mood': float(stats['avg_mood']) if stats['avg_mood'] else None,
+                'avg_energy': float(stats['avg_energy']) if stats['avg_energy'] else None
+            },
+            'top_contacts': top_contacts
+        }
+        
+        # Generate contextual weekly prompt
+        entry_count = weekly_insights['weekly_stats']['entry_count']
+        top_contacts = weekly_insights['top_contacts']
+        
+        if entry_count > 0:
+            if top_contacts:
+                contact_names = [c['name'] for c in top_contacts[:2]]
+                prompt = f"Looking back at this week, you've been thinking about {' and '.join(contact_names)}. What did these relationships teach you? Who else supported or challenged you in unexpected ways?"
+            else:
+                prompt = "This week brought new experiences and insights. Who were the people that made a difference in your journey? What conversations or moments of connection stood out?"
+        else:
+            prompt = "Welcome to your weekly reflection! Who helped you this week? Think about the people who offered support, shared ideas, or simply made you smile. What did these interactions reveal about your relationships?"
+        
+        return jsonify({
+            'success': True,
+            'prompt': prompt,
+            'weekly_insights': weekly_insights
+        })
+        
+    except Exception as e:
+        logging.error(f"Error generating weekly prompt: {e}")
+        return jsonify({
+            'success': True,
+            'prompt': 'Who helped you this week? Reflect on the relationships that supported your growth.',
+            'weekly_insights': {'weekly_stats': {}, 'top_contacts': []}
+        })
 
 def register_api_routes(app):
     """Register API routes with the Flask app"""

@@ -259,7 +259,7 @@ def get_weekly_prompt():
         weekly_insights = journal.get_weekly_insights(user_id)
         
         # Generate contextual weekly prompt
-        prompt = journal_routes._generate_weekly_prompt(weekly_insights)
+        prompt = generate_weekly_prompt(weekly_insights)
         
         return jsonify({
             "success": True,
@@ -361,7 +361,7 @@ def generate_ai_reflection(title: str, content: str, user_question: str, reflect
         Keep your response between 150-300 words and make it personal and actionable.
         """
         
-        response = self.openai_client.chat.completions.create(
+        response = openai_client.chat.completions.create(
             model="gpt-4o",  # the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
             messages=[
                 {"role": "system", "content": system_prompt},
@@ -376,7 +376,7 @@ def generate_ai_reflection(title: str, content: str, user_question: str, reflect
     except Exception as e:
         return f"Unable to generate AI reflection at this time. Please try again later. ({str(e)})"
 
-def _generate_weekly_prompt(self, weekly_insights: dict) -> str:
+def generate_weekly_prompt(weekly_insights: dict) -> str:
     """Generate contextual weekly journaling prompt"""
     stats = weekly_insights.get('weekly_stats')
     top_contacts = weekly_insights.get('top_contacts', [])

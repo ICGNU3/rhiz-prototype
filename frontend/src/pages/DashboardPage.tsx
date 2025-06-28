@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { BarChart3, Users, Target, Brain, TrendingUp, MessageSquare, Loader2, AlertCircle } from 'lucide-react';
 import { analyticsAPI, contactsAPI, goalsAPI, intelligenceAPI } from '../services/api';
 import SkeletonLoader, { StatCardSkeleton, DashboardSkeleton } from '../components/common/SkeletonLoader';
+import WeeklyJournalPrompt from '../components/journal/WeeklyJournalPrompt';
 
 interface DashboardStats {
   totalContacts: number;
