@@ -333,23 +333,37 @@ def verify_magic_link():
     token = request.args.get('token')
     
     if not token:
+        logging.error(f"Magic link verification failed: No token provided")
         return redirect('/login?error=invalid_token')
     
     db = get_db()
     
-    # Find user with valid token
+    # Log token verification attempt
+    logging.info(f"Attempting to verify magic link token (length: {len(token)})")
+    
+    # Find user with valid token and check expiration
     cursor = db.cursor()
     cursor.execute('''
-        SELECT *, magic_link_expires, NOW() as now_time FROM users 
-        WHERE magic_link_token = %s
+        SELECT * FROM users 
+        WHERE magic_link_token = %s 
+        AND magic_link_expires > NOW()
     ''', (token,))
     user = cursor.fetchone()
     
     if not user:
-        return redirect('/login?error=invalid_token')
-    
-    # Check if token is expired - Note: PostgreSQL uses tuple access by index
-    # Assuming magic_link_expires is at index position (need to verify schema)
+        # Check if token exists but is expired
+        cursor.execute('''
+            SELECT id, email, magic_link_expires FROM users 
+            WHERE magic_link_token = %s
+        ''', (token,))
+        expired_user = cursor.fetchone()
+        
+        if expired_user:
+            logging.error(f"Magic link token expired for user {expired_user['email']}")
+            return redirect('/login?error=token_expired')
+        else:
+            logging.error(f"Magic link token not found in database")
+            return redirect('/login?error=invalid_token')
     
     # Clear the token and create session
     try:
@@ -360,9 +374,11 @@ def verify_magic_link():
         ''', (token,))
         db.commit()
         
-        # Create authenticated session - user[0] should be the user ID
-        session['user_id'] = user[0]
+        # Create authenticated session - access by column name
+        session['user_id'] = user['id']
         session['authenticated'] = True
+        
+        logging.info(f"Magic link verification successful for user {user['email']}")
         
         # New user - redirect to React onboarding
         return redirect('/app/onboarding')
