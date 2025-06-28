@@ -775,8 +775,12 @@ def intelligence_chat():
         
         # Use contact intelligence for processing
         try:
-            import services.contact_intelligence as contact_intelligence_module
-            response = contact_intelligence_module.process_natural_language_query(user_id, user_message)
+            import sys
+            sys.path.append('backend/services')
+            from contact_intelligence import ContactIntelligence
+            
+            contact_intel = ContactIntelligence()
+            response = contact_intel.process_natural_language_query(user_id, user_message)
             
             # Handle string response from ContactNLP
             if isinstance(response, str):
