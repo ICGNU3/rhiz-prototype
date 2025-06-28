@@ -33,10 +33,11 @@ def health_check():
         
         # Database check
         try:
-            import sqlite3
-            conn = sqlite3.connect("db.sqlite3")
+            import psycopg2
+            conn = psycopg2.connect(os.environ.get("DATABASE_URL"))
             cursor = conn.cursor()
             cursor.execute("SELECT 1")
+            cursor.close()
             conn.close()
             checks["database"] = "healthy"
         except Exception as e:

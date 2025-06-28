@@ -5,13 +5,14 @@ Provides RESTful endpoints to support the React frontend with existing Flask bac
 
 from flask import Blueprint, request, jsonify, session, redirect, render_template
 from functools import wraps
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import os
 import json
 import logging
 from datetime import datetime, timedelta
 from dataclasses import asdict
-from backend.services.database_helpers import DatabaseHelper
+from utils.database_helpers import get_db_cursor, execute_query_one, execute_query
 from services.google_contacts_sync import GoogleContactsSync
 from services.linkedin_csv_sync import LinkedInCSVSync, TwitterCSVSync
 
@@ -76,26 +77,7 @@ def get_current_user():
         'created_at': user.get('created_at')
     })
 
-@api_bp.route('/auth/me', methods=['GET'])
-@auth_required
-def get_auth_me():
-    """Get current authenticated user for React frontend compatibility"""
-    user_id = session.get('user_id')
-    db = get_db()
-    
-    with db.cursor() as cursor:
-        cursor.execute('SELECT * FROM users WHERE id = %s', (user_id,))
-        user = cursor.fetchone()
-    
-    if not user:
-        return jsonify({'error': 'User not found'}), 404
-    
-    return jsonify({
-        'id': user[0],  # PostgreSQL returns tuples, user[0] is the id
-        'email': user[1],  # user[1] is the email
-        'subscription_tier': user[6] if len(user) > 6 else 'explorer',  # Default tier
-        'created_at': user[-2] if len(user) >= 2 else None  # created_at
-    })
+
 
 @api_bp.route('/auth/login', methods=['POST'])
 def login():
