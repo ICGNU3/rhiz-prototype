@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Target, Users, Brain, Settings, LogOut } from 'lucide-react';
+import { Home, Target, Users, Brain, Share2, Settings, LogOut } from 'lucide-react';
 
 interface NavbarProps {
   user?: { email: string; subscription_tier: string };
@@ -11,11 +11,12 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   const location = useLocation();
 
   const navItems = [
-    { path: '/dashboard', icon: Home, label: 'Home' },
-    { path: '/goals', icon: Target, label: 'Goals' },
-    { path: '/contacts', icon: Users, label: 'Contacts' },
-    { path: '/intelligence', icon: Brain, label: 'Intelligence' },
-    { path: '/settings', icon: Settings, label: 'Settings' },
+    { path: '/app/dashboard', icon: Home, label: 'Home' },
+    { path: '/app/goals', icon: Target, label: 'Goals' },
+    { path: '/app/contacts', icon: Users, label: 'Contacts' },
+    { path: '/app/network', icon: Share2, label: 'Network' },
+    { path: '/app/intelligence', icon: Brain, label: 'Intelligence' },
+    { path: '/app/settings', icon: Settings, label: 'Settings' },
   ];
 
   const isActive = (path: string) => location.pathname === path;

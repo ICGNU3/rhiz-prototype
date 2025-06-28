@@ -11,6 +11,7 @@ import TrustPage from './pages/TrustPage';
 import CrmPage from './pages/CrmPage';
 import Settings from './pages/Settings';
 import OnboardingPage from './pages/OnboardingPage';
+import NetworkPage from './pages/NetworkPage';
 import Login from './components/auth/Login';
 
 // Create a query client
@@ -52,6 +53,7 @@ function AppContent() {
             <Route path="/app/goals" element={<GoalsPage />} />
             <Route path="/app/contacts" element={<ContactsPage />} />
             <Route path="/app/intelligence" element={<IntelligencePage />} />
+            <Route path="/app/network" element={<NetworkPage />} />
             <Route path="/app/trust" element={<TrustPage />} />
             <Route path="/app/crm" element={<CrmPage />} />
             <Route path="/app/settings" element={<Settings />} />

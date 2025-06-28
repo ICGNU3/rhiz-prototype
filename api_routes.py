@@ -792,6 +792,49 @@ def get_network_graph():
         logging.error(f"Error getting network graph: {e}")
         return jsonify({'error': 'Failed to load network data'}), 500
 
+@api_bp.route('/trust/metrics/<contact_id>', methods=['GET'])
+@auth_required
+def get_trust_metrics(contact_id):
+    """Get trust metrics for a specific contact over time"""
+    user_id = session.get('user_id')
+    time_range = request.args.get('range', '30d')  # 7d, 30d, 90d
+    
+    try:
+        # Calculate days based on range
+        days_map = {'7d': 7, '30d': 30, '90d': 90}
+        days = days_map.get(time_range, 30)
+        
+        # Generate mock metrics for demonstration
+        # In production, this would query trust_signals and interaction_history tables
+        from datetime import datetime, timedelta
+        import random
+        
+        metrics = []
+        timestamps = []
+        
+        for i in range(10):  # 10 data points
+            date = datetime.now() - timedelta(days=days - (i * days // 10))
+            timestamps.append(date.isoformat())
+            
+            # Generate realistic trust metrics
+            base_trust = 60 + random.uniform(-20, 30)
+            metrics.append({
+                'trust_score': max(0, min(100, base_trust)),
+                'response_time': random.uniform(1, 24),  # hours
+                'interaction_frequency': random.uniform(1, 10),  # per week
+                'reciprocity_score': random.uniform(40, 90)
+            })
+        
+        return jsonify({
+            'contact_id': contact_id,
+            'metrics': metrics,
+            'timestamps': timestamps
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting trust metrics: {e}")
+        return jsonify({'error': 'Failed to load trust metrics'}), 500
+
 # Health check endpoint
 @api_bp.route('/health', methods=['GET'])
 def health_check():
