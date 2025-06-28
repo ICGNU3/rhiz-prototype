@@ -83,6 +83,17 @@ The application follows an enhanced Flask MVC architecture with AI-powered conta
 
 ## Recent Changes
 
+- **June 28, 2025**: ONBOARDING FLOW RELATIONSHIP-FOCUSED LANGUAGE UPDATE completed
+  - **INTENT OPTIONS REWRITE**: Updated all six intent categories to emphasize relationship depth over transactional connections (e.g., "Deepen relationships with aligned investors who share your vision" vs "Connect with investors and raise capital")
+  - **WELCOME MESSAGE TRANSFORMATION**: Changed opening message from "relationship intelligence platform setup" to "strengthen the relationships that matter most to what you're building"
+  - **VISION-ORIENTED LANGUAGE**: Replaced "goal" terminology with "vision" throughout onboarding flow to emphasize purpose-driven relationship building
+  - **CONTACT IMPORT REFRAMING**: Updated contact import step from "Connect Your Network" to "Bring Your Relationships Into Rhiz" with emphasis on identifying aligned people
+  - **COMPLETION MESSAGING**: Enhanced completion step to focus on "relationship intelligence" and finding people "aligned with what you're building"
+  - **PROGRESS INDICATORS**: Updated step titles from "Network" to "Relationships" and header from "Getting Started" to "Building Your Relationship Intelligence"
+  - **EMOTIONALLY INTELLIGENT COPY**: All language now emphasizes meaningful connections, shared vision, and mutual value rather than transactional networking
+  - **FORWARD-LOOKING TONE**: Completion flow focuses on discovering relationships through existing connections and tracking meaningful progress
+  - **RHIZ PHILOSOPHY ALIGNMENT**: Complete language overhaul ensures onboarding reflects Rhiz's relational philosophy of strengthening relationships over networking tactics
+
 - **June 28, 2025**: REACT FRONTEND NAVIGATION AUDIT AND ROUTING FIXES completed
   - **COMPREHENSIVE NAVIGATION AUDIT**: Completed systematic analysis of all React Router navigation elements across entire frontend codebase
   - **CRITICAL ROUTING FIXES**: Resolved 3 broken navigation issues including Login component redirect path, missing signup route reference, and non-functional dashboard quick action buttons
