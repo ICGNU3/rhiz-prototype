@@ -762,11 +762,11 @@ def intelligence_chat():
         
         user_id = session.get('user_id')
         
-        # Import the ContactNLP class for processing
+        # Use contact intelligence for processing
         try:
-            from contact_intelligence import ContactNLP
-            nlp_processor = ContactNLP(user_id)
-            response = nlp_processor.process_command(user_message)
+            from services.contact_intelligence import contact_intelligence
+            contact_intelligence.db = get_db()
+            response = contact_intelligence.process_natural_language_query(user_id, user_message)
             
             # Handle string response from ContactNLP
             if isinstance(response, str):
