@@ -136,10 +136,12 @@ def register():
     if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
         return jsonify({'error': 'Invalid email format'}), 400
     
-    db = get_db()
-    
     # Check if user already exists
-    existing_user = db.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+    existing_user = DatabaseHelper.execute_query(
+        'SELECT id, email FROM users WHERE email = %s',
+        (email,),
+        fetch_one=True
+    )
     if existing_user:
         return jsonify({'error': 'User already exists with this email'}), 409
     
@@ -148,11 +150,10 @@ def register():
     user_id = str(uuid.uuid4())
     
     try:
-        db.execute('''
+        DatabaseHelper.execute_insert('''
             INSERT INTO users (id, email, subscription_tier, created_at)
-            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
         ''', (user_id, email, 'explorer'))
-        db.commit()
         
         # Create session
         session['user_id'] = user_id
@@ -160,14 +161,12 @@ def register():
         
         # Create starter goal to help with onboarding
         goal_id = str(uuid.uuid4())
-        db.execute('''
-            INSERT INTO goals (id, user_id, title, description)
-            VALUES (?, ?, ?, ?)
+        DatabaseHelper.execute_insert('''
+            INSERT INTO goals (id, user_id, title, description, created_at)
+            VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
         ''', (goal_id, user_id, 
               'Get started with Rhiz', 
               'Add your first contacts and start building your relationship intelligence network'))
-        
-        db.commit()
         
         return jsonify({
             'success': True,
@@ -2148,7 +2147,17 @@ def register_core_routes(app):
             </body></html>
             ''', 500
 
-    # React routes removed - handled by services/react_integration.py to avoid conflicts
+    @app.route('/app')
+    @app.route('/app/')
+    @app.route('/app/<path:route>')
+    def serve_react_app(route=""):
+        """Serve React frontend for app routes"""
+        # Check if user is authenticated
+        if 'user_id' not in session:
+            return redirect('/login')
+        
+        # Serve the React app with proper authentication
+        return render_template('app.html')
 # Onboarding API endpoints
 @api_bp.route('/onboarding/welcome', methods=['POST'])
 @auth_required
