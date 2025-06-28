@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { BarChart3, Users, Target, Brain, TrendingUp, MessageSquare, Loader2, AlertCircle } from 'lucide-react';
 import { analyticsAPI, contactsAPI, goalsAPI, intelligenceAPI } from '../services/api';
