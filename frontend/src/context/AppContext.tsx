@@ -155,6 +155,7 @@ const AppContext = createContext<{
     // Auth actions
     setUser: (user: User | null) => void;
     setLoading: (loading: boolean) => void;
+    logout: () => void;
     
     // Contact actions
     setContacts: (contacts: Contact[]) => void;
@@ -187,6 +188,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Auth actions
     setUser: (user: User | null) => dispatch({ type: 'SET_USER', payload: user }),
     setLoading: (loading: boolean) => dispatch({ type: 'SET_LOADING', payload: loading }),
+    logout: async () => {
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+      } catch (error) {
+        console.error('Logout error:', error);
+      } finally {
+        dispatch({ type: 'SET_USER', payload: null });
+      }
+    },
     
     // Contact actions
     setContacts: (contacts: Contact[]) => dispatch({ type: 'SET_CONTACTS', payload: contacts }),
@@ -291,11 +304,12 @@ export const useApp = () => {
 
 // Selector hooks for specific state slices
 export const useAuth = () => {
-  const { state } = useApp();
+  const { state, actions } = useApp();
   return {
     user: state.user,
     isAuthenticated: state.isAuthenticated,
-    isLoading: state.isLoading
+    isLoading: state.isLoading,
+    logout: actions.logout
   };
 };
 
