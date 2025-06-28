@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { BarChart3, Users, Target, Brain, TrendingUp, MessageSquare, Loader2, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { analyticsAPI, contactsAPI, goalsAPI, intelligenceAPI } from '../services/api';
 import SkeletonLoader, { StatCardSkeleton, DashboardSkeleton } from '../components/common/SkeletonLoader';
 import WeeklyJournalPrompt from '../components/journal/WeeklyJournalPrompt';
@@ -23,6 +24,7 @@ interface RecentActivity {
 }
 
 const DashboardPage: React.FC = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     totalContacts: 0,
     activeGoals: 0,
@@ -186,22 +188,34 @@ const DashboardPage: React.FC = () => {
             <h3 className="text-xl font-semibold text-white mb-6">Quick Actions</h3>
             
             <div className="grid grid-cols-2 gap-4">
-              <button className="glass-button p-4 rounded-lg text-blue-400 border border-blue-400/30 hover:bg-blue-400/10 transition-all duration-300">
+              <button 
+                onClick={() => navigate('/app/contacts')}
+                className="glass-button p-4 rounded-lg text-blue-400 border border-blue-400/30 hover:bg-blue-400/10 transition-all duration-300"
+              >
                 <Users className="w-6 h-6 mx-auto mb-2" />
                 <span className="text-sm">Add Contact</span>
               </button>
               
-              <button className="glass-button p-4 rounded-lg text-purple-400 border border-purple-400/30 hover:bg-purple-400/10 transition-all duration-300">
+              <button 
+                onClick={() => navigate('/app/goals')}
+                className="glass-button p-4 rounded-lg text-purple-400 border border-purple-400/30 hover:bg-purple-400/10 transition-all duration-300"
+              >
                 <Target className="w-6 h-6 mx-auto mb-2" />
                 <span className="text-sm">Create Goal</span>
               </button>
               
-              <button className="glass-button p-4 rounded-lg text-green-400 border border-green-400/30 hover:bg-green-400/10 transition-all duration-300">
+              <button 
+                onClick={() => navigate('/app/intelligence')}
+                className="glass-button p-4 rounded-lg text-green-400 border border-green-400/30 hover:bg-green-400/10 transition-all duration-300"
+              >
                 <Brain className="w-6 h-6 mx-auto mb-2" />
                 <span className="text-sm">AI Insights</span>
               </button>
               
-              <button className="glass-button p-4 rounded-lg text-yellow-400 border border-yellow-400/30 hover:bg-yellow-400/10 transition-all duration-300">
+              <button 
+                onClick={() => navigate('/app/intelligence')}
+                className="glass-button p-4 rounded-lg text-yellow-400 border border-yellow-400/30 hover:bg-yellow-400/10 transition-all duration-300"
+              >
                 <MessageSquare className="w-6 h-6 mx-auto mb-2" />
                 <span className="text-sm">Send Message</span>
               </button>
