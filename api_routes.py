@@ -776,9 +776,7 @@ def intelligence_chat():
         
         # Use contact intelligence for processing
         try:
-            import sys
-            sys.path.append('backend/services')
-            from contact_intelligence import ContactIntelligence
+            from services.contact_intelligence import ContactIntelligence
             
             contact_intel = ContactIntelligence()
             response = contact_intel.process_natural_language_query(user_id, user_message)
@@ -1347,12 +1345,10 @@ def get_trust_digest():
     user_id = session.get('user_id')
     
     try:
-        import sys
-        sys.path.append('backend/services')
-        from enhanced_trust_insights import EnhancedTrustInsights
+        from services.trust_insights import TrustInsights
         
-        trust_engine = EnhancedTrustInsights()
-        digest = trust_engine.get_trust_digest_api(user_id)
+        trust_engine = TrustInsights()
+        digest = trust_engine.get_trust_insights(user_id)
         return jsonify(digest)
     except Exception as e:
         return jsonify({'error': 'Trust digest temporarily unavailable'}), 500
@@ -2078,9 +2074,7 @@ def settings_integrations():
     user_id = session.get('user_id')
     
     try:
-        import sys
-        sys.path.append('backend/services')
-        from social_integrations import SocialIntegrations
+        from services.social_integrations import SocialIntegrations
         
         social_service = SocialIntegrations()
         integrations = social_service.get_integration_status(user_id)
