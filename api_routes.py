@@ -1006,7 +1006,9 @@ def import_csv_contacts():
 def process_csv_file(user_id, file_content, source):
     """Process CSV file and import contacts"""
     import csv
+    import uuid
     from io import StringIO
+    from datetime import datetime
     
     contacts = []
     
@@ -1098,20 +1100,38 @@ def process_csv_file(user_id, file_content, source):
             else:
                 full_name = contact_data.get('email', 'Unknown Contact')
             
+            # Set warmth based on source
+            if source == 'linkedin':
+                warmth_status = 3  # Warm
+                warmth_label = 'Warm'
+            else:
+                warmth_status = 1  # Cold  
+                warmth_label = 'Cold'
+            
+            # Generate unique contact ID
+            contact_id = str(uuid.uuid4())
+            
+            # Create import notes
+            import_notes = f"Imported from {source}"
+            if contact_data.get('connection_date'):
+                import_notes += f" on {contact_data.get('connection_date')}"
+            
             # Insert into database
             cursor = db.execute('''
-                INSERT INTO contacts (user_id, name, email, phone, company, title, 
-                                    notes, warmth, source, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO contacts (id, user_id, name, email, phone, company, title, 
+                                    notes, warmth_status, warmth_label, source, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
+                contact_id,
                 user_id,
                 full_name,
                 contact_data.get('email'),
                 contact_data.get('phone'),
                 contact_data.get('company'),
                 contact_data.get('title'),
-                contact_data.get('notes', f'Imported from {source}'),
-                'cold',  # Default warmth
+                import_notes,
+                warmth_status,
+                warmth_label,
                 source,
                 datetime.now().isoformat()
             ))
