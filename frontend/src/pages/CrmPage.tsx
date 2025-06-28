@@ -1,403 +1,310 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, CheckSquare, FileText, Paperclip, Plus, Clock, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { BarChart3, Users, Calendar, TrendingUp, Loader2, AlertCircle, Filter, Search, ChevronRight } from 'lucide-react';
+import { crmAPI } from '../services/api';
 
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  due_date: string;
-  priority: 'high' | 'medium' | 'low';
-  completed: boolean;
-  contact_id?: string;
-  contact_name?: string;
+interface PipelineStage {
+  pipeline_stage: string;
+  count: number;
 }
 
-interface Reminder {
+interface Interaction {
   id: string;
-  title: string;
-  description: string;
-  reminder_time: string;
-  contact_id?: string;
-  contact_name?: string;
+  contact_name: string;
+  interaction_type: string;
+  status: string;
+  timestamp: string;
+  subject?: string;
+  summary?: string;
 }
 
-interface JournalEntry {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  contact_id?: string;
-  contact_name?: string;
+interface CrmStatistics {
+  total_contacts: number;
+  warm_contacts: number;
+  active_contacts: number;
 }
 
 const CrmPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('tasks');
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [filterStage, setFilterStage] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    // Load tasks
-    fetch('/api/crm/tasks')
-      .then(res => res.json())
-      .then(data => setTasks(data.tasks || []))
-      .catch(err => console.error('Failed to load tasks:', err));
+  // Fetch CRM data with React Query
+  const { 
+    data: crmData, 
+    isLoading: crmLoading, 
+    error: crmError, 
+    refetch: refetchCrm 
+  } = useQuery({
+    queryKey: ['crm'],
+    queryFn: async () => {
+      const response = await crmAPI.getAll();
+      return response.data;
+    },
+    retry: 2,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
-    // Load reminders
-    fetch('/api/crm/reminders')
-      .then(res => res.json())
-      .then(data => setReminders(data.reminders || []))
-      .catch(err => console.error('Failed to load reminders:', err));
+  // Update contact stage mutation
+  const updateStageMutation = useMutation({
+    mutationFn: ({ contactId, stage }: { contactId: string; stage: string }) => 
+      crmAPI.updateContactStage(contactId, stage),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crm'] });
+    },
+    onError: (error) => {
+      console.error('Failed to update contact stage:', error);
+    },
+  });
 
-    // Load journal entries
-    fetch('/api/crm/journal')
-      .then(res => res.json())
-      .then(data => setJournalEntries(data.entries || []))
-      .catch(err => console.error('Failed to load journal entries:', err));
-  }, []);
+  const pipeline = crmData?.pipeline || [];
+  const recentInteractions = crmData?.recent_interactions || [];
+  const statistics = crmData?.statistics || {};
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'text-danger';
-      case 'medium': return 'text-warning';
-      case 'low': return 'text-success';
-      default: return 'text-secondary';
+  const getStageColor = (stage: string) => {
+    switch (stage) {
+      case 'hot': return 'bg-red-500/20 text-red-400 border-red-400/30';
+      case 'warm': return 'bg-yellow-500/20 text-yellow-400 border-yellow-400/30';
+      case 'cold': return 'bg-blue-500/20 text-blue-400 border-blue-400/30';
+      case 'dormant': return 'bg-gray-500/20 text-gray-400 border-gray-400/30';
+      default: return 'bg-gray-500/20 text-gray-400 border-gray-400/30';
     }
   };
 
-  const TasksTab = () => (
-    <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h4 className="text-white">Tasks & Follow-ups</h4>
-        <button 
-          className="btn btn-primary"
-          onClick={() => setShowCreateModal(true)}
-        >
-          <Plus className="w-4 h-4 me-2" />
-          New Task
-        </button>
+  const getStageIcon = (stage: string) => {
+    switch (stage) {
+      case 'hot': return '🔥';
+      case 'warm': return '☀️';
+      case 'cold': return '❄️';
+      case 'dormant': return '😴';
+      default: return '📊';
+    }
+  };
+
+  const getInteractionIcon = (type: string) => {
+    switch (type) {
+      case 'email': return '📧';
+      case 'call': return '📞';
+      case 'meeting': return '🤝';
+      case 'linkedin': return '💼';
+      default: return '💬';
+    }
+  };
+
+  // Loading state
+  if (crmLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-800 flex items-center justify-center">
+        <div className="glass-card p-8 flex items-center space-x-4">
+          <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
+          <span className="text-white text-lg">Loading CRM data...</span>
+        </div>
       </div>
+    );
+  }
 
-      {tasks.length > 0 ? (
-        <div className="space-y-3">
-          {tasks.map((task) => (
-            <div key={task.id} className="glass-card p-4">
-              <div className="d-flex justify-content-between align-items-start mb-3">
-                <div className="d-flex align-items-center">
-                  <input 
-                    type="checkbox" 
-                    checked={task.completed}
-                    className="form-check-input me-3"
-                    onChange={() => {
-                      // Toggle task completion
-                      setTasks(tasks.map(t => 
-                        t.id === task.id ? {...t, completed: !t.completed} : t
-                      ));
-                    }}
-                  />
-                  <div>
-                    <h6 className={`mb-1 ${task.completed ? 'text-decoration-line-through text-muted' : 'text-white'}`}>
-                      {task.title}
-                    </h6>
-                    {task.contact_name && (
-                      <small className="text-info">
-                        <User className="w-3 h-3 me-1" />
-                        {task.contact_name}
-                      </small>
-                    )}
-                  </div>
-                </div>
-                <div className="d-flex align-items-center">
-                  <span className={`badge me-2 ${getPriorityColor(task.priority)}`}>
-                    {task.priority.toUpperCase()}
-                  </span>
-                  <small className="text-muted">
-                    <Calendar className="w-3 h-3 me-1" />
-                    {new Date(task.due_date).toLocaleDateString()}
-                  </small>
-                </div>
-              </div>
-              
-              {task.description && (
-                <p className="text-gray-300 text-sm mb-0">{task.description}</p>
-              )}
-            </div>
-          ))}
+  // Error state
+  if (crmError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-800 flex items-center justify-center">
+        <div className="glass-card p-8 flex flex-col items-center space-y-4">
+          <AlertCircle className="w-12 h-12 text-red-400" />
+          <div className="text-center">
+            <h2 className="text-white text-xl font-semibold mb-2">Failed to load CRM data</h2>
+            <p className="text-gray-400 mb-4">Unable to fetch your CRM information</p>
+            <button 
+              onClick={() => refetchCrm()}
+              className="glass-button px-6 py-2 rounded-lg text-blue-400 border border-blue-400/30 hover:bg-blue-400/10"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
-      ) : (
-        <div className="text-center py-8 text-gray-400">
-          <CheckSquare className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p>No tasks yet</p>
-          <button 
-            className="btn btn-outline-primary"
-            onClick={() => setShowCreateModal(true)}
-          >
-            Create your first task
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const RemindersTab = () => (
-    <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h4 className="text-white">Reminders</h4>
-        <button 
-          className="btn btn-primary"
-          onClick={() => setShowCreateModal(true)}
-        >
-          <Plus className="w-4 h-4 me-2" />
-          New Reminder
-        </button>
       </div>
-
-      {reminders.length > 0 ? (
-        <div className="space-y-3">
-          {reminders.map((reminder) => (
-            <div key={reminder.id} className="glass-card p-4">
-              <div className="d-flex justify-content-between align-items-start mb-2">
-                <h6 className="text-white mb-1">{reminder.title}</h6>
-                <small className="text-muted">
-                  <Clock className="w-3 h-3 me-1" />
-                  {new Date(reminder.reminder_time).toLocaleString()}
-                </small>
-              </div>
-              
-              {reminder.contact_name && (
-                <small className="text-info d-block mb-2">
-                  <User className="w-3 h-3 me-1" />
-                  {reminder.contact_name}
-                </small>
-              )}
-              
-              {reminder.description && (
-                <p className="text-gray-300 text-sm mb-0">{reminder.description}</p>
-              )}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-8 text-gray-400">
-          <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p>No reminders set</p>
-          <button 
-            className="btn btn-outline-primary"
-            onClick={() => setShowCreateModal(true)}
-          >
-            Create your first reminder
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  const JournalTab = () => (
-    <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h4 className="text-white">Journal Entries</h4>
-        <button 
-          className="btn btn-primary"
-          onClick={() => setShowCreateModal(true)}
-        >
-          <Plus className="w-4 h-4 me-2" />
-          New Entry
-        </button>
-      </div>
-
-      {journalEntries.length > 0 ? (
-        <div className="space-y-4">
-          {journalEntries.map((entry) => (
-            <div key={entry.id} className="glass-card p-4">
-              <div className="d-flex justify-content-between align-items-start mb-3">
-                <h6 className="text-white">{entry.title}</h6>
-                <small className="text-muted">
-                  {new Date(entry.created_at).toLocaleDateString()}
-                </small>
-              </div>
-              
-              {entry.contact_name && (
-                <small className="text-info d-block mb-2">
-                  <User className="w-3 h-3 me-1" />
-                  {entry.contact_name}
-                </small>
-              )}
-              
-              <p className="text-gray-300 text-sm mb-0">{entry.content}</p>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-8 text-gray-400">
-          <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p>No journal entries yet</p>
-          <button 
-            className="btn btn-outline-primary"
-            onClick={() => setShowCreateModal(true)}
-          >
-            Write your first entry
-          </button>
-        </div>
-      )}
-    </div>
-  );
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-800">
       <div className="container mx-auto px-6 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            CRM Tools
-          </h1>
-          <p className="text-gray-300 mt-2">
-            Manage tasks, reminders, and relationship notes
-          </p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+              CRM Pipeline
+            </h1>
+            <p className="text-gray-300 mt-2">
+              Track contacts through your relationship pipeline
+            </p>
+          </div>
+          <button 
+            onClick={() => refetchCrm()}
+            className="glass-button px-6 py-3 rounded-lg text-purple-400 border border-purple-400/30 hover:bg-purple-400/10 flex items-center"
+          >
+            <BarChart3 className="w-5 h-5 mr-2" />
+            Refresh Data
+          </button>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="glass-card p-2 mb-6">
-          <nav className="nav nav-pills">
-            <button 
-              className={`nav-link ${activeTab === 'tasks' ? 'active bg-primary' : 'text-gray-300'}`}
-              onClick={() => setActiveTab('tasks')}
-            >
-              <CheckSquare className="w-4 h-4 me-2" />
-              Tasks
-            </button>
-            <button 
-              className={`nav-link ${activeTab === 'reminders' ? 'active bg-primary' : 'text-gray-300'}`}
-              onClick={() => setActiveTab('reminders')}
-            >
-              <Clock className="w-4 h-4 me-2" />
-              Reminders
-            </button>
-            <button 
-              className={`nav-link ${activeTab === 'journal' ? 'active bg-primary' : 'text-gray-300'}`}
-              onClick={() => setActiveTab('journal')}
-            >
-              <FileText className="w-4 h-4 me-2" />
-              Journal
-            </button>
-          </nav>
+        {/* Statistics Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="glass-card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Users className="w-8 h-8 text-blue-400" />
+              <span className="text-2xl font-bold text-blue-400">
+                {statistics.total_contacts || 0}
+              </span>
+            </div>
+            <h3 className="text-white font-semibold mb-1">Total Contacts</h3>
+            <p className="text-gray-400 text-sm">All contacts in pipeline</p>
+          </div>
+
+          <div className="glass-card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <TrendingUp className="w-8 h-8 text-green-400" />
+              <span className="text-2xl font-bold text-green-400">
+                {statistics.warm_contacts || 0}
+              </span>
+            </div>
+            <h3 className="text-white font-semibold mb-1">Warm Contacts</h3>
+            <p className="text-gray-400 text-sm">High-value relationships</p>
+          </div>
+
+          <div className="glass-card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <Calendar className="w-8 h-8 text-yellow-400" />
+              <span className="text-2xl font-bold text-yellow-400">
+                {statistics.active_contacts || 0}
+              </span>
+            </div>
+            <h3 className="text-white font-semibold mb-1">Active This Month</h3>
+            <p className="text-gray-400 text-sm">Recently engaged contacts</p>
+          </div>
         </div>
 
-        {/* Tab Content */}
-        <div className="glass-card p-6">
-          {activeTab === 'tasks' && <TasksTab />}
-          {activeTab === 'reminders' && <RemindersTab />}
-          {activeTab === 'journal' && <JournalTab />}
-        </div>
-
-        {/* Create Modal */}
-        {showCreateModal && (
-          <div className="fixed-top d-flex align-items-center justify-content-center h-100" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
-            <div className="glass-card p-6 m-4" style={{maxWidth: '500px', width: '100%'}}>
-              <h5 className="text-white mb-4">
-                Create {activeTab === 'tasks' ? 'Task' : activeTab === 'reminders' ? 'Reminder' : 'Journal Entry'}
-              </h5>
-              
-              <form className="space-y-4">
-                <div className="mb-3">
-                  <label className="form-label text-gray-300">Title</label>
-                  <input 
-                    type="text" 
-                    className="form-control bg-gray-800/50 border-gray-600 text-white"
-                    placeholder="Enter title..."
-                  />
-                </div>
-                
-                <div className="mb-3">
-                  <label className="form-label text-gray-300">Description</label>
-                  <textarea 
-                    className="form-control bg-gray-800/50 border-gray-600 text-white"
-                    rows={3}
-                    placeholder="Enter description..."
-                  />
-                </div>
-                
-                {activeTab === 'tasks' && (
-                  <>
-                    <div className="mb-3">
-                      <label className="form-label text-gray-300">Due Date</label>
-                      <input 
-                        type="date" 
-                        className="form-control bg-gray-800/50 border-gray-600 text-white"
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Pipeline Stages */}
+          <div className="glass-card p-6">
+            <h3 className="text-white font-semibold mb-6">Pipeline Distribution</h3>
+            <div className="space-y-4">
+              {pipeline.length > 0 ? (
+                pipeline.map((stage: PipelineStage, index: number) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-2xl">{getStageIcon(stage.pipeline_stage)}</span>
+                        <span className="text-white capitalize font-medium">
+                          {stage.pipeline_stage}
+                        </span>
+                      </div>
+                      <span className="text-gray-400 font-semibold">
+                        {stage.count}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full ${
+                          stage.pipeline_stage === 'hot' ? 'bg-red-400' :
+                          stage.pipeline_stage === 'warm' ? 'bg-yellow-400' :
+                          stage.pipeline_stage === 'cold' ? 'bg-blue-400' :
+                          'bg-gray-400'
+                        }`}
+                        style={{ 
+                          width: `${Math.max(10, (stage.count / Math.max(...pipeline.map(p => p.count))) * 100)}%` 
+                        }}
                       />
                     </div>
-                    <div className="mb-3">
-                      <label className="form-label text-gray-300">Priority</label>
-                      <select className="form-select bg-gray-800/50 border-gray-600 text-white">
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                      </select>
-                    </div>
-                  </>
-                )}
-                
-                {activeTab === 'reminders' && (
-                  <div className="mb-3">
-                    <label className="form-label text-gray-300">Reminder Time</label>
-                    <input 
-                      type="datetime-local" 
-                      className="form-control bg-gray-800/50 border-gray-600 text-white"
-                    />
                   </div>
-                )}
-                
-                <div className="d-flex gap-3 pt-3">
-                  <button 
-                    type="button"
-                    className="btn btn-outline-secondary flex-1"
-                    onClick={() => setShowCreateModal(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit"
-                    className="btn btn-primary flex-1"
-                  >
-                    Create
-                  </button>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <BarChart3 className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No pipeline data available</p>
                 </div>
-              </form>
+              )}
             </div>
           </div>
-        )}
-      </div>
 
-      <style>{`
-        .glass-card {
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(10px);
-          border-radius: 16px;
-        }
-        
-        .space-y-3 > * + * {
-          margin-top: 0.75rem;
-        }
-        
-        .space-y-4 > * + * {
-          margin-top: 1rem;
-        }
-        
-        .nav-link {
-          border-radius: 8px;
-          padding: 0.5rem 1rem;
-          margin: 0 0.25rem;
-          display: flex;
-          align-items: center;
-          border: none;
-          background: none;
-        }
-        
-        .nav-link:hover {
-          background: rgba(255, 255, 255, 0.1);
-        }
-      `}</style>
+          {/* Recent Interactions */}
+          <div className="glass-card p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-white font-semibold">Recent Interactions</h3>
+              <div className="flex items-center space-x-2">
+                <Search className="w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search interactions..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-gray-800/50 border border-gray-600 rounded px-3 py-1 text-white text-sm placeholder-gray-400 focus:outline-none focus:border-blue-400"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {recentInteractions.length > 0 ? (
+                recentInteractions
+                  .filter((interaction: Interaction) => 
+                    !searchQuery || 
+                    interaction.contact_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    interaction.interaction_type.toLowerCase().includes(searchQuery.toLowerCase())
+                  )
+                  .map((interaction: Interaction, index: number) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg hover:bg-gray-800/50 transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-lg">
+                          {getInteractionIcon(interaction.interaction_type)}
+                        </span>
+                        <div>
+                          <h5 className="text-white font-medium text-sm">
+                            {interaction.contact_name}
+                          </h5>
+                          <p className="text-gray-400 text-xs">
+                            {interaction.interaction_type} • {interaction.status}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-gray-400 text-xs">
+                          {new Date(interaction.timestamp).toLocaleDateString()}
+                        </p>
+                        <ChevronRight className="w-4 h-4 text-gray-500 ml-auto" />
+                      </div>
+                    </div>
+                  ))
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No recent interactions</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Pipeline Actions */}
+        <div className="mt-8 glass-card p-6">
+          <h3 className="text-white font-semibold mb-4">Quick Actions</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button className="p-4 bg-blue-500/10 border border-blue-400/30 rounded-lg text-blue-400 hover:bg-blue-500/20 transition-colors">
+              <Users className="w-6 h-6 mx-auto mb-2" />
+              <span className="text-sm">Add Contact</span>
+            </button>
+            <button className="p-4 bg-green-500/10 border border-green-400/30 rounded-lg text-green-400 hover:bg-green-500/20 transition-colors">
+              <Calendar className="w-6 h-6 mx-auto mb-2" />
+              <span className="text-sm">Schedule Follow-up</span>
+            </button>
+            <button className="p-4 bg-purple-500/10 border border-purple-400/30 rounded-lg text-purple-400 hover:bg-purple-500/20 transition-colors">
+              <BarChart3 className="w-6 h-6 mx-auto mb-2" />
+              <span className="text-sm">View Analytics</span>
+            </button>
+            <button className="p-4 bg-yellow-500/10 border border-yellow-400/30 rounded-lg text-yellow-400 hover:bg-yellow-500/20 transition-colors">
+              <TrendingUp className="w-6 h-6 mx-auto mb-2" />
+              <span className="text-sm">Pipeline Report</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

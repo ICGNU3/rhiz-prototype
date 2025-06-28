@@ -123,7 +123,7 @@ except Exception as e:
     logging.error(f"Failed to initialize database: {e}")
 
 # Import routes after app creation
-from routes import *
+from backend.routes import *
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

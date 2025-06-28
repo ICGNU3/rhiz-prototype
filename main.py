@@ -4,8 +4,7 @@ import os
 import logging
 from datetime import datetime
 from flask import request, session, redirect
-from api_routes import register_api_routes
-from api_routes_mobile import register_mobile_api_routes
+from backend.routes.api_routes import register_api_routes
 
 # Register API routes for React frontend
 register_api_routes(app)

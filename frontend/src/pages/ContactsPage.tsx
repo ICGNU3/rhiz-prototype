@@ -1,319 +1,265 @@
-/**
- * Enhanced Contacts Page with import functionality, filtering, and trust insights
- */
-
-import React, { useState, useEffect } from 'react';
-import { useContacts } from '../context/AppContext';
-import { contactsApi } from '../services/api/contactsApi';
-// import { UnifiedContactImport } from '../components/contacts/UnifiedContactImport';
-// import { UnifiedTrustDashboard } from '../components/trust/UnifiedTrustDashboard';
-import type { Contact, ContactFilters } from '../types';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Users, Search, Filter, Plus, Mail, Phone, Building, MapPin, Calendar, Loader2, AlertCircle, Edit, Trash2 } from 'lucide-react';
+import { contactsAPI, Contact } from '../services/api';
 
 const ContactsPage: React.FC = () => {
-  const { contacts, selectedContact, filters, actions } = useContacts();
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'list' | 'cards' | 'pipeline'>('cards');
-  const [sortBy, setSortBy] = useState<'name' | 'company' | 'last_contact' | 'trust_score'>('name');
-  const [filterWarmth, setFilterWarmth] = useState<string[]>([]);
+  const [filterWarmth, setFilterWarmth] = useState<number | null>(null);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    loadContacts();
-  }, [filters]);
-
-  const loadContacts = async () => {
-    setIsLoading(true);
-    try {
-      const result = await contactsApi.getContacts(filters);
-      actions.setContacts(result.data || []);
-    } catch (error) {
-      console.error('Failed to load contacts:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleImportComplete = (imported: number, source: string) => {
-    setShowImportModal(false);
-    loadContacts(); // Refresh contacts after import
-    // Show success message
-    console.log(`Successfully imported ${imported} contacts from ${source}`);
-  };
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    actions.setFilters({ ...filters, search: query });
-  };
-
-  const handleWarmthFilter = (warmth: string) => {
-    const newWarmthFilter = filterWarmth.includes(warmth)
-      ? filterWarmth.filter(w => w !== warmth)
-      : [...filterWarmth, warmth];
-    setFilterWarmth(newWarmthFilter);
-    actions.setFilters({ ...filters, warmth: newWarmthFilter });
-  };
-
-  const getWarmthColor = (warmth: string) => {
-    switch (warmth) {
-      case 'cold': return 'text-gray-400 bg-gray-500';
-      case 'aware': return 'text-blue-400 bg-blue-500';
-      case 'warm': return 'text-orange-400 bg-orange-500';
-      case 'active': return 'text-green-400 bg-green-500';
-      case 'contributor': return 'text-purple-400 bg-purple-500';
-      default: return 'text-gray-400 bg-gray-500';
-    }
-  };
-
-  const filteredContacts = contacts.filter(contact => {
-    const matchesSearch = !searchQuery || 
-      contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.email?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesWarmth = filterWarmth.length === 0 || 
-      filterWarmth.includes(contact.warmth);
-
-    return matchesSearch && matchesWarmth;
+  // Fetch contacts with React Query
+  const { 
+    data: contacts = [], 
+    isLoading: contactsLoading, 
+    error: contactsError, 
+    refetch: refetchContacts 
+  } = useQuery({
+    queryKey: ['contacts', { search: searchQuery, warmth: filterWarmth }],
+    queryFn: async () => {
+      const filters: any = {};
+      if (searchQuery) filters.search = searchQuery;
+      if (filterWarmth !== null) filters.warmth = filterWarmth;
+      
+      const response = await contactsAPI.getAll(filters);
+      return response.data || [];
+    },
+    retry: 2,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  const sortedContacts = [...filteredContacts].sort((a, b) => {
-    switch (sortBy) {
-      case 'name': return a.name.localeCompare(b.name);
-      case 'company': return (a.company || '').localeCompare(b.company || '');
-      case 'last_contact': return new Date(b.last_contact || '').getTime() - new Date(a.last_contact || '').getTime();
-      case 'trust_score': return (b.trust_score || 0) - (a.trust_score || 0);
-      default: return 0;
-    }
+  // Create contact mutation
+  const createContactMutation = useMutation({
+    mutationFn: contactsAPI.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      setShowCreateModal(false);
+    },
+    onError: (error) => {
+      console.error('Failed to create contact:', error);
+    },
   });
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold gradient-text">Contacts</h1>
-          <p className="text-gray-400 mt-1">
-            Manage your network with intelligent relationship insights
-          </p>
+  // Update contact mutation
+  const updateContactMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Contact> }) => 
+      contactsAPI.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      setSelectedContact(null);
+    },
+    onError: (error) => {
+      console.error('Failed to update contact:', error);
+    },
+  });
+
+  // Delete contact mutation
+  const deleteContactMutation = useMutation({
+    mutationFn: contactsAPI.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      setSelectedContact(null);
+    },
+    onError: (error) => {
+      console.error('Failed to delete contact:', error);
+    },
+  });
+
+  const ContactCard: React.FC<{ contact: Contact }> = ({ contact }) => (
+    <div 
+      className="glass-card p-6 cursor-pointer transition-all duration-300 hover:scale-105 border border-white/10"
+      onClick={() => setSelectedContact(contact)}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+            <span className="text-white font-semibold text-lg">
+              {contact.name.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div>
+            <h3 className="text-white font-semibold">{contact.name}</h3>
+            {contact.title && (
+              <p className="text-gray-400 text-sm">{contact.title}</p>
+            )}
+          </div>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex items-center space-x-2">
+          <span className={`px-3 py-1 rounded-full text-xs ${
+            contact.warmth_status >= 8 ? 'bg-green-500/20 text-green-400' :
+            contact.warmth_status >= 6 ? 'bg-yellow-500/20 text-yellow-400' :
+            contact.warmth_status >= 3 ? 'bg-blue-500/20 text-blue-400' :
+            'bg-gray-500/20 text-gray-400'
+          }`}>
+            {contact.warmth_label || 'Unknown'}
+          </span>
+        </div>
+      </div>
+
+      {contact.company && (
+        <div className="flex items-center text-gray-400 text-sm mb-2">
+          <Building className="w-4 h-4 mr-2" />
+          {contact.company}
+        </div>
+      )}
+
+      {contact.email && (
+        <div className="flex items-center text-gray-400 text-sm mb-2">
+          <Mail className="w-4 h-4 mr-2" />
+          {contact.email}
+        </div>
+      )}
+
+      {contact.location && (
+        <div className="flex items-center text-gray-400 text-sm mb-4">
+          <MapPin className="w-4 h-4 mr-2" />
+          {contact.location}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between">
+        <span className="text-gray-400 text-sm">
+          Warmth: {contact.warmth_status}/10
+        </span>
+        <div className="flex space-x-2">
           <button
-            onClick={() => setShowImportModal(true)}
-            className="btn btn-secondary"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedContact(contact);
+            }}
+            className="p-1 text-blue-400 hover:bg-blue-400/10 rounded"
           >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-            </svg>
-            Import Contacts
+            <Edit className="w-4 h-4" />
           </button>
-          <button className="btn btn-primary">
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Contact
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (confirm('Are you sure you want to delete this contact?')) {
+                deleteContactMutation.mutate(contact.id);
+              }
+            }}
+            className="p-1 text-red-400 hover:bg-red-400/10 rounded"
+          >
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
+    </div>
+  );
 
-      {/* Search and Filters */}
-      <div className="glass-card p-6">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search */}
-          <div className="flex-1">
-            <div className="relative">
-              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search contacts by name, company, or email..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          {/* Warmth Filters */}
-          <div className="flex flex-wrap gap-2">
-            {['cold', 'aware', 'warm', 'active', 'contributor'].map((warmth) => (
-              <button
-                key={warmth}
-                onClick={() => handleWarmthFilter(warmth)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                  filterWarmth.includes(warmth)
-                    ? `${getWarmthColor(warmth)} bg-opacity-30`
-                    : 'text-gray-400 bg-white bg-opacity-5 hover:bg-opacity-10'
-                }`}
-              >
-                {warmth.charAt(0).toUpperCase() + warmth.slice(1)}
-              </button>
-            ))}
-          </div>
-
-          {/* View Mode and Sort */}
-          <div className="flex items-center space-x-2">
-            <div className="flex bg-white bg-opacity-5 rounded-lg p-1">
-              {['list', 'cards', 'pipeline'].map((mode) => (
-                <button
-                  key={mode}
-                  onClick={() => setViewMode(mode as any)}
-                  className={`px-3 py-1 rounded text-xs font-medium transition-all ${
-                    viewMode === mode
-                      ? 'bg-white bg-opacity-10 text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
-                </button>
-              ))}
-            </div>
-
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-2 bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="name">Sort by Name</option>
-              <option value="company">Sort by Company</option>
-              <option value="last_contact">Sort by Last Contact</option>
-              <option value="trust_score">Sort by Trust Score</option>
-            </select>
-          </div>
+  // Loading state
+  if (contactsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-800 flex items-center justify-center">
+        <div className="glass-card p-8 flex items-center space-x-4">
+          <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
+          <span className="text-white text-lg">Loading contacts...</span>
         </div>
       </div>
+    );
+  }
 
-      {/* Content */}
-      <div className="flex gap-6">
-        {/* Contacts List */}
-        <div className="flex-1">
-          {isLoading ? (
-            <div className="glass-card p-8 text-center">
-              <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p className="text-gray-400">Loading contacts...</p>
-            </div>
-          ) : sortedContacts.length === 0 ? (
-            <div className="glass-card p-8 text-center">
-              <div className="text-6xl mb-4">🤝</div>
-              <h3 className="text-xl font-semibold text-white mb-2">No contacts found</h3>
-              <p className="text-gray-400 mb-6">
-                {searchQuery || filterWarmth.length > 0
-                  ? 'Try adjusting your search or filters'
-                  : 'Start building your network by importing or adding contacts'
-                }
-              </p>
-              {!searchQuery && filterWarmth.length === 0 && (
-                <button
-                  onClick={() => setShowImportModal(true)}
-                  className="btn btn-primary"
-                >
-                  Import Your First Contacts
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className={viewMode === 'cards' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
-              {sortedContacts.map((contact) => (
-                <div
-                  key={contact.id}
-                  onClick={() => actions.selectContact(contact)}
-                  className={`glass-card p-4 cursor-pointer transition-all hover:bg-white hover:bg-opacity-10 ${
-                    selectedContact?.id === contact.id ? 'ring-2 ring-blue-500' : ''
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-white">{contact.name}</h3>
-                      {contact.company && (
-                        <p className="text-sm text-gray-400">{contact.company}</p>
-                      )}
-                      {contact.title && (
-                        <p className="text-xs text-gray-500">{contact.title}</p>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-end space-y-1">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getWarmthColor(contact.warmth)} bg-opacity-20`}>
-                        {contact.warmth}
-                      </span>
-                      {contact.trust_score && (
-                        <div className="text-xs text-gray-400">
-                          Trust: {Math.round(contact.trust_score * 100)}%
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-1 text-xs text-gray-400">
-                    {contact.email && (
-                      <div className="flex items-center">
-                        <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                          <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                        </svg>
-                        {contact.email}
-                      </div>
-                    )}
-                    {contact.last_contact && (
-                      <div className="flex items-center">
-                        <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                        </svg>
-                        Last contact: {new Date(contact.last_contact).toLocaleDateString()}
-                      </div>
-                    )}
-                  </div>
-
-                  {contact.tags && contact.tags.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1">
-                      {contact.tags.slice(0, 3).map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-2 py-1 bg-blue-500 bg-opacity-20 text-blue-300 rounded text-xs"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                      {contact.tags.length > 3 && (
-                        <span className="px-2 py-1 bg-gray-500 bg-opacity-20 text-gray-400 rounded text-xs">
-                          +{contact.tags.length - 3}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Trust Panel */}
-        {selectedContact && (
-          <div className="w-80">
-            {/* <TrustPanel contact={selectedContact} /> */}
-            <div className="glass-card p-4">
-              <h5>Trust Insights</h5>
-              <p>Trust insights for {selectedContact.name}</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Import Modal - migrating to React components */}
-      {showImportModal && (
-        <div className="modal-overlay">
-          <div className="glass-card p-4 m-4">
-            <h5>Import Contacts</h5>
-            <p>Contact import functionality</p>
+  // Error state
+  if (contactsError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-800 flex items-center justify-center">
+        <div className="glass-card p-8 flex flex-col items-center space-y-4">
+          <AlertCircle className="w-12 h-12 text-red-400" />
+          <div className="text-center">
+            <h2 className="text-white text-xl font-semibold mb-2">Failed to load contacts</h2>
+            <p className="text-gray-400 mb-4">Unable to fetch your contacts data</p>
             <button 
-              className="btn btn-secondary mt-3"
-              onClick={() => setShowImportModal(false)}
+              onClick={() => refetchContacts()}
+              className="glass-button px-6 py-2 rounded-lg text-blue-400 border border-blue-400/30 hover:bg-blue-400/10"
             >
-              Close
+              Try Again
             </button>
           </div>
         </div>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-800">
+      <div className="container mx-auto px-6 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Contacts
+            </h1>
+            <p className="text-gray-300 mt-2">
+              Manage your professional relationships
+            </p>
+          </div>
+          <button 
+            onClick={() => setShowCreateModal(true)}
+            disabled={createContactMutation.isPending}
+            className="glass-button px-6 py-3 rounded-lg text-blue-400 border border-blue-400/30 hover:bg-blue-400/10 flex items-center disabled:opacity-50"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Add Contact
+          </button>
+        </div>
+
+        {/* Filters */}
+        <div className="glass-card p-6 mb-8">
+          <div className="flex flex-wrap items-center space-x-4 space-y-2">
+            <div className="flex-1 min-w-64">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="Search contacts..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400"
+                />
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Filter className="w-4 h-4 text-gray-400" />
+              <select
+                value={filterWarmth || ''}
+                onChange={(e) => setFilterWarmth(e.target.value ? Number(e.target.value) : null)}
+                className="bg-gray-800/50 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-400"
+              >
+                <option value="">All Warmth Levels</option>
+                <option value="8">Hot (8-10)</option>
+                <option value="6">Warm (6-7)</option>
+                <option value="3">Cold (3-5)</option>
+                <option value="1">Dormant (1-2)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Contacts Grid */}
+        {contacts.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {contacts.map(contact => (
+              <ContactCard key={contact.id} contact={contact} />
+            ))}
+          </div>
+        ) : (
+          <div className="glass-card p-12 text-center">
+            <Users className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+            <h3 className="text-white text-xl mb-2">No Contacts Found</h3>
+            <p className="text-gray-400 mb-6">
+              {searchQuery || filterWarmth ? 'Try adjusting your filters' : 'Add your first contact to get started'}
+            </p>
+            <button 
+              onClick={() => setShowCreateModal(true)}
+              className="glass-button px-6 py-3 rounded-lg text-blue-400 border border-blue-400/30 hover:bg-blue-400/10"
+            >
+              Add Your First Contact
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
