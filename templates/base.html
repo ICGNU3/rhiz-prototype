@@ -3,22 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}OuRhizome - Root Membership Contact Intelligence{% endblock %}</title>
-    
-    <!-- Favicon and Touch Icons -->
-    <link rel="icon" type="image/x-icon" href="/placeholder">
-    <link rel="apple-touch-icon" href="/placeholder">
+    <title>{% block title %}Rhiz - High-Context Relationship Intelligence{% endblock %}</title>
     
     <!-- Social Share Meta Tags -->
-    <meta property="og:title" content="{% block og_title %}OuRhizome - Root Membership Contact Intelligence{% endblock %}">
-    <meta property="og:description" content="{% block og_description %}Goal in mind. People in reach. Moves in motion. Join the exclusive community of One Hundred Root Members.{% endblock %}">
-    <meta property="og:image" content="/placeholder">
+    <meta property="og:title" content="{% block og_title %}Rhiz - High-Context Relationship Intelligence{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Purpose in mind. People in reach. Intelligence in action. Coordination infrastructure for builders who activate meaningful connections.{% endblock %}">
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{% block twitter_title %}OuRhizome - Root Membership Contact Intelligence{% endblock %}">
-    <meta name="twitter:description" content="{% block twitter_description %}Goal in mind. People in reach. Moves in motion. Join the exclusive community of One Hundred Root Members.{% endblock %}">
-    <meta name="twitter:image" content="/placeholder">
+    <meta name="twitter:title" content="{% block twitter_title %}Rhiz - High-Context Relationship Intelligence{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Purpose in mind. People in reach. Intelligence in action. Coordination infrastructure for builders who activate meaningful connections.{% endblock %}"
     
     <!-- Bootstrap CSS with Replit theme -->
     <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
@@ -26,14 +20,30 @@
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
-    <!-- Root Membership Glassmorphism Theme -->
-    <link rel="stylesheet" href="/placeholder">
+    <!-- Modern 2025 Glassmorphism Styles -->
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: var(--shadow-glass);
+        }
+        .nav-glass {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+    </style>
     
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Background Gamification Engine -->
-    <script src="/placeholder"></script>
     
     <script>
         // Integration helper functions
@@ -188,11 +198,11 @@
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom">
+    <nav class="navbar navbar-expand-lg navbar-dark nav-glass">
         <div class="container">
             <a class="navbar-brand text-white d-flex align-items-center" href="/">
-                <img src="/placeholder" alt="OuRhizome" style="height: 32px; width: 32px; margin-right: 10px;">
-                <span class="fw-bold">OuRhizome</span>
+                <i class="bi bi-diagram-3-fill me-2" style="font-size: 1.5rem; color: #667eea;"></i>
+                <span class="fw-bold">Rhiz</span>
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -221,17 +231,17 @@
                             <i class="bi bi-brain me-1"></i>Intelligence
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/goal-matcher">
-                                <i class="bi bi-magic me-2"></i>Goal Matching
-                            </a></li>
-                            <li><a class="dropdown-item" href="/intelligence/contact-discovery">
-                                <i class="bi bi-search me-2"></i>Contact Discovery
-                            </a></li>
                             <li><a class="dropdown-item" href="/intelligence/trust-insights">
                                 <i class="bi bi-shield-check me-2"></i>Trust Insights
                             </a></li>
-                            <li><a class="dropdown-item" href="/network-visualization">
-                                <i class="bi bi-diagram-3 me-2"></i>Network Map
+                            <li><a class="dropdown-item" href="/intelligence/ai-assistant">
+                                <i class="bi bi-robot me-2"></i>AI Assistant
+                            </a></li>
+                            <li><a class="dropdown-item" href="/intelligence/network-intelligence">
+                                <i class="bi bi-graph-up me-2"></i>Network Intelligence
+                            </a></li>
+                            <li><a class="dropdown-item" href="/monique/tasks">
+                                <i class="bi bi-person-workspace me-2"></i>Monique CRM
                             </a></li>
                         </ul>
                     </li>
