@@ -439,7 +439,9 @@ def get_contacts():
     
     query += ' ORDER BY name'
     
-    contacts = db.execute(query, params).fetchall()
+    with db.cursor() as cursor:
+        cursor.execute(query, params)
+        contacts = cursor.fetchall()
     
     # Add sync status information
     contact_list = []
@@ -448,10 +450,12 @@ def get_contacts():
         
         # Get sync source information (with fallback if table doesn't exist)
         try:
-            source_info = db.execute(
-                'SELECT source FROM contact_sources WHERE contact_id = ? AND is_primary = 1',
-                (contact['id'],)
-            ).fetchone()
+            with db.cursor() as cursor:
+                cursor.execute(
+                    'SELECT source FROM contact_sources WHERE contact_id = %s AND is_primary = 1',
+                    (contact['id'],)
+                )
+                source_info = cursor.fetchone()
             contact_dict['sync_status'] = source_info['source'] if source_info else 'manual'
         except sqlite3.OperationalError:
             # Table doesn't exist yet, use manual as default
@@ -1792,6 +1796,76 @@ def save_onboarding_preferences():
     except Exception as e:
         logging.error(f"Error saving onboarding preferences: {e}")
         return jsonify({'error': 'Failed to save preferences'}), 500
+
+@api_bp.route('/onboarding/network', methods=['POST'])
+@auth_required  
+def save_network_onboarding():
+    """Save network onboarding data"""
+    user_id = session.get('user_id')
+    data = request.get_json()
+    
+    try:
+        # Extract data from request
+        contacts = data.get('contacts', [])
+        classifications = data.get('classifications', {})
+        trust_scores = data.get('trustScores', {})
+        completed_sections = data.get('completedSections', [])
+        
+        # Save contacts with classifications and trust scores
+        saved_contacts = 0
+        db = get_db()
+        
+        for i, contact in enumerate(contacts):
+            # Check if contact already exists
+            existing = db.execute(
+                "SELECT id FROM contacts WHERE user_id = ? AND (email = ? OR (name = ? AND phone = ?))",
+                (user_id, contact.get('email'), contact.get('name'), contact.get('phone'))
+            ).fetchone()
+            
+            if not existing:
+                # Insert new contact
+                db.execute("""
+                    INSERT INTO contacts (user_id, name, email, phone, title, company, 
+                                        relationship_type, warmth, notes, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                """, (
+                    user_id,
+                    contact.get('name'),
+                    contact.get('email'),
+                    contact.get('phone'),
+                    contact.get('title'),
+                    contact.get('company'),
+                    classifications.get(str(i), {}).get('type', 'other'),
+                    trust_scores.get(str(i), 3),  # Default trust score of 3
+                    f"Imported during onboarding. Sentiment: {classifications.get(str(i), {}).get('sentiment', 'neutral')}"
+                ))
+                saved_contacts += 1
+        
+        # Save onboarding progress
+        db.execute("""
+            INSERT OR REPLACE INTO user_onboarding_progress (user_id, step, completed_at, data)
+            VALUES (?, ?, datetime('now'), ?)
+        """, (user_id, 'network_mapping', json.dumps({
+            'total_contacts': len(contacts),
+            'classified_contacts': len(classifications),
+            'trust_scores_set': len(trust_scores),
+            'completed_sections': completed_sections
+        })))
+        
+        db.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully saved {saved_contacts} contacts',
+            'contacts_saved': saved_contacts,
+            'total_contacts': len(contacts)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Failed to save network data: {str(e)}'
+        }), 500
 
 @api_bp.route('/onboarding/complete', methods=['POST'])
 @auth_required

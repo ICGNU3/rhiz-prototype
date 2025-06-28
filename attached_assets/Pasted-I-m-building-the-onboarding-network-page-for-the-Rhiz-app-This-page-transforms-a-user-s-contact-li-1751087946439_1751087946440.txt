@@ -1,0 +1,75 @@
+I’m building the /onboarding/network page for the Rhiz app. This page transforms a user’s contact list into a living relationship graph.
+
+Use React for the frontend and assume Python (Flask/FastAPI) for the backend. Implement the following functional components:
+
+1. Contact Import Section
+Options to import from:
+
+Google Contacts (OAuth)
+
+LinkedIn (CSV Upload)
+
+Apple/iCloud (CSV Upload)
+
+Twitter/X (OAuth or @handle input with fallback text: “Twitter import not available”)
+
+Manual Add Contact form
+
+Include confirmation step + progress bar per source
+
+2. Contact Classification
+Display imported contacts in grid view
+
+Add dropdown for tagging relationship type (e.g., friend, investor, collaborator)
+
+Include emoji picker or sentiment slider
+
+Enable batch actions (e.g., prioritize, delete, tag all)
+
+3. “Unknown But Important” Mode
+Highlight untagged or ambiguous contacts
+
+Prompt options: “Familiar,” “Don’t remember,” “Feels important,” “Skip”
+
+4. Relationship Enrichment Panel (Optional Sidebar)
+Let users add:
+
+“How you met”
+
+“Last interaction”
+
+“Shared goals”
+
+“Private notes”
+
+5. Trust Calibration
+Trust slider (1–5 scale or emoji faces) per contact
+
+6. Auto-Sync Setup
+Toggle: “Keep my network updated?”
+
+Options: Google or iCloud re-authorization
+
+7. Network Warm-Up Message Tool
+Simple message template: “Hey [Name], I’m building something new—can I ask you a quick question?”
+
+Let user select contacts and delivery method (SMS, email, etc. — stub out integrations)
+
+8. CTA Footer
+Show message: “Your network is now alive inside Rhiz. Let’s make it meaningful.”
+
+Button: Continue to Goals → navigates to /onboarding/goals
+
+General
+Maintain visual continuity with our existing Rhiz React UI
+
+Don’t break current routing or state structure
+
+Reuse existing components if available
+
+Use context or Redux for global contact state
+
+Do not discard our network visualizations — integrate or keep code intact for later use
+
+Implement the UI first, stub API endpoints if needed, and comment clearly where integrations (Google, LinkedIn, etc.) are expected. Use best practices for file structure and code readability.
+
