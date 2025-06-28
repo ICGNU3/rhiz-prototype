@@ -212,14 +212,16 @@ const ContactsPage: React.FC = () => {
               Manage your professional relationships
             </p>
           </div>
-          <button 
+          <AnimatedButton
             onClick={() => setShowCreateModal(true)}
             disabled={createContactMutation.isPending}
-            className="glass-button px-6 py-3 rounded-lg text-blue-400 border border-blue-400/30 hover:bg-blue-400/10 flex items-center disabled:opacity-50"
+            state={createContactMutation.isPending ? 'loading' : 'idle'}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+            size="lg"
           >
             <Plus className="w-5 h-5 mr-2" />
             Add Contact
-          </button>
+          </AnimatedButton>
         </div>
 
         {/* Filters */}
