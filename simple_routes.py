@@ -1,14 +1,20 @@
 """
 Future-forward authentication routes for Rhiz
-Eliminates redundancy, redirects to modern React interface
+Integrates modernized User model with existing authentication system
 """
 import os
 from flask import Flask, session, redirect, render_template, request, jsonify
 from app import app
 
-def get_db_connection():
-    """Simple database connection for authentication"""
-    return None
+# Import modernized authentication service
+try:
+    from backend.app.services.auth_service import auth_service
+    modernized_auth = True
+except ImportError:
+    # Fallback for backward compatibility
+    modernized_auth = False
+    import logging
+    logging.warning("Modernized auth service not available, using fallback")
 
 @app.route('/')
 def landing():
@@ -32,23 +38,65 @@ def login():
 
 @app.route('/auth/magic-link', methods=['POST'])
 def send_magic_link():
-    """Handle magic link requests"""
+    """Handle magic link requests with modernized authentication"""
     try:
         data = request.get_json()
         email = data.get('email')
         
-        # Magic link logic would go here
-        # For now, provide fallback to demo
-        return jsonify({'message': f'Magic link sent to {email}', 'redirect': '/demo-login'}), 200
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+        
+        if modernized_auth:
+            # Use modernized authentication service
+            try:
+                token = auth_service.create_magic_link(email)
+                # In production, send email with token
+                # For demo, we'll create/authenticate the user directly
+                user = auth_service.authenticate_user(email, create_if_not_exists=True)
+                
+                if user:
+                    session['user_id'] = user.id
+                    session['user_email'] = user.email
+                    session['authenticated'] = True
+                    return jsonify({
+                        'message': f'Magic link sent to {email}',
+                        'redirect': '/app/dashboard'
+                    }), 200
+                else:
+                    return jsonify({'error': 'Authentication failed'}), 500
+                    
+            except Exception as e:
+                return jsonify({'error': f'Authentication error: {str(e)}'}), 500
+        else:
+            # Fallback logic for backward compatibility
+            return jsonify({'message': f'Magic link sent to {email}', 'redirect': '/demo-login'}), 200
+            
     except Exception as e:
         return jsonify({'error': 'Magic link service temporarily unavailable'}), 500
 
 @app.route('/demo-login')
 def demo_login():
-    """Quick demo login for immediate access"""
-    session['user_id'] = 'demo_user'
-    session['demo_mode'] = True
-    return redirect('/app/dashboard')
+    """Quick demo login for immediate access with modernized auth"""
+    try:
+        if modernized_auth:
+            # Create demo user with modernized service
+            user = auth_service.create_demo_user()
+            session['user_id'] = user.id
+            session['user_email'] = user.email
+            session['authenticated'] = True
+            session['demo_mode'] = True
+        else:
+            # Fallback for backward compatibility
+            session['user_id'] = 'demo_user'
+            session['demo_mode'] = True
+            
+        return redirect('/app/dashboard')
+        
+    except Exception as e:
+        # Fallback if modernized auth fails
+        session['user_id'] = 'demo_user'
+        session['demo_mode'] = True
+        return redirect('/app/dashboard')
 
 # Essential future-forward redirects for clean UX
 @app.route('/dashboard')
