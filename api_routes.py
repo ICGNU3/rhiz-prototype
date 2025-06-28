@@ -1619,6 +1619,88 @@ def process_vcf_file(user_id, file_content, source):
     return contacts
 
 # Trust Insights endpoints
+@api_bp.route('/trust', methods=['GET'])
+@auth_required
+def get_trust():
+    """Get comprehensive trust data for current user"""
+    user_id = session.get('user_id')
+    try:
+        import services.trust_insights as trust_insights_module
+        trust_engine = trust_insights_module.TrustInsights()
+        trust_engine.db = get_db()
+        
+        trust_data = trust_engine.get_trust_insights(user_id)
+        health_data = trust_engine.get_trust_health(user_id)
+        
+        return jsonify({
+            'success': True,
+            'insights': trust_data,
+            'health': health_data,
+            'user_id': user_id
+        })
+        
+    except Exception as e:
+        logging.error(f"Trust data error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@api_bp.route('/crm', methods=['GET'])
+@auth_required
+def get_crm():
+    """Get CRM pipeline and contact management data"""
+    user_id = session.get('user_id')
+    db = get_db()
+    
+    try:
+        with db.cursor() as cursor:
+            # Get pipeline stages and counts (using warmth_status as pipeline indicator)
+            cursor.execute("""
+                SELECT 
+                    CASE 
+                        WHEN warmth_status >= 8 THEN 'hot'
+                        WHEN warmth_status >= 6 THEN 'warm'
+                        WHEN warmth_status >= 3 THEN 'cold'
+                        ELSE 'dormant'
+                    END as pipeline_stage,
+                    COUNT(*) as count
+                FROM contacts 
+                WHERE user_id = %s 
+                GROUP BY pipeline_stage
+            """, (user_id,))
+            pipeline_data = cursor.fetchall()
+            
+            # Get recent interactions
+            cursor.execute("""
+                SELECT ci.*, c.name as contact_name
+                FROM contact_interactions ci
+                JOIN contacts c ON ci.contact_id = c.id
+                WHERE c.user_id = %s
+                ORDER BY ci.interaction_date DESC
+                LIMIT 10
+            """, (user_id,))
+            recent_interactions = cursor.fetchall()
+            
+            # Get contact statistics
+            cursor.execute("""
+                SELECT 
+                    COUNT(*) as total_contacts,
+                    COUNT(CASE WHEN warmth_status >= 7 THEN 1 END) as warm_contacts,
+                    COUNT(CASE WHEN last_interaction_date > NOW() - INTERVAL '30 days' THEN 1 END) as active_contacts
+                FROM contacts 
+                WHERE user_id = %s
+            """, (user_id,))
+            stats = cursor.fetchone()
+            
+            return jsonify({
+                'success': True,
+                'pipeline': [dict(row) for row in pipeline_data],
+                'recent_interactions': [dict(row) for row in recent_interactions],
+                'statistics': dict(stats) if stats else {}
+            })
+            
+    except Exception as e:
+        logging.error(f"CRM data error: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @api_bp.route('/trust/digest', methods=['GET'])
 @auth_required
 def get_trust_digest():
