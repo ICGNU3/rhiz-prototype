@@ -210,7 +210,7 @@ def send_magic_link():
         
         # Get base URL for magic link
         base_url = request.host_url.rstrip('/')
-        magic_link = f"{base_url}/auth/verify?token={token}"
+        magic_link = f"{base_url}/api/auth/verify?token={token}"
         
         # Send email using Resend REST API
         response = requests.post(
