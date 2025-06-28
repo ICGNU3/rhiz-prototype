@@ -5,8 +5,8 @@
 import React, { useState, useEffect } from 'react';
 import { useContacts } from '../context/AppContext';
 import { contactsApi } from '../services/api/contactsApi';
-import { UnifiedContactImport } from '../components/contacts/UnifiedContactImport';
-import { UnifiedTrustDashboard } from '../components/trust/UnifiedTrustDashboard';
+// import { UnifiedContactImport } from '../components/contacts/UnifiedContactImport';
+// import { UnifiedTrustDashboard } from '../components/trust/UnifiedTrustDashboard';
 import type { Contact, ContactFilters } from '../types';
 
 const ContactsPage: React.FC = () => {
@@ -290,17 +290,30 @@ const ContactsPage: React.FC = () => {
         {/* Trust Panel */}
         {selectedContact && (
           <div className="w-80">
-            <TrustPanel contact={selectedContact} />
+            {/* <TrustPanel contact={selectedContact} /> */}
+            <div className="glass-card p-4">
+              <h5>Trust Insights</h5>
+              <p>Trust insights for {selectedContact.name}</p>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Import Modal */}
-      <ContactImportModal
-        isOpen={showImportModal}
-        onClose={() => setShowImportModal(false)}
-        onImportComplete={handleImportComplete}
-      />
+      {/* Import Modal - migrating to React components */}
+      {showImportModal && (
+        <div className="modal-overlay">
+          <div className="glass-card p-4 m-4">
+            <h5>Import Contacts</h5>
+            <p>Contact import functionality</p>
+            <button 
+              className="btn btn-secondary mt-3"
+              onClick={() => setShowImportModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
