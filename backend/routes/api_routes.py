@@ -640,17 +640,14 @@ def get_insights():
         
         openai_client = openai.OpenAI(api_key=api_key)
         
-        # Get user's contacts and recent interactions
+        # Get user's contacts 
         contacts_query = """
             SELECT c.id, c.name, c.email, c.company, c.title, c.warmth_status, 
                    c.notes, c.source, c.created_at, c.updated_at,
-                   COALESCE(ci.last_interaction, c.updated_at) as last_contact_date,
-                   COUNT(ci.id) as interaction_count
+                   c.updated_at as last_contact_date,
+                   0 as interaction_count
             FROM contacts c 
-            LEFT JOIN contact_interactions ci ON c.id = ci.contact_id
             WHERE c.user_id = %s
-            GROUP BY c.id, c.name, c.email, c.company, c.title, c.warmth_status, 
-                     c.notes, c.source, c.created_at, c.updated_at, ci.last_interaction
             ORDER BY c.updated_at DESC
             LIMIT 20
         """
@@ -1771,7 +1768,7 @@ def get_trust():
             SELECT c.id, c.name, c.email, c.company, c.title, c.warmth_status, 
                    c.notes, c.source, c.created_at, c.updated_at,
                    COUNT(ci.id) as interaction_count,
-                   MAX(ci.interaction_date) as last_interaction_date,
+                   MAX(ci.timestamp) as last_interaction_date,
                    AVG(CASE WHEN ci.interaction_type = 'email_sent' THEN 1 ELSE 0 END) as email_frequency,
                    AVG(CASE WHEN ci.interaction_type = 'meeting' THEN 1 ELSE 0 END) as meeting_frequency
             FROM contacts c 
