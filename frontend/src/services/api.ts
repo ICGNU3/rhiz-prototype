@@ -24,11 +24,17 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.error('API Error:', error);
     if (error.response?.status === 401) {
       localStorage.removeItem('authToken');
       window.location.href = '/login';
     }
-    return Promise.reject(error);
+    // Always return a resolved promise with error info to prevent unhandled rejections
+    return Promise.resolve({
+      data: null,
+      error: error.response?.data || error.message || 'Network error',
+      status: error.response?.status || 500
+    });
   }
 );
 
