@@ -75,6 +75,49 @@ def login():
     """Login page route"""
     return render_template('login.html')
 
+@app.route('/auth/verify')
+@app.route('/auth/verify/<token>')
+def verify_magic_link(token=None):
+    """Verify magic link and login user - handles both URL formats"""
+    # Get token from URL parameter or query string
+    if not token:
+        token = request.args.get('token')
+    
+    if not token:
+        print("No token provided in magic link verification")
+        return redirect('/login')
+    
+    try:
+        print(f"Verifying magic link token: {token[:20]}...")
+        
+        # Import auth module and verify token
+        from auth import AuthManager
+        from app import db
+        
+        auth_manager = AuthManager(db)
+        email = auth_manager.verify_magic_link(token)
+        
+        if email:
+            print(f"Magic link verified for email: {email}")
+            # Create user session
+            user = auth_manager.get_user_by_email(email)
+            if user:
+                create_session_user(user['id'], email)
+                session['authenticated'] = True
+                session['email'] = email
+                print(f"User logged in successfully: {email}")
+                return redirect('/app/dashboard')
+            else:
+                print(f"No user found for email: {email}")
+                return redirect('/login')
+        else:
+            print("Magic link token invalid or expired")
+            return redirect('/login')
+            
+    except Exception as e:
+        print(f"Magic link verification error: {e}")
+        return redirect('/login')
+
 @app.route('/auth/magic-link', methods=['POST'])
 def send_magic_link():
     """Handle magic link requests with Resend email service"""
