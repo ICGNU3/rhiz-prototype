@@ -1154,6 +1154,8 @@ def process_csv_file(user_id, file_content, source):
 
 def process_vcf_file(user_id, file_content, source):
     """Process VCF (vCard) file and import contacts"""
+    import uuid
+    from datetime import datetime
     contacts = []
     
     # Simple VCF parser (basic implementation)
@@ -1187,12 +1189,16 @@ def process_vcf_file(user_id, file_content, source):
             
             full_name = contact_data.get('name') or contact_data.get('email', 'Unknown Contact')
             
+            # Generate unique contact ID
+            vcf_contact_id = str(uuid.uuid4())
+            
             # Insert into database
             cursor = db.execute('''
-                INSERT INTO contacts (user_id, name, email, phone, company, title, 
-                                    notes, warmth, source, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO contacts (id, user_id, name, email, phone, company, title, 
+                                    notes, warmth_status, warmth_label, source, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
+                vcf_contact_id,
                 user_id,
                 full_name,
                 contact_data.get('email'),
@@ -1200,14 +1206,13 @@ def process_vcf_file(user_id, file_content, source):
                 contact_data.get('company'),
                 contact_data.get('title'),
                 f'Imported from {source}',
-                'cold',  # Default warmth
+                1,  # Cold warmth_status
+                'Cold',  # Cold warmth_label
                 source,
                 datetime.now().isoformat()
             ))
-            
-            contact_id = cursor.lastrowid
             contacts.append({
-                'id': contact_id,
+                'id': vcf_contact_id,
                 'name': full_name,
                 'email': contact_data.get('email'),
                 'company': contact_data.get('company'),
