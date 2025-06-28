@@ -11,6 +11,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 from dataclasses import asdict
+from database_helpers import DatabaseHelper
 
 # Create API blueprint
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -1763,8 +1764,6 @@ def register_core_routes(app):
     def request_invite():
         """Handle invite request form submission"""
         try:
-            db = get_db()
-            
             # Extract form data
             first_name = request.form.get('firstName', '').strip()
             last_name = request.form.get('lastName', '').strip()
@@ -1775,24 +1774,50 @@ def register_core_routes(app):
             
             # Basic validation
             if not all([first_name, last_name, email, company, stage, goals]):
-                return render_template('invite_error.html', 
-                                    error="All fields are required for invite consideration."), 400
+                return '''
+                <html><body style="font-family: Arial, sans-serif; padding: 40px; text-align: center;">
+                    <h2>Missing Information</h2>
+                    <p>All fields are required for invite consideration.</p>
+                    <a href="/" style="color: #007bff;">← Back to home</a>
+                </body></html>
+                ''', 400
             
-            # Store invite request in database
-            db.execute('''
+            # Store invite request in database using PostgreSQL syntax
+            DatabaseHelper.execute_insert('''
                 INSERT INTO invite_requests (first_name, last_name, email, company, stage, goals, requested_at, status)
-                VALUES (?, ?, ?, ?, ?, ?, datetime('now'), 'pending')
-            ''', (first_name, last_name, email, company, stage, goals))
-            db.commit()
-            db.close()
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (first_name, last_name, email, company, stage, goals, datetime.now().isoformat(), 'pending'))
             
-            # Simple confirmation without email for now
-            return render_template('invite_confirmation.html', name=first_name)
+            # Simple confirmation page
+            return f'''
+            <html>
+            <head>
+                <title>Invitation Request Received</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; padding: 40px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; min-height: 100vh; }}
+                    .card {{ background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 40px; border-radius: 20px; max-width: 500px; margin: 0 auto; }}
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <h1>🎉 Request Received!</h1>
+                    <p>Thank you, {first_name}! Your invitation request has been submitted.</p>
+                    <p>We'll review your application within 48 hours and email you at <strong>{email}</strong> if selected.</p>
+                    <a href="/" style="color: #fff; text-decoration: underline;">← Back to Rhiz</a>
+                </div>
+            </body>
+            </html>
+            '''
             
         except Exception as e:
             logging.error(f"Invite request error: {e}")
-            return render_template('invite_error.html', 
-                                error="Something went wrong. Please try again."), 500
+            return '''
+            <html><body style="font-family: Arial, sans-serif; padding: 40px; text-align: center;">
+                <h2>Something went wrong</h2>
+                <p>Please try again or contact support.</p>
+                <a href="/" style="color: #007bff;">← Back to home</a>
+            </body></html>
+            ''', 500
 
     # React routes removed - handled by services/react_integration.py to avoid conflicts
 # Onboarding API endpoints
