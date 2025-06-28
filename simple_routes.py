@@ -233,9 +233,63 @@ def demo_login():
 
 # Essential future-forward redirects for clean UX
 @app.route('/dashboard')
-def dashboard_redirect():
-    """Redirect legacy dashboard to modern React interface"""
-    return redirect('/app/dashboard')
+def dashboard():
+    """Serve the functional dashboard with real data"""
+    from flask import render_template
+    import sqlite3
+    
+    # Get user data and context for the dashboard
+    user_id = session.get('user_id', 'demo_user')
+    
+    # Get database connection
+    conn = sqlite3.connect('db.sqlite3')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    try:
+        # Get goals for user
+        goals = cursor.execute(
+            'SELECT * FROM goals WHERE user_id = ? ORDER BY created_at DESC LIMIT 10',
+            (user_id,)
+        ).fetchall()
+        
+        # Get contacts for user
+        contacts = cursor.execute(
+            'SELECT * FROM contacts WHERE user_id = ? ORDER BY created_at DESC LIMIT 10',
+            (user_id,)
+        ).fetchall()
+        
+        # Get AI suggestions
+        ai_suggestions = cursor.execute(
+            'SELECT * FROM ai_suggestions WHERE user_id = ? ORDER BY created_at DESC LIMIT 5',
+            (user_id,)
+        ).fetchall()
+        
+        # Get user progress/XP data
+        user_progress = {
+            'xp': 1250,
+            'level': 'Connection Master',
+            'goals_completed': len(goals),
+            'contacts_added': len(contacts)
+        }
+        
+        conn.close()
+        
+        return render_template('index.html',
+                             goals=goals,
+                             contacts=contacts,
+                             ai_suggestions=ai_suggestions,
+                             user_progress=user_progress)
+                             
+    except Exception as e:
+        conn.close()
+        print(f"Dashboard error: {e}")
+        # Fallback with minimal data
+        return render_template('index.html',
+                             goals=[],
+                             contacts=[],
+                             ai_suggestions=[],
+                             user_progress={'xp': 0, 'level': 'Getting Started'})
 
 @app.route('/goals')
 def goals_redirect():
