@@ -245,7 +245,7 @@ class SmartNetworkingEngine:
             "top_relationships": top_contacts[:5],
             "at_risk_relationships": [c for c in top_contacts if c["health_score"] < 40],
             "network_insights": network_insights,
-            "recommended_actions": self._get_network_action_plan(network_analysis, top_contacts),
+            "recommended_actions": self._get_relationship_action_plan(network_analysis, top_contacts),
             "last_updated": datetime.now().isoformat()
         }
     
@@ -309,7 +309,7 @@ class SmartNetworkingEngine:
         
         # Company diversity insights
         if analysis["company_diversity"] / analysis["total_contacts"] > 0.8:
-            insights.append("Great company diversity! This provides broad networking opportunities.")
+            insights.append("Great company diversity! This provides broad relationship opportunities.")
         
         # Relationship health insights
         avg_health = sum(c["health_score"] for c in top_contacts) / len(top_contacts) if top_contacts else 0
@@ -318,7 +318,7 @@ class SmartNetworkingEngine:
         
         return insights
     
-    def _get_network_action_plan(self, analysis: Dict[str, Any], 
+    def _get_relationship_action_plan(self, analysis: Dict[str, Any], 
                                top_contacts: List[Dict]) -> List[Dict[str, str]]:
         """Generate actionable network development plan"""
         actions = []

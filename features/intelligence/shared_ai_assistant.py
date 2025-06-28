@@ -586,12 +586,12 @@ RELATIONSHIP WARMTH PATTERNS:
 {warmth_context}
 
 Generate insights about:
-- Most effective networking behaviors
+- Most effective relationship behaviors
 - Relationship building patterns
 - Communication trends
 - Strategic recommendations
 
-Respond with JSON format for networking insights."""
+Respond with JSON format for relationship insights."""
 
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o",
@@ -603,8 +603,8 @@ Respond with JSON format for networking insights."""
             result = json.loads(response.choices[0].message.content)
             
             return CollectiveInsight(
-                insight_type="networking_patterns",
-                title=result.get("title", "Community Networking Patterns"),
+                insight_type="relationship_patterns",
+                title=result.get("title", "Community Relationship Patterns"),
                 description=result.get("description", ""),
                 data_points=result.get("data_points", []),
                 trend_direction=result.get("trend_direction", "stable"),
@@ -613,7 +613,7 @@ Respond with JSON format for networking insights."""
             )
             
         except Exception as e:
-            logging.error(f"Error generating networking patterns insight: {e}")
+            logging.error(f"Error generating relationship patterns insight: {e}")
             return None
 
     def _generate_collaboration_trends_insight(self, cursor, week_start: str) -> Optional[CollectiveInsight]:
