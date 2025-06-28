@@ -145,22 +145,27 @@ class Goal(db.Model):
     """Goal model for tracking user objectives"""
     __tablename__ = 'goals'
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String, ForeignKey('users.id'), nullable=False)
     
     title = Column(String(255), nullable=False)
     description = Column(Text)
-    category = Column(String(100))  # fundraising, hiring, partnerships, etc.
+    goal_type = Column(String(100))  # fundraising, hiring, partnerships, etc.
+    timeline = Column(String(100))
     status = Column(String(50), default='active')  # active, paused, completed
-    priority = Column(String(20), default='medium')  # low, medium, high
+    priority_level = Column(String(50), default='medium')  # low, medium, high
+    metrics = Column(Text)
+    progress_percentage = Column(Integer, default=0)
     
     # AI processing
-    embedding = Column(JSON)  # Store vector embeddings for matching
+    embedding = Column(Text)  # Store vector embeddings for matching
+    target_contact_types = Column(Text)
+    preferred_interaction_style = Column(Text)
+    context_notes = Column(Text)
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    target_date = Column(DateTime)
     
     # Relationships
     user = relationship('User', back_populates='goals')
@@ -172,12 +177,18 @@ class Goal(db.Model):
             'user_id': str(self.user_id),
             'title': self.title,
             'description': self.description,
-            'category': self.category,
+            'goal_type': self.goal_type,
+            'timeline': self.timeline,
             'status': self.status,
-            'priority': self.priority,
+            'priority_level': self.priority_level,
+            'metrics': self.metrics,
+            'progress_percentage': self.progress_percentage,
+            'embedding': self.embedding,
+            'target_contact_types': self.target_contact_types,
+            'preferred_interaction_style': self.preferred_interaction_style,
+            'context_notes': self.context_notes,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
-            'target_date': self.target_date.isoformat() if self.target_date else None
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
 
 
