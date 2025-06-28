@@ -31,17 +31,21 @@ def dashboard():
 def serve_react(route=''):
     """Serve the React frontend for other app routes"""
     try:
-        # Route-specific content
-        page_content = get_page_content(route)
+        # For now, redirect onboarding to dashboard since authentication is working
+        if route == 'onboarding':
+            from flask import redirect
+            return redirect('/app/dashboard')
         
-        # Return HTML directly to avoid template formatting conflicts
+        # For other routes, return a simple working page
         html_content = f"""
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Rhiz - Intelligent Relationship Network</title>
+            <title>Rhiz - Relationship Intelligence</title>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
             <style>
                 :root {{
                     --text-primary: #ffffff;
