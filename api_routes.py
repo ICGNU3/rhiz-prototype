@@ -55,19 +55,21 @@ def get_current_user():
         return jsonify({'error': 'Not authenticated'}), 401
     
     db = get_db()
-    user = db.execute(
-        'SELECT id, email, subscription_tier, created_at FROM users WHERE id = ?',
-        (user_id,)
-    ).fetchone()
+    with db.cursor() as cursor:
+        cursor.execute(
+            'SELECT id, email, subscription_tier, created_at FROM users WHERE id = %s',
+            (user_id,)
+        )
+        user = cursor.fetchone()
     
     if not user:
         return jsonify({'error': 'User not found'}), 404
     
     return jsonify({
-        'id': user['id'],
-        'email': user['email'],
-        'subscription_tier': user['subscription_tier'],
-        'created_at': user['created_at']
+        'id': user[0],
+        'email': user[1],
+        'subscription_tier': user[2] if len(user) > 2 else 'explorer',
+        'created_at': user[3] if len(user) > 3 else None
     })
 
 @api_bp.route('/auth/me', methods=['GET'])
