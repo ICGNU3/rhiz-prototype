@@ -1080,14 +1080,19 @@ def get_contact_sources():
     """Get available integration sources"""
     try:
         from services.social_integrations import social_integrations
-        sources = social_integrations.get_platform_status()
+        platform_status = social_integrations.get_platform_status()
+        
+        # Extract available platforms from status dict
+        oauth_platforms = [platform for platform, status in platform_status.items() 
+                          if status.get('configured', False)]
         
         # Add manual and CSV as always available
-        all_sources = ['manual', 'csv'] + sources
+        all_sources = ['manual', 'csv'] + oauth_platforms
         
         return jsonify({
             'sources': all_sources,
-            'oauth_available': sources
+            'oauth_available': oauth_platforms,
+            'platform_status': platform_status
         })
     except Exception as e:
         logging.error(f"Sources error: {e}")
