@@ -201,7 +201,7 @@ def login():
             status.innerHTML = '<div class="alert alert-info">Sending magic link...</div>';
             
             try {
-                const response = await fetch('/auth/magic-link', {
+                const response = await fetch('/api/auth/magic-link', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -225,7 +225,7 @@ def login():
             status.innerHTML = '<div class="alert alert-info">Setting up demo...</div>';
             
             try {
-                const response = await fetch('/demo-login', {
+                const response = await fetch('/api/auth/demo-login', {
                     method: 'POST',
                     credentials: 'include'
                 });
