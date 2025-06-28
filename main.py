@@ -23,8 +23,7 @@ except Exception as e:
 from react_integration import register_react_integration
 register_react_integration(app)
 
-# Import simple working routes for immediate user access
-import simple_routes
+# Clean routing architecture - all routes now in api_routes.py
 
 @app.route('/health')
 def health_check():

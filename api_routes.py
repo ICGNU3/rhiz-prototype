@@ -1015,7 +1015,203 @@ def get_trust_tiers():
         logging.error(f"Trust tiers error: {e}")
         return jsonify({'error': str(e)}), 500
 
+# === CORE APPLICATION ROUTES ===
+
+def register_core_routes(app):
+    """Register core application routes"""
+    from flask import render_template
+    
+    @app.route('/')
+    def landing():
+        """Landing page"""
+        return render_template('landing.html')
+
+    @app.route('/login')
+    def login_page():
+        """Login page with modern authentication interface"""
+        return '''<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Rhiz</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .floating-orb {
+            position: fixed;
+            border-radius: 50%;
+            background: linear-gradient(45deg, rgba(79, 172, 254, 0.1), rgba(139, 92, 246, 0.1));
+            filter: blur(1px);
+            animation: float 6s ease-in-out infinite;
+            z-index: 1;
+        }
+        
+        .floating-orb:nth-child(1) { width: 200px; height: 200px; top: 10%; left: 10%; animation-delay: 0s; }
+        .floating-orb:nth-child(2) { width: 150px; height: 150px; top: 70%; right: 10%; animation-delay: 2s; }
+        .floating-orb:nth-child(3) { width: 100px; height: 100px; bottom: 20%; left: 50%; animation-delay: 4s; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #4facfe 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .btn-glassmorphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-glassmorphism:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-orb"></div>
+    <div class="floating-orb"></div>
+    <div class="floating-orb"></div>
+    
+    <div class="container-fluid d-flex align-items-center justify-content-center min-vh-100">
+        <div class="card glassmorphism border-0 shadow-lg" style="max-width: 400px; width: 100%;">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <h1 class="h3 gradient-text fw-bold mb-2">Welcome to Rhiz</h1>
+                    <p class="text-light-emphasis">Your intelligent relationship network</p>
+                </div>
+                
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="email" class="form-label text-light">Email address</label>
+                        <input type="email" class="form-control bg-dark border-secondary text-light" id="email" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 btn-glassmorphism mb-3">
+                        Send Magic Link
+                    </button>
+                </form>
+                
+                <div class="text-center">
+                    <div class="mb-3">
+                        <span class="text-light-emphasis">or</span>
+                    </div>
+                    <button id="registerBtn" class="btn btn-outline-light w-100 btn-glassmorphism">
+                        Create Free Account
+                    </button>
+                </div>
+                
+                <div id="status" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const status = document.getElementById('status');
+            
+            status.innerHTML = '<div class="alert alert-info">Sending magic link...</div>';
+            
+            try {
+                const response = await fetch('/api/auth/magic-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email: email })
+                });
+                
+                if (response.ok) {
+                    status.innerHTML = '<div class="alert alert-success">Magic link sent! Check your email.</div>';
+                } else {
+                    status.innerHTML = '<div class="alert alert-warning">Failed to send magic link. Please try again.</div>';
+                }
+            } catch (error) {
+                status.innerHTML = '<div class="alert alert-danger">Error sending magic link. Please try again.</div>';
+            }
+        });
+        
+        document.getElementById('registerBtn').addEventListener('click', async function() {
+            const email = document.getElementById('email').value;
+            const status = document.getElementById('status');
+            
+            if (!email) {
+                status.innerHTML = '<div class="alert alert-warning">Please enter an email address first.</div>';
+                return;
+            }
+            
+            status.innerHTML = '<div class="alert alert-info">Creating your account...</div>';
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    status.innerHTML = '<div class="alert alert-success">Account created! Redirecting to your dashboard...</div>';
+                    setTimeout(() => {
+                        window.location.href = '/app/dashboard';
+                    }, 1500);
+                } else {
+                    status.innerHTML = `<div class="alert alert-danger">${result.error || 'Registration failed. Please try again.'}</div>`;
+                }
+            } catch (error) {
+                status.innerHTML = '<div class="alert alert-danger">Error creating account. Please try again.</div>';
+            }
+        });
+    </script>
+</body>
+</html>'''
+
+    @app.route('/app/<path:route>')
+    def serve_react_app(route):
+        """Serve React frontend for app routes"""
+        return '''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rhiz - Relationship Intelligence</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module" src="/static/dist/index.js"></script>
+</body>
+</html>'''
+
 def register_api_routes(app):
     """Register API routes with the Flask app"""
     app.register_blueprint(api_bp)
+    register_core_routes(app)
     logging.info("API routes registered successfully")
