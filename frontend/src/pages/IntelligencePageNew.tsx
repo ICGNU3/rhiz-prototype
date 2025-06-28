@@ -34,7 +34,7 @@ const IntelligencePage: React.FC = () => {
   } = useQuery({
     queryKey: ['ai-suggestions'],
     queryFn: async () => {
-      const response = await intelligenceAPI.getSuggestions();
+      const response = await intelligenceAPI.getAISuggestions();
       return response.data || [];
     },
     retry: 2,
@@ -58,7 +58,7 @@ const IntelligencePage: React.FC = () => {
   // Chat mutation
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
-      const response = await intelligenceAPI.chat({ message });
+      const response = await intelligenceAPI.processNLQuery(message);
       return response.data;
     },
     onSuccess: (data) => {
