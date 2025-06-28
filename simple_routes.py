@@ -113,7 +113,7 @@ def verify_magic_link(token=None):
             session['email'] = email
             
             print(f"User logged in successfully via magic link: {email}")
-            return redirect('/app/dashboard')
+            return redirect('/dashboard')
         else:
             print("Invalid token format")
             return redirect('/login')
@@ -220,7 +220,7 @@ def demo_login():
         session['demo_mode'] = True
         
         print("Demo user logged in - accessing full platform with test data")
-        return redirect('/app/dashboard')
+        return redirect('/dashboard')
             
     except Exception as e:
         # Robust fallback for demo access
@@ -229,7 +229,7 @@ def demo_login():
         session['email'] = 'demo@rhiz.app'
         session['demo_mode'] = True
         print(f"Demo fallback activated: {e}")
-        return redirect('/app/dashboard')
+        return redirect('/dashboard')
 
 # Essential future-forward redirects for clean UX
 @app.route('/dashboard')
