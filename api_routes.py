@@ -329,7 +329,7 @@ def verify_magic_link():
         session['authenticated'] = True
         
         # Check if user has completed onboarding
-        if user.get('onboarding_completed'):
+        if user['onboarding_completed']:
             # Existing user - redirect to landing page
             return redirect('/?login=success')
         else:
@@ -337,6 +337,7 @@ def verify_magic_link():
             return redirect('/onboarding/welcome')
         
     except Exception as e:
+        logging.error(f"Magic link verification error: {e}")
         return redirect('/login?error=authentication_failed')
 
 @api_bp.route('/auth/logout', methods=['POST'])
