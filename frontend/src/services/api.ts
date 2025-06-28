@@ -106,25 +106,28 @@ export interface NetworkEdge {
   strength: number;
 }
 
-// Auth API
+// Auth API - Updated to match real Flask routes
 export const authAPI = {
   login: (email: string, password?: string) =>
-    api.post('/api/auth/login', { email, password }),
+    api.post('/api/login', { email, password }),
   
   magicLink: (email: string) =>
-    api.post('/api/auth/magic-link', { email }),
+    api.post('/auth/magic-link', { email }),
   
   logout: () =>
-    api.post('/api/auth/logout'),
+    api.post('/api/logout'),
   
   signup: (email: string, subscription_tier: string = 'explorer') =>
-    api.post('/api/auth/signup', { email, subscription_tier }),
+    api.post('/api/signup', { email, subscription_tier }),
   
   getCurrentUser: () =>
-    api.get<User>('/api/auth/me'),
+    api.get<User>('/api/current-user'),
+  
+  demoLogin: () =>
+    api.get('/demo-login'),
 };
 
-// Goals API
+// Goals API - Updated to match real Flask routes
 export const goalsAPI = {
   getAll: () =>
     api.get<Goal[]>('/api/goals'),
@@ -195,10 +198,10 @@ export const networkAPI = {
     api.post('/api/network/relationships', data),
 };
 
-// Intelligence API
+// Intelligence API - Updated to match real Flask routes
 export const intelligenceAPI = {
   getAISuggestions: () =>
-    api.get<AISuggestion[]>('/api/intelligence/suggestions'),
+    api.get<AISuggestion[]>('/api/ai-suggestions'),
   
   processNLQuery: (query: string) =>
     api.post('/api/intelligence/nlp', { query }),
@@ -207,7 +210,7 @@ export const intelligenceAPI = {
     api.get('/api/intelligence/unknown-contacts'),
   
   getInsights: () =>
-    api.get('/api/intelligence/insights'),
+    api.get('/api/insights'),
   
   generateOutreach: (contactId: string, goalId: string) =>
     api.post('/api/intelligence/outreach', { contact_id: contactId, goal_id: goalId }),

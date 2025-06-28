@@ -53,7 +53,7 @@ def health_check():
         
         # API keys check
         checks["openai"] = "configured" if os.environ.get('OPENAI_API_KEY') else "missing"
-        checks["sendgrid"] = "configured" if os.environ.get('SENDGRID_API_KEY') else "missing"
+        checks["resend"] = "configured" if os.environ.get('RESEND_API_KEY') else "missing"
         checks["stripe"] = "configured" if os.environ.get('STRIPE_SECRET_KEY') else "missing"
         
         health["checks"] = checks
