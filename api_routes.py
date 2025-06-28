@@ -295,7 +295,7 @@ def verify_magic_link():
     user = db.execute('''
         SELECT * FROM users 
         WHERE magic_link_token = ? 
-        AND datetime(magic_link_expires) > datetime('now')
+        AND magic_link_expires > datetime('now')
     ''', (token,)).fetchone()
     
     if not user:
