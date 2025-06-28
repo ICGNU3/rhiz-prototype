@@ -244,6 +244,19 @@ export const trustAPI = {
   
   getMetrics: (contactId: string) =>
     api.get(`/api/trust/metrics/${contactId}`),
+  
+  // New trust analytics endpoints
+  getTrustMetrics: () =>
+    api.get('/api/trust/analytics/metrics'),
+  
+  getTrustOverview: () =>
+    api.get('/api/trust/analytics/overview'),
+  
+  getContactTrustHistory: (contactId: string) =>
+    api.get(`/api/trust/analytics/history/${contactId}`),
+  
+  updateTrustScore: (contactId: string, score: number) =>
+    api.post(`/api/trust/analytics/score/${contactId}`, { score }),
 };
 
 // CRM API

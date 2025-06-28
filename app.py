@@ -6,6 +6,12 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
+# Import trust analytics routes
+from routes.trust_analytics_routes import (
+    get_trust_metrics, get_trust_overview, 
+    get_contact_trust_history, update_trust_score
+)
+
 # Load environment variables from .env file if it exists
 try:
     from dotenv import load_dotenv
@@ -985,6 +991,12 @@ def serve_react_app(path=None):
     except Exception as e:
         logging.error(f"React app serving error: {e}")
         return f"Error serving React app: {e}", 500
+
+# Trust Analytics API Routes
+app.add_url_rule('/api/trust/analytics/metrics', 'get_trust_metrics', get_trust_metrics, methods=['GET'])
+app.add_url_rule('/api/trust/analytics/overview', 'get_trust_overview', get_trust_overview, methods=['GET'])
+app.add_url_rule('/api/trust/analytics/history/<contact_id>', 'get_contact_trust_history', get_contact_trust_history, methods=['GET'])
+app.add_url_rule('/api/trust/analytics/score', 'update_trust_score', update_trust_score, methods=['POST'])
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
