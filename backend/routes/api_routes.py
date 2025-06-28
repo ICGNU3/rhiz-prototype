@@ -497,18 +497,8 @@ def get_contacts():
     for contact in contacts:
         contact_dict = dict(contact)
         
-        # Get sync source information (with fallback if table doesn't exist)
-        try:
-            with db.cursor() as cursor:
-                cursor.execute(
-                    'SELECT source FROM contact_sources WHERE contact_id = %s AND is_primary = 1',
-                    (contact['id'],)
-                )
-                source_info = cursor.fetchone()
-            contact_dict['sync_status'] = source_info['source'] if source_info else 'manual'
-        except sqlite3.OperationalError:
-            # Table doesn't exist yet, use manual as default
-            contact_dict['sync_status'] = 'manual'
+        # Use source field directly from contact table
+        contact_dict['sync_status'] = contact.get('source', 'manual')
         
         # Parse social handles if present
         if contact_dict.get('social_handles'):
