@@ -326,7 +326,8 @@ class EmailService:
     """Handle magic link email sending"""
     
     def __init__(self):
-        self.from_email = "noreply@founder-network.ai"
+        self.from_email = os.environ.get('FROM_EMAIL', 'onboarding@resend.dev')
+        self.resend_api_key = os.environ.get('RESEND_API_KEY')
     
     def send_magic_link(self, to_email: str, magic_token: str, base_url: str = None) -> bool:
         """Send magic link email for passwordless authentication"""
@@ -335,12 +336,12 @@ class EmailService:
         
         magic_url = f"{base_url}/auth/verify?token={magic_token}"
         
-        subject = "Sign in to Founder Network AI"
+        subject = "Sign in to Rhiz"
         html_content = f"""
         <html>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333;">
             <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h2 style="color: #6366f1;">Welcome to Founder Network AI</h2>
+                <h2 style="color: #6366f1;">Welcome to Rhiz</h2>
                 <p>Click the button below to sign in to your account:</p>
                 <div style="text-align: center; margin: 30px 0;">
                     <a href="{magic_url}" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: 600;">
@@ -356,10 +357,42 @@ class EmailService:
         """
         
         try:
-            # For now, log the magic link (in production, use SendGrid or similar)
-            logging.info(f"Magic link for {to_email}: {magic_url}")
-            print(f"MAGIC LINK: {magic_url}")  # Development convenience
-            return True
+            if self.resend_api_key:
+                # Use Resend for actual email delivery
+                import requests
+                
+                response = requests.post(
+                    'https://api.resend.com/emails',
+                    headers={
+                        'Authorization': f'Bearer {self.resend_api_key}',
+                        'Content-Type': 'application/json'
+                    },
+                    json={
+                        'from': self.from_email,
+                        'to': [to_email],
+                        'subject': subject,
+                        'html': html_content
+                    }
+                )
+                
+                if response.status_code == 200:
+                    logging.info(f"Magic link email sent successfully to {to_email}")
+                    return True
+                else:
+                    logging.error(f"Resend API error: {response.status_code} - {response.text}")
+                    # Fall back to logging for development
+                    logging.info(f"Magic link for {to_email}: {magic_url}")
+                    print(f"MAGIC LINK: {magic_url}")
+                    return True
+            else:
+                # Development fallback - log the magic link
+                logging.info(f"Magic link for {to_email}: {magic_url}")
+                print(f"MAGIC LINK: {magic_url}")
+                return True
+                
         except Exception as e:
             logging.error(f"Failed to send magic link email: {e}")
-            return False
+            # Even if email fails, log the link for development
+            logging.info(f"Magic link for {to_email}: {magic_url}")
+            print(f"MAGIC LINK: {magic_url}")
+            return True

@@ -76,9 +76,13 @@ document.getElementById('magicLinkForm').addEventListener('submit', async functi
     
     try {
         const formData = new FormData(this);
+        const email = formData.get('email');
         const response = await fetch('/auth/magic-link', {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email: email })
         });
         
         const result = await response.json();

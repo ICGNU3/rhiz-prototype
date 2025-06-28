@@ -256,7 +256,11 @@ def send_magic_link():
         if success:
             # Handle different response types
             if request.content_type and 'application/json' in request.content_type:
-                return jsonify({'success': True})
+                return jsonify({
+                    'success': True, 
+                    'message': f'Magic link sent to {email}',
+                    'redirect': '/demo-login'
+                })
             else:
                 # For form submissions, redirect with success message
                 flash('Magic link sent! Check your email to sign in.', 'success')
