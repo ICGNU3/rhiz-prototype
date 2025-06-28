@@ -142,6 +142,11 @@ const DashboardPage: React.FC = () => {
           ))}
         </div>
 
+        {/* Weekly Journal Prompt */}
+        <div className="mb-8">
+          <WeeklyJournalPrompt />
+        </div>
+
         {/* Recent Activity */}
         <div className="grid lg:grid-cols-2 gap-6">
           <div className="glass-card p-6 backdrop-blur-sm">
