@@ -1775,18 +1775,66 @@ def register_core_routes(app):
     @app.route('/app/<path:route>')
     def serve_react_app(route):
         """Serve React frontend for app routes"""
-        return '''<!DOCTYPE html>
+        try:
+            # For now, serve the static fallback index.html
+            with open('static/dist/index.html', 'r') as f:
+                return f.read()
+        except FileNotFoundError:
+            # Fallback if file doesn't exist
+            return '''<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Rhiz - Relationship Intelligence</title>
-    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: white;
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+        }
+    </style>
 </head>
 <body>
-    <div id="root"></div>
-    <script type="module" src="/static/dist/index.js"></script>
+    <div class="container-fluid h-100">
+        <div class="glass-card p-5 text-center m-5">
+            <h2 class="text-primary mb-4">Rhiz - ''' + route.title() + '''</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="glass-card p-4 h-100">
+                        <i class="bi bi-people text-info" style="font-size: 2rem;"></i>
+                        <h5 class="mt-3">Contacts</h5>
+                        <p class="text-muted">Manage your network</p>
+                        <a href="/contacts" class="btn btn-outline-info">View Contacts</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="glass-card p-4 h-100">
+                        <i class="bi bi-target text-success" style="font-size: 2rem;"></i>
+                        <h5 class="mt-3">Goals</h5>
+                        <p class="text-muted">Track your objectives</p>
+                        <a href="/goals" class="btn btn-outline-success">View Goals</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="glass-card p-4 h-100">
+                        <i class="bi bi-cpu text-warning" style="font-size: 2rem;"></i>
+                        <h5 class="mt-3">AI Insights</h5>
+                        <p class="text-muted">Smart recommendations</p>
+                        <a href="/intelligence" class="btn btn-outline-warning">View Intelligence</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>'''
 
