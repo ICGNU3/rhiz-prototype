@@ -63,29 +63,45 @@ class Contact(db.Model):
     """Contact model for relationship management"""
     __tablename__ = 'contacts'
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String, ForeignKey('users.id'), nullable=False)
     
     # Basic information
     name = Column(String(255), nullable=False)
     email = Column(String(255))
     phone = Column(String(50))
+    twitter = Column(String(255))
+    linkedin = Column(String(500))
+    handle = Column(String(255))
+    relationship_type = Column(String(100))
+    
+    # Warmth tracking
+    warmth_status = Column(Integer, default=0)
+    warmth_label = Column(String(50))
+    warmth_level = Column(String(20), default='cold')
+    
+    # Interaction tracking
+    last_interaction_date = Column(DateTime)
+    last_contact_method = Column(String(100))
+    interaction_count = Column(Integer, default=0)
+    
+    # Organization and metadata
+    priority_level = Column(String(20))
+    notes = Column(Text)
+    narrative_thread = Column(Text)
+    follow_up_action = Column(Text)
+    follow_up_due_date = Column(DateTime)
+    tags = Column(Text)
+    introduced_by = Column(String(255))
+    location = Column(String(255))
     company = Column(String(255))
     title = Column(String(255))
-    
-    # Social profiles
-    linkedin = Column(String(500))
-    twitter = Column(String(255))
-    
-    # Relationship context
-    notes = Column(Text)
-    warmth_level = Column(String(20), default='cold')  # cold, warm, hot, champion
-    source = Column(String(50), default='manual')  # manual, csv, linkedin, google, etc.
+    interests = Column(Text)
+    source = Column(String(50), default='manual')
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    last_interaction = Column(DateTime)
     
     # Relationships
     user = relationship('User', back_populates='contacts')
@@ -98,16 +114,30 @@ class Contact(db.Model):
             'name': self.name,
             'email': self.email,
             'phone': self.phone,
+            'twitter': self.twitter,
+            'linkedin': self.linkedin,
+            'handle': self.handle,
+            'relationship_type': self.relationship_type,
+            'warmth_status': self.warmth_status,
+            'warmth_label': self.warmth_label,
+            'warmth_level': self.warmth_level,
+            'last_interaction_date': self.last_interaction_date.isoformat() if self.last_interaction_date else None,
+            'last_contact_method': self.last_contact_method,
+            'interaction_count': self.interaction_count,
+            'priority_level': self.priority_level,
+            'notes': self.notes,
+            'narrative_thread': self.narrative_thread,
+            'follow_up_action': self.follow_up_action,
+            'follow_up_due_date': self.follow_up_due_date.isoformat() if self.follow_up_due_date else None,
+            'tags': self.tags,
+            'introduced_by': self.introduced_by,
+            'location': self.location,
             'company': self.company,
             'title': self.title,
-            'linkedin': self.linkedin,
-            'twitter': self.twitter,
-            'notes': self.notes,
-            'warmth_level': self.warmth_level,
+            'interests': self.interests,
             'source': self.source,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
-            'last_interaction': self.last_interaction.isoformat() if self.last_interaction else None
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
 
 

@@ -84,6 +84,7 @@ def register_blueprints(app):
     app.register_blueprint(goal_bp, url_prefix='/api/goals')
     app.register_blueprint(trust_bp, url_prefix='/api/trust')
     app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
+    app.register_blueprint(health_bp, url_prefix='/api')
     
     # Register core routes without prefix for compatibility
     app.register_blueprint(core_bp)
