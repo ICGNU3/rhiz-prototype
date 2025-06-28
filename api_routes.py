@@ -1721,8 +1721,8 @@ def register_core_routes(app):
     @app.route('/onboarding/goals')
     @auth_required
     def onboarding_goals():
-        """Redirect to goals page for step 2"""
-        return redirect('/goals')
+        """Show onboarding goals page for step 2"""
+        return render_template('onboarding/goals.html')
     
     @app.route('/onboarding/<path:step>')
     @auth_required

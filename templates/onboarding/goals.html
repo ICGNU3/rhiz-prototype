@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set Your Intent - Rhiz Onboarding</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #4facfe 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .btn-gradient {
+            background: linear-gradient(135deg, #4facfe 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
+            color: white;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            font-weight: bold;
+        }
+        
+        .step.active {
+            background: linear-gradient(135deg, #4facfe 0%, #8b5cf6 100%);
+            color: white;
+        }
+        
+        .step.completed {
+            background: rgba(34, 197, 94, 0.8);
+            color: white;
+        }
+        
+        .step.inactive {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .goal-option {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .goal-option:hover {
+            border-color: rgba(79, 172, 254, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .goal-option.selected {
+            border-color: #4facfe;
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+        }
+        
+        .goal-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            padding: 15px;
+        }
+        
+        .goal-input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #4facfe;
+            box-shadow: 0 0 0 0.2rem rgba(79, 172, 254, 0.25);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="glass-card">
+                    <!-- Progress Steps -->
+                    <div class="step-indicator">
+                        <div class="step completed">1</div>
+                        <div class="step active">2</div>
+                        <div class="step inactive">3</div>
+                        <div class="step inactive">4</div>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="text-center mb-4">
+                        <h1 class="gradient-text mb-3">What's Your Current Intent?</h1>
+                        <p class="lead text-white-50">
+                            Tell us what you're working on so we can connect you with the right people.
+                        </p>
+                    </div>
+                    
+                    <!-- Goal Categories -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="goal-option card bg-transparent h-100" data-category="fundraising">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-graph-up-arrow fs-1 text-success mb-3"></i>
+                                    <h5>Fundraising</h5>
+                                    <p class="text-white-50 small">Raising capital for your startup or project</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="goal-option card bg-transparent h-100" data-category="hiring">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-people fs-1 text-primary mb-3"></i>
+                                    <h5>Hiring</h5>
+                                    <p class="text-white-50 small">Finding talent and building your team</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="goal-option card bg-transparent h-100" data-category="partnerships">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-handshake fs-1 text-warning mb-3"></i>
+                                    <h5>Partnerships</h5>
+                                    <p class="text-white-50 small">Strategic partnerships and business development</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="goal-option card bg-transparent h-100" data-category="customers">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-target fs-1 text-info mb-3"></i>
+                                    <h5>Customer Development</h5>
+                                    <p class="text-white-50 small">Finding customers and validating your market</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Custom Goal Input -->
+                    <div class="mb-4">
+                        <label for="customGoal" class="form-label">Or describe your specific goal:</label>
+                        <textarea class="form-control goal-input" id="customGoal" rows="3" 
+                                placeholder="e.g., I need to raise a $250k angel round to build my MVP..."></textarea>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="text-center">
+                        <button type="button" class="btn btn-gradient btn-lg me-3" onclick="saveGoalAndContinue()">
+                            Continue <i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+                        <a href="/onboarding/welcome" class="btn btn-outline-light btn-lg">
+                            Back
+                        </a>
+                    </div>
+                    
+                    <!-- Help Text -->
+                    <div class="text-center mt-4">
+                        <small class="text-white-50">
+                            This helps us suggest relevant connections • You can add more goals later
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let selectedCategory = null;
+        
+        // Handle goal category selection
+        document.querySelectorAll('.goal-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // Remove selection from all options
+                document.querySelectorAll('.goal-option').forEach(opt => opt.classList.remove('selected'));
+                
+                // Add selection to clicked option
+                this.classList.add('selected');
+                selectedCategory = this.dataset.category;
+                
+                // Clear custom goal if category is selected
+                document.getElementById('customGoal').value = '';
+            });
+        });
+        
+        // Clear category selection when typing custom goal
+        document.getElementById('customGoal').addEventListener('input', function() {
+            if (this.value.trim()) {
+                document.querySelectorAll('.goal-option').forEach(opt => opt.classList.remove('selected'));
+                selectedCategory = null;
+            }
+        });
+        
+        function saveGoalAndContinue() {
+            const customGoal = document.getElementById('customGoal').value.trim();
+            
+            if (!selectedCategory && !customGoal) {
+                alert('Please select a goal category or enter a custom goal');
+                return;
+            }
+            
+            const goalData = {
+                category: selectedCategory,
+                description: customGoal || getDefaultGoalText(selectedCategory)
+            };
+            
+            // Save goal via API
+            fetch('/api/goals', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: goalData.category || 'Custom Goal',
+                    description: goalData.description
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Continue to next step
+                    window.location.href = '/contacts';
+                } else {
+                    alert('Error saving goal. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Continue anyway for demo purposes
+                window.location.href = '/contacts';
+            });
+        }
+        
+        function getDefaultGoalText(category) {
+            const defaults = {
+                'fundraising': 'I need to raise capital for my startup',
+                'hiring': 'I need to find talented people to join my team',
+                'partnerships': 'I need strategic partnerships to grow my business',
+                'customers': 'I need to find customers and validate my market'
+            };
+            return defaults[category] || 'I need help with my business goals';
+        }
+    </script>
+</body>
+</html>
