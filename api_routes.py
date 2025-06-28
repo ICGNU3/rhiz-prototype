@@ -68,10 +68,10 @@ def get_current_user():
         return jsonify({'error': 'User not found'}), 404
     
     return jsonify({
-        'id': user[0],
-        'email': user[1],
-        'subscription_tier': user[2] if len(user) > 2 else 'explorer',
-        'created_at': user[3] if len(user) > 3 else None
+        'id': user['id'],
+        'email': user['email'],
+        'subscription_tier': user.get('subscription_tier', 'explorer'),
+        'created_at': user.get('created_at')
     })
 
 @api_bp.route('/auth/me', methods=['GET'])
@@ -2156,8 +2156,10 @@ def register_core_routes(app):
         if 'user_id' not in session:
             return redirect('/login')
         
-        # Serve the React app with proper authentication
-        return render_template('app.html')
+        # Serve the React app directly without Jinja2 template processing
+        with open('templates/app.html', 'r') as f:
+            app_html = f.read()
+        return app_html
 # Onboarding API endpoints
 @api_bp.route('/onboarding/welcome', methods=['POST'])
 @auth_required
