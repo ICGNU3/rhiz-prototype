@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UnifiedContactImport } from '../components';
-import type { Contact, Goal, User } from '../types';
+import type { Contact, Goal, User } from '../types/index';
 
 interface OnboardingStep {
   id: string;
@@ -156,13 +156,14 @@ function GoalStep({ onNext, onBack, data, setData }: any) {
 }
 
 // Step 3: Contact Import (using UnifiedContactImport)
-function ContactStep({ onNext, onBack, data, setData }: any) {
+function ContactStep({ onNext, onBack, setData }: any) {
   const handleImportComplete = (contacts: Contact[]) => {
     setData((prev: OnboardingData) => ({
       ...prev,
       contacts: contacts
     }));
-    onNext();
+    // Auto-advance after successful import
+    setTimeout(() => onNext(), 1000);
   };
 
   return (
@@ -173,9 +174,9 @@ function ContactStep({ onNext, onBack, data, setData }: any) {
       </div>
 
       <UnifiedContactImport 
-        mode="onboarding"
+        isOnboarding={true}
         onImportComplete={handleImportComplete}
-        showSkipOption={true}
+        className="bg-transparent"
       />
 
       <div className="text-center mt-4">
@@ -191,7 +192,7 @@ function ContactStep({ onNext, onBack, data, setData }: any) {
 }
 
 // Step 4: AI Preview & Completion
-function CompletionStep({ onNext, onBack, data }: any) {
+function CompletionStep({ onBack, data }: any) {
   const navigate = useNavigate();
   const [isCompleting, setIsCompleting] = useState(false);
 

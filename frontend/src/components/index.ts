@@ -26,7 +26,7 @@ export { default as UnifiedContactImport } from './contacts/UnifiedContactImport
 export { default as UnifiedTrustDashboard } from './trust/UnifiedTrustDashboard';
 
 // Onboarding Components
-export { default as NetworkOnboarding } from './onboarding/NetworkOnboarding';
+// Note: NetworkOnboarding was consolidated into OnboardingPage.tsx for unified experience
 
 // Layout & Navigation
 export { default as Navbar } from './layout/Navbar';
