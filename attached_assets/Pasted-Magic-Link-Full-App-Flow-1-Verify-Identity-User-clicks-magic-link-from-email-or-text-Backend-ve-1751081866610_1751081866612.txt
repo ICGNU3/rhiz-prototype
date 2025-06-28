@@ -1,0 +1,106 @@
+Magic Link → Full App Flow
+1. Verify Identity
+User clicks magic link from email or text.
+
+Backend verifies token and logs user in automatically.
+
+Store session token in cookies or secure storage.
+
+✅ Output: Logged-in session established, user lands in-app.
+
+2. Welcome + Quick Intent Prompt
+First-time users get a 2-step welcome flow:
+
+“What brings you here?” with tags: Reconnect, Build, Map, Collaborate, Fundraise, Explore
+
+“Who are you most trying to connect or activate?” (contacts, communities, funders, collaborators)
+
+✅ Output: Initial personalization layer for recommendations, flows, and network sorting.
+
+3. Contact Sync & Import
+Ask user to sync contacts or upload from:
+
+Phone (CSV or VCF)
+
+Google Contacts (OAuth flow)
+
+LinkedIn (manual or plugin)
+
+Twitter/X follows (if auth available)
+
+Also include: “Add manually” and “Skip for now”
+
+✅ Output: Base network graph initiated. Sync is optional but heavily nudged.
+
+4. Network Mapping View
+Land in a clean, interactive network map with:
+
+Your synced contacts as nodes.
+
+Visual trust score (shaded ring, for example).
+
+Filter and search functions.
+
+Click on a node to view "Trust Panel" and message/contact/update options.
+
+✅ Output: User understands that this is relational software, not a CRM. It’s built around value, frequency, and trust.
+
+5. Trust & Contribution Panel
+User can dive into a node (person) and see:
+
+Last message or sync point
+
+Interaction heatmap
+
+Tags and groupings
+
+Trust score and contribution insights
+
+Add/update connection notes (e.g. how you met, shared goals)
+
+✅ Output: User is prompted to re-engage, reflect, or reconnect intelligently.
+
+6. Warm-Up Campaign
+Prompt: “Want to reconnect or activate your network?”
+
+Choose a segment (tagged group, top 10 closest, dormant)
+
+Choose a method: SMS, Email, X DM, In-App prompt
+
+Choose a template (check-in, ask for advice, share idea, etc.)
+
+Customize, preview, and send
+
+✅ Output: Network activation becomes a core loop. Smart messaging is now possible and useful.
+
+7. Settings & Ongoing Intelligence
+Settings tab includes:
+
+Profile info
+
+Sync toggles (auto or manual)
+
+Privacy options (data download/export)
+
+Token reward tracking (coming soon)
+
+User starts seeing automated insights:
+
+“You haven’t talked to X in 90 days”
+
+“Y just changed jobs”
+
+“Z just backed a project like yours”
+
+✅ Output: Continuous light-touch feedback loop that deepens user relationship with the system.
+
+🌱 Optional: Advanced Power-Ups
+As users grow:
+
+Unlock mini-Groves (circles of trust)
+
+Share introductions
+
+Send contribution offers
+
+Token-gated coordination

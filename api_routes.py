@@ -1365,6 +1365,70 @@ def register_core_routes(app):
 </body>
 </html>'''
 
+# Onboarding API endpoints
+@api_bp.route('/onboarding/welcome', methods=['POST'])
+@auth_required
+def save_onboarding_preferences():
+    """Save user onboarding preferences"""
+    try:
+        data = request.get_json()
+        user_id = session.get('user_id')
+        
+        if not data or not user_id:
+            return jsonify({'error': 'Missing data or authentication'}), 400
+        
+        intent = data.get('intent')
+        connection_type = data.get('connection_type')
+        
+        if not intent or not connection_type:
+            return jsonify({'error': 'Missing intent or connection type'}), 400
+        
+        # Update user preferences in database
+        db = get_db()
+        db.execute("""
+            UPDATE users 
+            SET onboarding_intent = ?, onboarding_connection_type = ?, onboarding_step = 'sync'
+            WHERE id = ?
+        """, (intent, connection_type, user_id))
+        db.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Preferences saved successfully'
+        })
+        
+    except Exception as e:
+        logging.error(f"Error saving onboarding preferences: {e}")
+        return jsonify({'error': 'Failed to save preferences'}), 500
+
+@api_bp.route('/onboarding/complete', methods=['POST'])
+@auth_required
+def complete_onboarding():
+    """Mark onboarding as complete"""
+    try:
+        user_id = session.get('user_id')
+        
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        # Mark onboarding as complete
+        db = get_db()
+        db.execute("""
+            UPDATE users 
+            SET onboarding_completed = 1, onboarding_step = 'complete'
+            WHERE id = ?
+        """, (user_id,))
+        db.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Onboarding completed successfully'
+        })
+        
+    except Exception as e:
+        logging.error(f"Error completing onboarding: {e}")
+        return jsonify({'error': 'Failed to complete onboarding'}), 500
+
 def register_api_routes(app):
     """Register API routes with the Flask app"""
     app.register_blueprint(api_bp)
