@@ -8,7 +8,7 @@ import Contacts from './pages/Contacts';
 import Intelligence from './pages/Intelligence';
 import TrustInsights from './pages/TrustInsights';
 import Settings from './pages/Settings';
-import Login from './pages/Login';
+import Login from './components/auth/Login';
 import { useAuth } from './hooks/useAuth';
 
 // Create a query client
