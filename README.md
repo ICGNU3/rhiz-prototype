@@ -1,4 +1,4 @@
-# OuRhizome - Contact Intelligence CRM
+# Rhiz - Contact Intelligence CRM
 
 A goal-first intelligent contact management platform for early-stage founders with exclusive "Root Membership" model featuring lifetime access for "One Hundred Root Members".
 
