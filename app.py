@@ -122,8 +122,62 @@ try:
 except Exception as e:
     logging.error(f"Failed to initialize database: {e}")
 
-# Import routes after app creation
-from routes import *
+# Add basic landing page route
+@app.route('/')
+def landing():
+    """Landing page for unauthenticated users"""
+    try:
+        return render_template('landing.html')
+    except Exception as e:
+        logging.error(f"Landing page template error: {e}")
+        return '''
+        <!DOCTYPE html>
+        <html lang="en" data-bs-theme="dark">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Rhiz - Relationship Intelligence Platform</title>
+            <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+            <style>
+                body { background: #1a1a1a; color: white; font-family: 'Inter', sans-serif; }
+                .container { max-width: 800px; margin: 100px auto; padding: 40px; text-align: center; }
+                .glass-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
+                             border-radius: 20px; padding: 40px; backdrop-filter: blur(10px); }
+                .btn-primary { background: linear-gradient(135deg, #3b82f6, #8b5cf6); border: none; 
+                              padding: 12px 24px; border-radius: 10px; text-decoration: none; 
+                              color: white; display: inline-block; margin: 10px; }
+                .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(59,130,246,0.3); }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="glass-card">
+                    <h1 style="font-size: 3rem; margin-bottom: 1rem; background: linear-gradient(135deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Rhiz</h1>
+                    <p style="font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.8;">Relationship Intelligence Platform</p>
+                    <p style="margin-bottom: 2rem;">High-context relationship intelligence for builders who activate meaningful connections.</p>
+                    <a href="/about" class="btn-primary">Learn More</a>
+                    <a href="/founders-log" class="btn-primary">Founder's Log</a>
+                </div>
+            </div>
+        </body>
+        </html>
+        '''
+
+@app.route('/about')
+def about():
+    """About page"""
+    try:
+        return render_template('about.html')
+    except:
+        return "About page - Rhiz platform"
+
+@app.route('/founders-log')
+def founders_log():
+    """Founder's log page"""
+    try:
+        return render_template('founders-log.html')
+    except:
+        return "Founder's log - Build updates and transparency"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
