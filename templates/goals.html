@@ -1,20 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}Goals - Founder Network AI{% endblock %}
+{% block title %}Goals - Rhiz{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <!-- Header -->
+    <!-- Modern Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <h2>
-                    <i class="bi bi-target me-2"></i>
-                    Your Goals
-                </h2>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGoalModal">
-                    <i class="bi bi-plus-lg me-1"></i>Create Goal
-                </button>
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h2 mb-1 gradient-text">Your Goals</h1>
+                        <p class="text-muted mb-0">Define objectives and connect with the right people</p>
+                    </div>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGoalModal">
+                        <i class="bi bi-plus-lg me-2"></i>Create Goal
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -24,8 +26,7 @@
         {% if goals %}
             {% for goal in goals %}
                 <div class="col-lg-6 mb-4">
-                    <div class="card h-100">
-                        <div class="card-body">
+                    <div class="glass-card h-100 p-4">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <h5 class="card-title mb-1">
                                     <i class="bi bi-bullseye me-2 text-primary"></i>
