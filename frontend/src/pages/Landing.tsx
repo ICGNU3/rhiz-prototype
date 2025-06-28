@@ -13,7 +13,7 @@ const Landing = () => {
     setMessage('')
 
     try {
-      const response = await axios.post('/api/auth/request-link', { email })
+      await axios.post('/api/auth/request-link', { email })
       setMessage('Magic link sent! Check your email to sign in.')
       setEmail('')
     } catch (error: any) {

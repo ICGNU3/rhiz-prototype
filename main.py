@@ -1,13 +1,334 @@
 from backend import create_app
 
 app = create_app()
-from flask import jsonify
+from flask import jsonify, send_from_directory, render_template_string
 import os
 import logging
 from datetime import datetime
 from flask import request, session, redirect
 
 # Routes are now imported through app.py to maintain compatibility
+
+# Serve React frontend routes
+@app.route('/')
+def serve_landing():
+    """Serve React landing page"""
+    return render_template_string('''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhiz - Relationship Intelligence Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; }
+        .container { min-height: 100vh; background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); display: flex; align-items: center; justify-content: center; }
+        .card { background: white; padding: 3rem; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); max-width: 500px; width: 90%; text-align: center; }
+        .logo { font-size: 2rem; font-weight: bold; background: linear-gradient(135deg, #4f46e5, #9333ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; }
+        .title { font-size: 2.5rem; font-weight: bold; color: #1f2937; margin-bottom: 1rem; }
+        .subtitle { font-size: 1.2rem; color: #6b7280; margin-bottom: 2rem; }
+        .form { margin-bottom: 2rem; }
+        .input { width: 100%; padding: 1rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem; margin-bottom: 1rem; }
+        .input:focus { outline: none; border-color: #4f46e5; }
+        .btn { width: 100%; padding: 1rem; background: linear-gradient(135deg, #4f46e5, #9333ea); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .message { padding: 1rem; border-radius: 8px; margin-top: 1rem; }
+        .message.success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+        .message.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .spinner { width: 20px; height: 20px; border: 2px solid transparent; border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="logo">Rhiz</div>
+            <h1 class="title">Relationship Intelligence</h1>
+            <p class="subtitle">Transform how you build professional relationships with AI-powered insights</p>
+            
+            <form class="form" id="authForm">
+                <input type="email" id="email" class="input" placeholder="Enter your email address" required>
+                <button type="submit" class="btn" id="submitBtn">
+                    Get Magic Link
+                </button>
+            </form>
+            
+            <div id="message" class="message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('authForm');
+        const emailInput = document.getElementById('email');
+        const submitBtn = document.getElementById('submitBtn');
+        const messageDiv = document.getElementById('message');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = emailInput.value;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Sending...';
+            
+            try {
+                const response = await fetch('/api/auth/request-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                if (response.ok) {
+                    showMessage('Magic link sent! Check your email to sign in.', 'success');
+                    emailInput.value = '';
+                } else {
+                    const data = await response.json();
+                    showMessage(data.error || 'Something went wrong. Please try again.', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error. Please try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Get Magic Link';
+            }
+        });
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
+    ''')
+
+@app.route('/dashboard')
+def serve_dashboard():
+    """Serve React dashboard page"""
+    return render_template_string('''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Rhiz</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f9fafb; }
+        .nav { background: white; border-bottom: 1px solid #e5e7eb; padding: 1rem 2rem; }
+        .nav-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.5rem; font-weight: bold; background: linear-gradient(135deg, #4f46e5, #9333ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-links { display: flex; gap: 2rem; }
+        .nav-link { color: #6b7280; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; transition: color 0.2s; }
+        .nav-link:hover, .nav-link.active { color: #4f46e5; }
+        .user-info { color: #6b7280; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .header { margin-bottom: 2rem; }
+        .title { font-size: 2rem; font-weight: bold; color: #1f2937; margin-bottom: 0.5rem; }
+        .subtitle { color: #6b7280; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+        .stat-icon { width: 2.5rem; height: 2.5rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
+        .stat-icon.goals { background: #e0e7ff; color: #4f46e5; }
+        .stat-icon.contacts { background: #f3e8ff; color: #9333ea; }
+        .stat-icon.insights { background: #dcfce7; color: #16a34a; }
+        .stat-icon.plan { background: #fef3c7; color: #d97706; }
+        .stat-label { font-size: 0.875rem; color: #6b7280; margin-bottom: 0.25rem; }
+        .stat-value { font-size: 1.5rem; font-weight: bold; color: #1f2937; }
+        .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .section { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .section-title { font-size: 1.25rem; font-weight: 600; color: #1f2937; }
+        .section-link { color: #4f46e5; text-decoration: none; font-size: 0.875rem; }
+        .empty-state { text-align: center; padding: 2rem; color: #6b7280; }
+        .loading { display: flex; align-items: center; justify-content: center; padding: 2rem; }
+        .spinner { width: 2rem; height: 2rem; border: 2px solid #e5e7eb; border-top: 2px solid #4f46e5; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-content">
+            <div class="logo">Rhiz</div>
+            <div class="nav-links">
+                <a href="/dashboard" class="nav-link active">Dashboard</a>
+                <a href="/goals" class="nav-link">Goals</a>
+                <a href="/contacts" class="nav-link">Contacts</a>
+            </div>
+            <div class="user-info" id="userInfo">Loading...</div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1 class="title">Welcome back!</h1>
+            <p class="subtitle">Here's what's happening with your relationship intelligence platform.</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon goals">🎯</div>
+                <div class="stat-label">Goals</div>
+                <div class="stat-value" id="goalsCount">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon contacts">👥</div>
+                <div class="stat-label">Contacts</div>
+                <div class="stat-value" id="contactsCount">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon insights">🧠</div>
+                <div class="stat-label">AI Insights</div>
+                <div class="stat-value" id="insightsCount">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon plan">📈</div>
+                <div class="stat-label">Plan</div>
+                <div class="stat-value" id="planTier">-</div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Goals</h2>
+                    <a href="/goals" class="section-link">View all</a>
+                </div>
+                <div id="goalsContent" class="loading">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Contacts</h2>
+                    <a href="/contacts" class="section-link">View all</a>
+                </div>
+                <div id="contactsContent" class="loading">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                // Check authentication
+                const authResponse = await fetch('/api/auth/me');
+                if (!authResponse.ok) {
+                    window.location.href = '/';
+                    return;
+                }
+                
+                const userData = await authResponse.json();
+                const user = userData.user;
+                
+                // Update user info
+                document.getElementById('userInfo').textContent = user.email;
+                document.getElementById('goalsCount').textContent = user.goals_count || 0;
+                document.getElementById('contactsCount').textContent = user.contacts_count || 0;
+                document.getElementById('insightsCount').textContent = user.ai_suggestions_used || 0;
+                document.getElementById('planTier').textContent = user.subscription_tier || 'Free';
+
+                // Load goals
+                try {
+                    const goalsResponse = await fetch('/api/goals');
+                    if (goalsResponse.ok) {
+                        const goals = await goalsResponse.json();
+                        displayGoals(goals.slice(0, 3));
+                    } else {
+                        document.getElementById('goalsContent').innerHTML = '<div class="empty-state">No goals found</div>';
+                    }
+                } catch (error) {
+                    document.getElementById('goalsContent').innerHTML = '<div class="empty-state">Error loading goals</div>';
+                }
+
+                // Load contacts
+                try {
+                    const contactsResponse = await fetch('/api/contacts');
+                    if (contactsResponse.ok) {
+                        const contacts = await contactsResponse.json();
+                        displayContacts(contacts.slice(0, 5));
+                    } else {
+                        document.getElementById('contactsContent').innerHTML = '<div class="empty-state">No contacts found</div>';
+                    }
+                } catch (error) {
+                    document.getElementById('contactsContent').innerHTML = '<div class="empty-state">Error loading contacts</div>';
+                }
+
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+                window.location.href = '/';
+            }
+        }
+
+        function displayGoals(goals) {
+            const container = document.getElementById('goalsContent');
+            if (goals.length === 0) {
+                container.innerHTML = '<div class="empty-state">No goals yet. <a href="/goals">Create your first goal</a></div>';
+                return;
+            }
+
+            container.innerHTML = goals.map(goal => `
+                <div style="border-left: 4px solid #4f46e5; padding-left: 1rem; margin-bottom: 1rem;">
+                    <h3 style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">${goal.title}</h3>
+                    <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.5rem;">${goal.description || ''}</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.75rem; padding: 0.25rem 0.5rem; background: #e0e7ff; color: #4f46e5; border-radius: 9999px;">${goal.goal_type || 'General'}</span>
+                        <span style="font-size: 0.75rem; color: #6b7280;">${goal.progress_percentage || 0}% complete</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayContacts(contacts) {
+            const container = document.getElementById('contactsContent');
+            if (contacts.length === 0) {
+                container.innerHTML = '<div class="empty-state">No contacts yet. <a href="/contacts">Add your first contact</a></div>';
+                return;
+            }
+
+            container.innerHTML = contacts.map(contact => `
+                <div style="display: flex; align-items: center; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; background: #f9fafb;">
+                    <div style="width: 2.5rem; height: 2.5rem; background: linear-gradient(135deg, #4f46e5, #9333ea); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; margin-right: 1rem;">
+                        ${contact.name ? contact.name.charAt(0).toUpperCase() : '?'}
+                    </div>
+                    <div style="flex: 1;">
+                        <h4 style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">${contact.name || 'Unknown'}</h4>
+                        <p style="color: #6b7280; font-size: 0.875rem;">${contact.company || contact.email || ''}</p>
+                    </div>
+                    <span style="font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 9999px; ${
+                        contact.warmth_level === 'hot' ? 'background: #fee2e2; color: #991b1b;' :
+                        contact.warmth_level === 'warm' ? 'background: #fef3c7; color: #92400e;' :
+                        'background: #dbeafe; color: #1e40af;'
+                    }">${contact.warmth_level || 'cold'}</span>
+                </div>
+            `).join('');
+        }
+
+        // Load dashboard on page load
+        loadDashboard();
+    </script>
+</body>
+</html>
+    ''')
+
+@app.route('/goals')
+def serve_goals():
+    """Serve React goals page"""
+    return redirect('/dashboard')  # Simple redirect for now
+
+@app.route('/contacts')
+def serve_contacts():
+    """Serve React contacts page"""
+    return redirect('/dashboard')  # Simple redirect for now
 
 
 
