@@ -924,49 +924,252 @@ def get_contact_sources():
         logging.error(f"Sources error: {e}")
         return jsonify({'sources': ['manual', 'csv'], 'oauth_available': []})
 
-@api_bp.route('/contacts/oauth/<source>', methods=['GET'])
+@api_bp.route('/contacts/oauth-url/<source>', methods=['GET'])
 @auth_required
 def get_oauth_url(source):
     """Get OAuth URL for external service"""
     user_id = session.get('user_id')
     
     try:
-        from social_integrations import SocialIntegrationManager
-        manager = SocialIntegrationManager()
-        
-        # Generate state with user_id for security
-        state = f"{user_id}_{source}_{datetime.now().timestamp()}"
-        oauth_url = manager.get_auth_url(source, state)
-        
-        if oauth_url:
-            return jsonify({'oauth_url': oauth_url, 'state': state})
+        if source == 'google':
+            # Check if Google OAuth is configured
+            google_client_id = os.environ.get('GOOGLE_CLIENT_ID')
+            if not google_client_id:
+                return jsonify({'error': 'Google OAuth not configured. Please ask admin to add GOOGLE_CLIENT_ID to environment secrets.'}), 400
+            
+            # Create Google OAuth URL
+            redirect_uri = request.url_root.rstrip('/') + '/api/contacts/oauth-callback/google'
+            oauth_url = (
+                f"https://accounts.google.com/o/oauth2/auth?"
+                f"client_id={google_client_id}&"
+                f"redirect_uri={redirect_uri}&"
+                f"scope=https://www.googleapis.com/auth/contacts.readonly&"
+                f"response_type=code&"
+                f"access_type=offline&"
+                f"state={user_id}"
+            )
+            return jsonify({'oauth_url': oauth_url})
+        elif source == 'twitter':
+            return jsonify({'error': 'Twitter integration coming soon!'}), 400
         else:
-            return jsonify({'error': f'{source} integration not configured'}), 400
+            return jsonify({'error': 'Unsupported OAuth source'}), 400
     except Exception as e:
         logging.error(f"OAuth URL error: {e}")
         return jsonify({'error': str(e)}), 500
 
-@api_bp.route('/contacts/import/csv', methods=['POST'])
+@api_bp.route('/contacts/import-csv', methods=['POST'])
 @auth_required
 def import_csv_contacts():
-    """Import contacts from CSV data"""
+    """Import contacts from CSV file upload"""
     user_id = session.get('user_id')
-    data = request.get_json()
-    csv_data = data.get('csv_data', [])
     
-    if not csv_data:
-        return jsonify({'error': 'CSV data required'}), 400
+    # Check if file was uploaded
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file uploaded'}), 400
+    
+    file = request.files['file']
+    source = request.form.get('source', 'csv')
+    
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    
+    # Validate file type
+    if not file.filename or not file.filename.lower().endswith(('.csv', '.vcf')):
+        return jsonify({'error': 'Only CSV and VCF files are supported'}), 400
     
     try:
-        from contact_sync_engine import ContactSyncEngine
-        sync_engine = ContactSyncEngine()
-        sync_engine.init_sync_tables()
+        # Read file content
+        file_content = file.read().decode('utf-8')
         
-        results = sync_engine.process_csv_contacts(user_id, csv_data)
-        return jsonify(results)
+        # Process the file based on type
+        if file.filename.lower().endswith('.csv'):
+            imported_contacts = process_csv_file(user_id, file_content, source)
+        elif file.filename.lower().endswith('.vcf'):
+            imported_contacts = process_vcf_file(user_id, file_content, source)
+        else:
+            return jsonify({'error': 'Unsupported file type'}), 400
+        
+        return jsonify({
+            'success': True,
+            'imported_count': len(imported_contacts),
+            'imported_contacts': imported_contacts[:5],  # Return first 5 for preview
+            'message': f'Successfully imported {len(imported_contacts)} contacts'
+        })
+        
     except Exception as e:
-        logging.error(f"CSV import error: {e}")
-        return jsonify({'error': str(e)}), 500
+        logging.error(f"File import error: {e}")
+        return jsonify({'error': f'Import failed: {str(e)}'}), 500
+
+def process_csv_file(user_id, file_content, source):
+    """Process CSV file and import contacts"""
+    import csv
+    from io import StringIO
+    
+    contacts = []
+    reader = csv.DictReader(StringIO(file_content))
+    
+    # Common field mappings for different CSV formats
+    field_mappings = {
+        # LinkedIn export format
+        'First Name': 'first_name',
+        'Last Name': 'last_name', 
+        'Email Address': 'email',
+        'Company': 'company',
+        'Position': 'title',
+        'Connected On': 'connection_date',
+        # Google Contacts format
+        'Name': 'name',
+        'Given Name': 'first_name',
+        'Family Name': 'last_name',
+        'E-mail 1 - Value': 'email',
+        'E-mail Address': 'email',
+        'Phone 1 - Value': 'phone',
+        'Organization 1 - Name': 'company',
+        'Organization 1 - Title': 'title',
+        # Generic CSV format
+        'name': 'name',
+        'email': 'email',
+        'phone': 'phone',
+        'company': 'company',
+        'title': 'title',
+        'notes': 'notes'
+    }
+    
+    db = get_db()
+    
+    for row in reader:
+        try:
+            # Map CSV fields to standard contact fields
+            contact_data = {}
+            
+            for csv_field, value in row.items():
+                if csv_field in field_mappings and value:
+                    standard_field = field_mappings[csv_field]
+                    contact_data[standard_field] = value.strip()
+            
+            # Handle name splitting if full name provided
+            if 'name' in contact_data and 'first_name' not in contact_data:
+                name_parts = contact_data['name'].split(' ', 1)
+                contact_data['first_name'] = name_parts[0]
+                if len(name_parts) > 1:
+                    contact_data['last_name'] = name_parts[1]
+            
+            # Skip if no name or email
+            if not (contact_data.get('first_name') or contact_data.get('name') or contact_data.get('email')):
+                continue
+            
+            # Create contact name
+            if 'first_name' in contact_data and 'last_name' in contact_data:
+                full_name = f"{contact_data['first_name']} {contact_data['last_name']}"
+            elif 'name' in contact_data:
+                full_name = contact_data['name']
+            elif 'first_name' in contact_data:
+                full_name = contact_data['first_name']
+            else:
+                full_name = contact_data.get('email', 'Unknown Contact')
+            
+            # Insert into database
+            cursor = db.execute('''
+                INSERT INTO contacts (user_id, name, email, phone, company, title, 
+                                    notes, warmth, source, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                user_id,
+                full_name,
+                contact_data.get('email'),
+                contact_data.get('phone'),
+                contact_data.get('company'),
+                contact_data.get('title'),
+                contact_data.get('notes', f'Imported from {source}'),
+                'cold',  # Default warmth
+                source,
+                datetime.now().isoformat()
+            ))
+            
+            contact_id = cursor.lastrowid
+            contacts.append({
+                'id': contact_id,
+                'name': full_name,
+                'email': contact_data.get('email'),
+                'company': contact_data.get('company'),
+                'source': source
+            })
+            
+        except Exception as e:
+            logging.warning(f"Skipping contact row due to error: {e}")
+            continue
+    
+    db.commit()
+    return contacts
+
+def process_vcf_file(user_id, file_content, source):
+    """Process VCF (vCard) file and import contacts"""
+    contacts = []
+    
+    # Simple VCF parser (basic implementation)
+    vcf_contacts = file_content.split('BEGIN:VCARD')
+    
+    db = get_db()
+    
+    for vcf_contact in vcf_contacts[1:]:  # Skip first empty element
+        try:
+            contact_data = {}
+            lines = vcf_contact.split('\n')
+            
+            for line in lines:
+                line = line.strip()
+                if ':' in line:
+                    field, value = line.split(':', 1)
+                    if field == 'FN':  # Full name
+                        contact_data['name'] = value
+                    elif field == 'EMAIL':
+                        contact_data['email'] = value
+                    elif field.startswith('TEL'):
+                        contact_data['phone'] = value
+                    elif field == 'ORG':
+                        contact_data['company'] = value
+                    elif field == 'TITLE':
+                        contact_data['title'] = value
+            
+            # Skip if no name or email
+            if not (contact_data.get('name') or contact_data.get('email')):
+                continue
+            
+            full_name = contact_data.get('name') or contact_data.get('email', 'Unknown Contact')
+            
+            # Insert into database
+            cursor = db.execute('''
+                INSERT INTO contacts (user_id, name, email, phone, company, title, 
+                                    notes, warmth, source, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                user_id,
+                full_name,
+                contact_data.get('email'),
+                contact_data.get('phone'),
+                contact_data.get('company'),
+                contact_data.get('title'),
+                f'Imported from {source}',
+                'cold',  # Default warmth
+                source,
+                datetime.now().isoformat()
+            ))
+            
+            contact_id = cursor.lastrowid
+            contacts.append({
+                'id': contact_id,
+                'name': full_name,
+                'email': contact_data.get('email'),
+                'company': contact_data.get('company'),
+                'source': source
+            })
+            
+        except Exception as e:
+            logging.warning(f"Skipping VCF contact due to error: {e}")
+            continue
+    
+    db.commit()
+    return contacts
 
 # Trust Insights endpoints
 @api_bp.route('/trust/insights', methods=['GET'])
