@@ -3,10 +3,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './styles/globals.css';
 import { AppProvider, useAuth } from './context/AppContext';
 import Navbar from './components/layout/Navbar';
-import Dashboard from './pages/Dashboard';
-import Goals from './pages/Goals';
-import Contacts from './pages/Contacts';
-import Intelligence from './pages/Intelligence';
+import DashboardPage from './pages/DashboardPage';
+import GoalsPage from './pages/GoalsPage';
+import ContactsPage from './pages/ContactsPage';
+import IntelligencePage from './pages/IntelligencePage';
 import TrustInsights from './pages/TrustInsights';
 import Settings from './pages/Settings';
 import OnboardingPage from './pages/OnboardingPage';
@@ -47,10 +47,10 @@ function AppContent() {
         <div className="max-w-7xl mx-auto">
           <Routes>
             <Route path="/app/onboarding" element={<OnboardingPage />} />
-            <Route path="/app/dashboard" element={<Dashboard />} />
-            <Route path="/app/goals" element={<Goals />} />
-            <Route path="/app/contacts" element={<Contacts />} />
-            <Route path="/app/intelligence" element={<Intelligence />} />
+            <Route path="/app/dashboard" element={<DashboardPage />} />
+            <Route path="/app/goals" element={<GoalsPage />} />
+            <Route path="/app/contacts" element={<ContactsPage />} />
+            <Route path="/app/intelligence" element={<IntelligencePage />} />
             <Route path="/app/intelligence/trust-insights" element={<TrustInsights />} />
             <Route path="/app/settings" element={<Settings />} />
             <Route path="/onboarding" element={<Navigate to="/app/onboarding" replace />} />
