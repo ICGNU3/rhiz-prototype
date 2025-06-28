@@ -2461,6 +2461,320 @@ def settings_integrations():
     except Exception as e:
         return jsonify({'error': 'Integration status unavailable'}), 500
 
+# Settings API Routes
+@api_bp.route('/settings/profile', methods=['GET'])
+@auth_required
+def get_user_profile():
+    """Get user profile settings"""
+    try:
+        user_id = session.get('user_id')
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, email, first_name, last_name, timezone, subscription_tier 
+            FROM users WHERE id = %s
+        """, (user_id,))
+        
+        user = cursor.fetchone()
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+            
+        # Combine first_name and last_name into name
+        name = f"{user.get('first_name', '') or ''} {user.get('last_name', '') or ''}".strip()
+        if not name:
+            name = user.get('email', '').split('@')[0]  # Fallback to email prefix
+            
+        return jsonify({
+            'id': user['id'],
+            'name': name,
+            'email': user['email'],
+            'timezone': user.get('timezone', 'America/New_York'),
+            'subscription_tier': user.get('subscription_tier', 'free')
+        })
+        
+    except Exception as e:
+        logging.error(f"Error fetching user profile: {e}")
+        return jsonify({'error': 'Failed to fetch profile'}), 500
+
+@api_bp.route('/settings/profile', methods=['PUT'])
+@auth_required
+def update_user_profile():
+    """Update user profile settings"""
+    try:
+        user_id = session.get('user_id')
+        data = request.get_json()
+        
+        # Split name into first_name and last_name
+        name = data.get('name', '').strip()
+        name_parts = name.split(' ', 1) if name else ['', '']
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ''
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE users 
+            SET email = %s, first_name = %s, last_name = %s, timezone = %s
+            WHERE id = %s
+        """, (
+            data.get('email'),
+            first_name,
+            last_name, 
+            data.get('timezone', 'America/New_York'),
+            user_id
+        ))
+        conn.commit()
+        
+        return jsonify({'message': 'Profile updated successfully'})
+        
+    except Exception as e:
+        logging.error(f"Error updating user profile: {e}")
+        return jsonify({'error': 'Failed to update profile'}), 500
+
+@api_bp.route('/settings/notifications', methods=['GET'])
+@auth_required  
+def get_notification_preferences():
+    """Get user notification preferences"""
+    try:
+        user_id = session.get('user_id')
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT notification_preferences FROM users WHERE id = %s
+        """, (user_id,))
+        
+        user = cursor.fetchone()
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+            
+        # Parse JSON preferences or return defaults
+        import json
+        prefs = user.get('notification_preferences')
+        if prefs:
+            try:
+                preferences = json.loads(prefs)
+            except:
+                preferences = {}
+        else:
+            preferences = {}
+            
+        # Return with defaults
+        return jsonify({
+            'email_notifications': preferences.get('email_notifications', True),
+            'push_notifications': preferences.get('push_notifications', False),
+            'weekly_digest': preferences.get('weekly_digest', True),
+            'relationship_updates': preferences.get('relationship_updates', True),
+            'goal_reminders': preferences.get('goal_reminders', False)
+        })
+        
+    except Exception as e:
+        logging.error(f"Error fetching notification preferences: {e}")
+        return jsonify({'error': 'Failed to fetch preferences'}), 500
+
+@api_bp.route('/settings/notifications', methods=['PUT'])
+@auth_required
+def update_notification_preferences():
+    """Update user notification preferences"""
+    try:
+        user_id = session.get('user_id')
+        data = request.get_json()
+        
+        import json
+        preferences_json = json.dumps(data)
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE users 
+            SET notification_preferences = %s
+            WHERE id = %s
+        """, (preferences_json, user_id))
+        conn.commit()
+        
+        return jsonify({'message': 'Notification preferences updated'})
+        
+    except Exception as e:
+        logging.error(f"Error updating notification preferences: {e}")
+        return jsonify({'error': 'Failed to update preferences'}), 500
+
+@api_bp.route('/settings/integrations', methods=['GET'])
+@auth_required
+def get_integration_settings():
+    """Get user integration status"""
+    try:
+        user_id = session.get('user_id')
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT integration_settings FROM users WHERE id = %s
+        """, (user_id,))
+        
+        user = cursor.fetchone()
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+            
+        # Parse JSON settings or return defaults
+        import json
+        settings = user.get('integration_settings')
+        if settings:
+            try:
+                integrations = json.loads(settings)
+            except:
+                integrations = {}
+        else:
+            integrations = {}
+            
+        return jsonify({
+            'linkedin': integrations.get('linkedin', False),
+            'google': integrations.get('google', False),
+            'twitter': integrations.get('twitter', False)
+        })
+        
+    except Exception as e:
+        logging.error(f"Error fetching integration settings: {e}")
+        return jsonify({'error': 'Failed to fetch integrations'}), 500
+
+@api_bp.route('/settings/integrations/<platform>/connect', methods=['GET'])
+@auth_required
+def connect_integration(platform):
+    """Generate OAuth URL for platform connection"""
+    try:
+        # OAuth URLs for different platforms (these would be real OAuth endpoints)
+        oauth_urls = {
+            'linkedin': 'https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT&scope=r_liteprofile%20r_emailaddress%20w_member_social',
+            'google': 'https://accounts.google.com/oauth2/auth?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT&scope=https://www.googleapis.com/auth/contacts.readonly',
+            'twitter': 'https://twitter.com/i/oauth2/authorize?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT&scope=users.read%20tweet.read'
+        }
+        
+        if platform not in oauth_urls:
+            return jsonify({'error': 'Platform not supported'}), 400
+            
+        return jsonify({
+            'oauth_url': oauth_urls[platform],
+            'message': f'OAuth URL for {platform} (demo placeholder)'
+        })
+        
+    except Exception as e:
+        logging.error(f"Error generating OAuth URL for {platform}: {e}")
+        return jsonify({'error': 'Failed to generate OAuth URL'}), 500
+
+@api_bp.route('/settings/integrations/<platform>/disconnect', methods=['POST'])
+@auth_required
+def disconnect_integration(platform):
+    """Disconnect platform integration"""
+    try:
+        user_id = session.get('user_id')
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # Get current settings
+        cursor.execute("""
+            SELECT integration_settings FROM users WHERE id = %s
+        """, (user_id,))
+        
+        user = cursor.fetchone()
+        import json
+        
+        settings = user.get('integration_settings')
+        if settings:
+            try:
+                integrations = json.loads(settings)
+            except:
+                integrations = {}
+        else:
+            integrations = {}
+            
+        # Update platform status
+        integrations[platform] = False
+        
+        # Save updated settings
+        cursor.execute("""
+            UPDATE users 
+            SET integration_settings = %s
+            WHERE id = %s
+        """, (json.dumps(integrations), user_id))
+        conn.commit()
+        
+        return jsonify({'message': f'{platform} disconnected successfully'})
+        
+    except Exception as e:
+        logging.error(f"Error disconnecting {platform}: {e}")
+        return jsonify({'error': 'Failed to disconnect integration'}), 500
+
+@api_bp.route('/settings/export', methods=['GET'])
+@auth_required
+def export_user_data():
+    """Export all user data as JSON"""
+    try:
+        user_id = session.get('user_id')
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # Get user profile
+        cursor.execute("""
+            SELECT id, email, first_name, last_name, timezone, subscription_tier,
+                   notification_preferences, integration_settings, created_at
+            FROM users WHERE id = %s
+        """, (user_id,))
+        user_data = cursor.fetchone()
+        
+        # Get contacts
+        cursor.execute("""
+            SELECT * FROM contacts WHERE user_id = %s ORDER BY created_at DESC
+        """, (user_id,))
+        contacts_data = cursor.fetchall()
+        
+        # Get goals
+        cursor.execute("""
+            SELECT * FROM goals WHERE user_id = %s ORDER BY created_at DESC
+        """, (user_id,))
+        goals_data = cursor.fetchall()
+        
+        # Get interactions
+        cursor.execute("""
+            SELECT ci.*, c.name as contact_name 
+            FROM contact_interactions ci
+            JOIN contacts c ON ci.contact_id = c.id
+            WHERE c.user_id = %s 
+            ORDER BY ci.created_at DESC
+        """, (user_id,))
+        interactions_data = cursor.fetchall()
+        
+        # Compile export data
+        export_data = {
+            'export_timestamp': datetime.now().isoformat(),
+            'user_profile': dict(user_data) if user_data else {},
+            'contacts': [dict(contact) for contact in contacts_data],
+            'goals': [dict(goal) for goal in goals_data],
+            'interactions': [dict(interaction) for interaction in interactions_data],
+            'summary': {
+                'total_contacts': len(contacts_data),
+                'total_goals': len(goals_data),
+                'total_interactions': len(interactions_data)
+            }
+        }
+        
+        # Convert to JSON response
+        from flask import Response
+        import json
+        
+        json_data = json.dumps(export_data, indent=2, default=str)
+        
+        return Response(
+            json_data,
+            mimetype='application/json',
+            headers={'Content-Disposition': f'attachment; filename=rhiz-export-{user_id}.json'}
+        )
+        
+    except Exception as e:
+        logging.error(f"Error exporting user data: {e}")
+        return jsonify({'error': 'Failed to export data'}), 500
+
 def register_api_routes(app):
     """Register API routes with the Flask app"""
     app.register_blueprint(api_bp)
