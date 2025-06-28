@@ -38,7 +38,7 @@ export { default as AIConversationInterface } from './intelligence/AIConversatio
 export { default as RhizomaticGraph } from './network/RhizomaticGraph';
 
 // Goal Management
-export { default as GoalList } from './goals/GoalList';
+// Note: Goal components are now integrated directly into GoalsPage.tsx
 
 // Settings (Remaining component from features)
 export { default as SettingsPanel } from './features/SettingsPanel';
@@ -67,7 +67,7 @@ export { default as SettingsPanel } from './features/SettingsPanel';
  */
 
 // Type exports for convenience
-export type { ContactImportSource } from '../types/api';
+export type { ContactSource } from '../types/api';
 
 // Style exports for CSS-in-JS components
 export { UnifiedContactImportStyles } from './contacts/UnifiedContactImport';
