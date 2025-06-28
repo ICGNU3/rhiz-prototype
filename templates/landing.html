@@ -31,6 +31,21 @@
     <meta name="twitter:title" content="Rhiz - High-context relationship intelligence">
     <meta name="twitter:description" content="Transform professional relationships through AI-driven insights and strategic connection building.">
     
+    <!-- Security & Performance Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    
+    <!-- Enhanced Accessibility -->
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="color-scheme" content="dark">
+    
+    <!-- Progressive Web App Enhancements -->
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+    
     <!-- Structured Data for SEO -->
     <script type="application/ld+json">
     {
@@ -1040,6 +1055,17 @@
             color: #94a3b8;
             font-size: 13px;
         }
+        
+        /* Enhanced Button Loading Animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .button-loading {
+            align-items: center;
+            gap: 8px;
+        }
     </style>
 </head>
 <body>
@@ -1557,10 +1583,15 @@
                                     </div>
                                 </div>
                                 <div class="col-12 text-center">
-                                    <button type="submit" class="cta-button-light" style="width: 100%; max-width: 400px;">
-                                        Request Invitation
-                                        <i class="bi bi-envelope"></i>
+                                    <button type="submit" class="cta-button-light" style="width: 100%; max-width: 400px;" id="submitButton">
+                                        <span class="button-text">Request Invitation</span>
+                                        <span class="button-loading" style="display: none;">
+                                            <i class="bi bi-arrow-clockwise" style="animation: spin 1s linear infinite;"></i>
+                                            Submitting...
+                                        </span>
+                                        <i class="bi bi-envelope button-icon"></i>
                                     </button>
+                                    <div id="formFeedback" style="margin-top: 15px; display: none;"></div>
                                     <p style="margin-top: 20px; font-size: 14px; color: var(--text-secondary);">
                                         Invite requests are reviewed within 48 hours. Selected builders will receive access credentials via email.
                                     </p>
@@ -1575,6 +1606,11 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Performance Enhancement: Preload Critical Resources -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     
     <!-- Advanced 2025 Animations & Interactions -->
     <script>
@@ -1809,6 +1845,70 @@
                     card.style.boxShadow = '';
                 });
             });
+
+            // Enhanced Form Submission with Better UX
+            const rootMembershipForm = document.getElementById('rootMembershipForm');
+            const submitButton = document.getElementById('submitButton');
+            const formFeedback = document.getElementById('formFeedback');
+            
+            if (rootMembershipForm && submitButton) {
+                rootMembershipForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    // Show loading state
+                    const buttonText = submitButton.querySelector('.button-text');
+                    const buttonLoading = submitButton.querySelector('.button-loading');
+                    const buttonIcon = submitButton.querySelector('.button-icon');
+                    
+                    buttonText.style.display = 'none';
+                    buttonIcon.style.display = 'none';
+                    buttonLoading.style.display = 'inline-flex';
+                    submitButton.disabled = true;
+                    
+                    try {
+                        const formData = new FormData(rootMembershipForm);
+                        const response = await fetch('/request-invite', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        if (response.ok) {
+                            // Success feedback
+                            formFeedback.innerHTML = `
+                                <div style="padding: 15px; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 10px; color: #22c55e;">
+                                    <i class="bi bi-check-circle"></i> Application submitted successfully! Check your email for next steps.
+                                </div>
+                            `;
+                            formFeedback.style.display = 'block';
+                            
+                            // Reset form after success
+                            setTimeout(() => {
+                                rootMembershipForm.reset();
+                            }, 1000);
+                            
+                        } else {
+                            throw new Error('Submission failed');
+                        }
+                        
+                    } catch (error) {
+                        // Error feedback
+                        formFeedback.innerHTML = `
+                            <div style="padding: 15px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; color: #ef4444;">
+                                <i class="bi bi-exclamation-triangle"></i> Something went wrong. Please try again or email us directly.
+                            </div>
+                        `;
+                        formFeedback.style.display = 'block';
+                    } finally {
+                        // Reset button state
+                        setTimeout(() => {
+                            buttonText.style.display = 'inline';
+                            buttonIcon.style.display = 'inline';
+                            buttonLoading.style.display = 'none';
+                            submitButton.disabled = false;
+                        }, 1500);
+                    }
+                });
+            }
 
             // Smooth scroll enhancement
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
