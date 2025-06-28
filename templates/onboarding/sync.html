@@ -333,15 +333,40 @@
         
         async function initiateGoogleSync() {
             try {
+                showSyncProgress();
                 const response = await fetch('/api/contacts/oauth-url/google');
                 const result = await response.json();
                 
                 if (response.ok && result.oauth_url) {
-                    window.location.href = result.oauth_url;
+                    // Open OAuth in popup window
+                    const popup = window.open(result.oauth_url, 'google-oauth', 'width=500,height=600');
+                    
+                    // Listen for messages from popup
+                    window.addEventListener('message', function(event) {
+                        if (event.data.success) {
+                            hideSyncProgress();
+                            showSuccessMessage(event.data.imported_count);
+                            showContinueButton();
+                            popup.close();
+                        } else if (event.data.error) {
+                            hideSyncProgress();
+                            alert('Google sync failed: ' + event.data.error);
+                        }
+                    });
+                    
+                    // Check if popup was closed manually
+                    const checkClosed = setInterval(() => {
+                        if (popup.closed) {
+                            clearInterval(checkClosed);
+                            hideSyncProgress();
+                        }
+                    }, 1000);
                 } else {
-                    alert('Google sync not available. Please try uploading a CSV file.');
+                    hideSyncProgress();
+                    alert('Google sync not available: ' + (result.error || 'Please ask admin to configure Google OAuth.'));
                 }
             } catch (error) {
+                hideSyncProgress();
                 alert('Google sync not available. Please try uploading a CSV file.');
             }
         }
@@ -365,6 +390,114 @@
             // Skip to network view with option to add manually
             window.location.href = '/onboarding/network?manual=true';
         }
+        
+        function uploadSelectedFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showUploadError('Please select a file first.');
+                return;
+            }
+            
+            // Validate file size (10MB limit)
+            if (file.size > 10 * 1024 * 1024) {
+                showUploadError('File too large. Please select a file smaller than 10MB.');
+                return;
+            }
+            
+            // Validate file type
+            const allowedTypes = ['.csv', '.vcf'];
+            const fileExt = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+            if (!allowedTypes.includes(fileExt)) {
+                showUploadError('Only CSV and VCF files are supported.');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('source', getFileSource(file.name));
+            
+            uploadFile(formData);
+        }
+        
+        async function uploadFile(formData) {
+            try {
+                showSyncProgress();
+                updateProgressText('Uploading and processing your file...');
+                
+                const response = await fetch('/api/contacts/import-csv', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    hideSyncProgress();
+                    showSuccessMessage(result.imported_count);
+                    showContinueButton();
+                } else {
+                    hideSyncProgress();
+                    showUploadError('Upload failed: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                hideSyncProgress();
+                showUploadError('Network error. Please check your connection and try again.');
+            }
+        }
+        
+        function showUploadError(message) {
+            const errorDiv = document.getElementById('uploadError');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('d-none');
+        }
+        
+        function hideUploadError() {
+            const errorDiv = document.getElementById('uploadError');
+            errorDiv.classList.add('d-none');
+        }
+        
+        function updateProgressText(text) {
+            const progressElement = document.querySelector('#syncProgress .fw-bold');
+            if (progressElement) {
+                progressElement.textContent = text;
+            }
+        }
+        
+        function getFileSource(filename) {
+            const name = filename.toLowerCase();
+            if (name.includes('linkedin')) return 'linkedin';
+            if (name.includes('google') || name.includes('contacts')) return 'google';
+            if (name.includes('outlook') || name.includes('hotmail')) return 'outlook';
+            if (name.includes('icloud') || name.includes('apple')) return 'icloud';
+            return 'csv';
+        }
+        
+        function showManualEntry() {
+            // Create manual entry modal or redirect
+            window.location.href = '/onboarding/network?mode=manual';
+        }
+        
+        // File input change handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('fileInput');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const fileInfo = document.getElementById('fileInfo');
+            
+            fileInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    fileInfo.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                    fileInfo.classList.remove('d-none');
+                    uploadBtn.disabled = false;
+                    hideUploadError();
+                } else {
+                    fileInfo.classList.add('d-none');
+                    uploadBtn.disabled = true;
+                }
+            });
+        });
         
         function showSyncProgress() {
             document.getElementById('syncProgress').classList.remove('d-none');
