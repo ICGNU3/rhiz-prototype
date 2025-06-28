@@ -32,3 +32,5 @@ export interface ApiResponse<T> {
   data?: T;
   error?: string;
 }
+
+export type ContactImportSource = 'google' | 'linkedin' | 'csv' | 'manual' | 'icloud' | 'outlook';
