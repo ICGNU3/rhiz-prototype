@@ -41,7 +41,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex flex-col">
-      <Navbar user={user} />
+      <Navbar user={user} onLogout={logout} />
       <main className="flex-1 p-6">
         <div className="max-w-7xl mx-auto">
           <Routes>
