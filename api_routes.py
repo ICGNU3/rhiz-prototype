@@ -89,24 +89,64 @@ def login():
     
     return jsonify({'error': 'User not found'}), 404
 
-@api_bp.route('/auth/demo-login', methods=['POST'])
-def demo_login():
-    """Quick demo login for testing"""
-    db = get_db()
-    user = db.execute('SELECT * FROM users WHERE email = ?', ('demo@rhiz.app',)).fetchone()
+@api_bp.route('/auth/register', methods=['POST'])
+def register():
+    """Register a new user with email"""
+    data = request.get_json()
+    email = data.get('email')
     
-    if user:
-        session['user_id'] = user['id']
+    if not email:
+        return jsonify({'error': 'Email is required'}), 400
+    
+    # Validate email format
+    import re
+    if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+        return jsonify({'error': 'Invalid email format'}), 400
+    
+    db = get_db()
+    
+    # Check if user already exists
+    existing_user = db.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+    if existing_user:
+        return jsonify({'error': 'User already exists with this email'}), 409
+    
+    # Create new user
+    import uuid
+    user_id = str(uuid.uuid4())
+    
+    try:
+        db.execute('''
+            INSERT INTO users (id, email, subscription_tier, created_at)
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+        ''', (user_id, email, 'explorer'))
+        db.commit()
+        
+        # Create session
+        session['user_id'] = user_id
+        session['authenticated'] = True
+        
+        # Create starter goal to help with onboarding
+        goal_id = str(uuid.uuid4())
+        db.execute('''
+            INSERT INTO goals (id, user_id, title, description)
+            VALUES (?, ?, ?, ?)
+        ''', (goal_id, user_id, 
+              'Get started with Rhiz', 
+              'Add your first contacts and start building your relationship intelligence network'))
+        
+        db.commit()
+        
         return jsonify({
             'success': True,
             'user': {
-                'id': user['id'],
-                'email': user['email'],
-                'subscription_tier': user['subscription_tier']
-            }
+                'id': user_id,
+                'email': email,
+                'subscription_tier': 'explorer'
+            },
+            'onboarding': True
         })
-    
-    return jsonify({'error': 'Demo user not found'}), 404
+    except Exception as e:
+        return jsonify({'error': 'Failed to create user'}), 500
 
 @api_bp.route('/auth/magic-link', methods=['POST'])
 def send_magic_link():

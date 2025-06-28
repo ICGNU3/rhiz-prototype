@@ -182,8 +182,8 @@ def login():
                     <div class="mb-3">
                         <span class="text-light-emphasis">or</span>
                     </div>
-                    <button id="demoBtn" class="btn btn-outline-light w-100 btn-glassmorphism">
-                        Try Demo
+                    <button id="registerBtn" class="btn btn-outline-light w-100 btn-glassmorphism">
+                        Create Free Account
                     </button>
                 </div>
                 
@@ -220,26 +220,39 @@ def login():
             }
         });
         
-        document.getElementById('demoBtn').addEventListener('click', async function() {
+        document.getElementById('registerBtn').addEventListener('click', async function() {
+            const email = document.getElementById('email').value;
             const status = document.getElementById('status');
-            status.innerHTML = '<div class="alert alert-info">Setting up demo...</div>';
+            
+            if (!email) {
+                status.innerHTML = '<div class="alert alert-warning">Please enter an email address first.</div>';
+                return;
+            }
+            
+            status.innerHTML = '<div class="alert alert-info">Creating your account...</div>';
             
             try {
-                const response = await fetch('/api/auth/demo-login', {
+                const response = await fetch('/api/auth/register', {
                     method: 'POST',
-                    credentials: 'include'
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email: email })
                 });
                 
+                const result = await response.json();
+                
                 if (response.ok) {
-                    status.innerHTML = '<div class="alert alert-success">Demo setup complete! Redirecting...</div>';
+                    status.innerHTML = '<div class="alert alert-success">Account created! Redirecting to your dashboard...</div>';
                     setTimeout(() => {
                         window.location.href = '/app/dashboard';
-                    }, 1000);
+                    }, 1500);
                 } else {
-                    status.innerHTML = '<div class="alert alert-danger">Demo setup failed. Please try again.</div>';
+                    status.innerHTML = `<div class="alert alert-danger">${result.error || 'Registration failed. Please try again.'}</div>`;
                 }
             } catch (error) {
-                status.innerHTML = '<div class="alert alert-danger">Error setting up demo. Please try again.</div>';
+                status.innerHTML = '<div class="alert alert-danger">Error creating account. Please try again.</div>';
             }
         });
     </script>
