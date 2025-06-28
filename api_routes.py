@@ -1770,6 +1770,8 @@ def register_core_routes(app):
     def request_invite():
         """Handle invite request form submission"""
         try:
+            logging.info("Invite request received")
+            
             # Extract form data
             first_name = request.form.get('firstName', '').strip()
             last_name = request.form.get('lastName', '').strip()
@@ -1778,8 +1780,11 @@ def register_core_routes(app):
             stage = request.form.get('stage', '').strip()
             goals = request.form.get('goals', '').strip()
             
+            logging.info(f"Form data: firstName={first_name}, lastName={last_name}, email={email}")
+            
             # Basic validation
             if not all([first_name, last_name, email, company, stage, goals]):
+                logging.warning("Missing form fields")
                 return '''
                 <html><body style="font-family: Arial, sans-serif; padding: 40px; text-align: center;">
                     <h2>Missing Information</h2>
@@ -1788,11 +1793,43 @@ def register_core_routes(app):
                 </body></html>
                 ''', 400
             
+            # Check if table exists first
+            try:
+                DatabaseHelper.execute_query("SELECT 1 FROM invite_requests LIMIT 1")
+                logging.info("invite_requests table exists")
+            except Exception as table_error:
+                logging.error(f"Table check error: {table_error}")
+                # Create table if it doesn't exist
+                try:
+                    DatabaseHelper.execute_query('''
+                        CREATE TABLE IF NOT EXISTS invite_requests (
+                            id SERIAL PRIMARY KEY,
+                            first_name VARCHAR(100) NOT NULL,
+                            last_name VARCHAR(100) NOT NULL,
+                            email VARCHAR(255) NOT NULL,
+                            company VARCHAR(255) NOT NULL,
+                            stage VARCHAR(100) NOT NULL,
+                            goals TEXT NOT NULL,
+                            requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            status VARCHAR(50) DEFAULT 'pending',
+                            reviewed_at TIMESTAMP NULL,
+                            reviewed_by VARCHAR(100) NULL,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        )
+                    ''')
+                    logging.info("Created invite_requests table")
+                except Exception as create_error:
+                    logging.error(f"Failed to create table: {create_error}")
+                    raise create_error
+            
             # Store invite request in database using PostgreSQL syntax
+            logging.info("Attempting to insert invite request")
             DatabaseHelper.execute_insert('''
                 INSERT INTO invite_requests (first_name, last_name, email, company, stage, goals, requested_at, status)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             ''', (first_name, last_name, email, company, stage, goals, datetime.now().isoformat(), 'pending'))
+            
+            logging.info("Successfully inserted invite request")
             
             # Simple confirmation page
             return f'''
@@ -1817,9 +1854,22 @@ def register_core_routes(app):
             
         except Exception as e:
             logging.error(f"Invite request error: {e}")
-            return '''
+            logging.error(f"Error type: {type(e).__name__}")
+            logging.error(f"Error details: {str(e)}")
+            
+            # Try to provide more helpful error information
+            error_details = str(e)
+            if "relation" in error_details and "does not exist" in error_details:
+                error_msg = "Database table missing - please contact support"
+            elif "DatabaseHelper" in error_details:
+                error_msg = "Database connection issue - please try again"
+            else:
+                error_msg = f"Server error: {error_details[:100]}"
+            
+            return f'''
             <html><body style="font-family: Arial, sans-serif; padding: 40px; text-align: center;">
                 <h2>Something went wrong</h2>
+                <p>Error: {error_msg}</p>
                 <p>Please try again or contact support.</p>
                 <a href="/" style="color: #007bff;">← Back to home</a>
             </body></html>
