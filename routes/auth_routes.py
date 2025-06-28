@@ -5,8 +5,8 @@ Handles signup, login, magic links, and subscription management
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash
 from . import RouteBase, login_required, get_current_user
-from stripe_integration import StripePaymentManager, PricingHelper
-from utils.email import email_service as resend_email_service
+# from stripe_integration import StripePaymentManager, PricingHelper
+# from utils.email import email_service as resend_email_service
 import logging
 
 # Create blueprint

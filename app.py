@@ -122,15 +122,36 @@ try:
 except Exception as e:
     logging.error(f"Failed to initialize database: {e}")
 
-# Add basic landing page route
-@app.route('/')
-def landing():
-    """Landing page for unauthenticated users"""
-    try:
-        return render_template('landing.html')
-    except Exception as e:
-        logging.error(f"Landing page template error: {e}")
-        return '''
+# Register route blueprints
+try:
+    from routes.core_routes import core_bp
+    from routes.auth_routes import auth_bp
+    from routes.contact_routes import contact_bp
+    from routes.goal_routes import goal_bp
+    from routes.intelligence_routes import intelligence_bp
+    from routes.journal_routes import journal_bp
+    
+    app.register_blueprint(core_bp)
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(contact_bp)
+    app.register_blueprint(goal_bp)
+    app.register_blueprint(intelligence_bp)
+    app.register_blueprint(journal_bp)
+    
+    logging.info("All route blueprints registered successfully")
+    
+except ImportError as e:
+    logging.error(f"Failed to import route blueprints: {e}")
+    
+    # Add basic landing page route as fallback
+    @app.route('/')
+    def landing():
+        """Landing page for unauthenticated users"""
+        try:
+            return render_template('landing.html')
+        except Exception as e:
+            logging.error(f"Landing page template error: {e}")
+            return '''
         <!DOCTYPE html>
         <html lang="en" data-bs-theme="dark">
         <head>
