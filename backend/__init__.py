@@ -6,7 +6,7 @@ import logging
 from flask import Flask
 from flask_cors import CORS
 from backend.extensions import db, migrate
-from backend.routes import register_blueprints
+# Direct blueprint imports will be done in register_blueprints function
 
 
 def create_app(config_name=None):
