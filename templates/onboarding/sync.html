@@ -266,8 +266,10 @@
             
             switch(syncType) {
                 case 'phone':
-                case 'linkedin':
                     showUploadZone();
+                    break;
+                case 'linkedin':
+                    showLinkedInScraper();
                     break;
                 case 'google':
                     initiateGoogleSync();
@@ -491,6 +493,117 @@
             if (name.includes('outlook') || name.includes('hotmail')) return 'outlook';
             if (name.includes('icloud') || name.includes('apple')) return 'icloud';
             return 'csv';
+        }
+        
+        function showLinkedInScraper() {
+            // Hide upload zone and show LinkedIn instructions
+            hideUploadZone();
+            
+            // Create LinkedIn scraper interface
+            const container = document.querySelector('.glass-card');
+            const existingLinkedInPanel = document.getElementById('linkedinScraperPanel');
+            
+            if (existingLinkedInPanel) {
+                existingLinkedInPanel.remove();
+            }
+            
+            const linkedinPanel = document.createElement('div');
+            linkedinPanel.id = 'linkedinScraperPanel';
+            linkedinPanel.className = 'mt-4 p-4 border border-primary rounded-3';
+            linkedinPanel.style.background = 'rgba(0, 123, 255, 0.1)';
+            
+            linkedinPanel.innerHTML = `
+                <div class="text-center mb-4">
+                    <i class="bi bi-linkedin text-primary mb-3" style="font-size: 2.5rem;"></i>
+                    <h4 class="text-primary">LinkedIn Connections Import</h4>
+                    <p class="text-light mb-0">Smart scraper to extract your LinkedIn connections</p>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="alert alert-info border-0" style="background: rgba(23, 162, 184, 0.1);">
+                        <h6 class="alert-heading mb-3"><i class="bi bi-info-circle me-2"></i>Instructions:</h6>
+                        <ol class="mb-0 text-light">
+                            <li class="mb-2">Make sure you are logged into LinkedIn in another browser tab</li>
+                            <li class="mb-2">Visit: <a href="https://www.linkedin.com/mynetwork/invite-connect/connections/" target="_blank" class="text-primary">LinkedIn Connections Page</a></li>
+                            <li class="mb-2">Keep that tab open and return here</li>
+                            <li>Click "Start Scraping" below to automatically extract your connections</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <button class="btn btn-primary btn-lg me-3" onclick="startLinkedInScraping()">
+                        <i class="bi bi-play-circle me-2"></i>Start Scraping
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="showUploadZone()">
+                        <i class="bi bi-upload me-2"></i>Upload CSV Instead
+                    </button>
+                </div>
+                
+                <div id="linkedinScrapingProgress" class="d-none mt-4">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary mb-3"></div>
+                        <div class="fw-bold">Scraping LinkedIn connections...</div>
+                        <small class="text-muted">This may take a few minutes depending on your network size</small>
+                    </div>
+                </div>
+            `;
+            
+            // Insert after sync options
+            const syncOptions = document.querySelector('.sync-options');
+            syncOptions.after(linkedinPanel);
+        }
+        
+        async function startLinkedInScraping() {
+            const progressDiv = document.getElementById('linkedinScrapingProgress');
+            const startButton = progressDiv.previousElementSibling.querySelector('button');
+            
+            // Show progress
+            progressDiv.classList.remove('d-none');
+            startButton.disabled = true;
+            
+            try {
+                const response = await fetch('/api/scrape-linkedin-connections', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        max_connections: 500,
+                        headless: true
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    // Success - show results and continue button
+                    progressDiv.classList.add('d-none');
+                    startButton.disabled = false;
+                    
+                    showSuccessMessage(result.imported_to_db || result.total_scraped);
+                    showContinueButton();
+                    
+                    // Update progress text
+                    updateProgressText(`Successfully imported ${result.imported_to_db} LinkedIn connections`);
+                } else {
+                    // Error handling
+                    progressDiv.classList.add('d-none');
+                    startButton.disabled = false;
+                    
+                    const errorMsg = result.error || 'Scraping failed';
+                    alert(`LinkedIn scraping failed: ${errorMsg}\n\nPlease try uploading a CSV file instead.`);
+                    
+                    // Show upload option as fallback
+                    showUploadZone();
+                }
+            } catch (error) {
+                progressDiv.classList.add('d-none');
+                startButton.disabled = false;
+                
+                alert('Network error during scraping. Please try uploading a CSV file instead.');
+                showUploadZone();
+            }
         }
         
         function showManualEntry() {
