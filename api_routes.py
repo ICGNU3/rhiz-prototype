@@ -764,9 +764,8 @@ def intelligence_chat():
         
         # Use contact intelligence for processing
         try:
-            from services.contact_intelligence import contact_intelligence
-            contact_intelligence.db = get_db()
-            response = contact_intelligence.process_natural_language_query(user_id, user_message)
+            import services.contact_intelligence as contact_intelligence_module
+            response = contact_intelligence_module.process_natural_language_query(user_id, user_message)
             
             # Handle string response from ContactNLP
             if isinstance(response, str):
@@ -1331,9 +1330,10 @@ def get_trust_insights():
     user_id = session.get('user_id')
     
     try:
-        from services.trust_insights import trust_insights
-        trust_insights.db = get_db()
-        insights_data = trust_insights.get_trust_insights(user_id)
+        import services.trust_insights as trust_insights_module
+        trust_engine = trust_insights_module.TrustInsights()
+        trust_engine.db = get_db()
+        insights_data = trust_engine.get_trust_insights(user_id)
         
         return jsonify({
             'success': True,
@@ -1351,9 +1351,10 @@ def get_trust_health():
     user_id = session.get('user_id')
     
     try:
-        from services.trust_insights import trust_insights
-        trust_insights.db = get_db()
-        health_data = trust_insights.get_trust_health(user_id)
+        import services.trust_insights as trust_insights_module
+        trust_engine = trust_insights_module.TrustInsights()
+        trust_engine.db = get_db()
+        health_data = trust_engine.get_trust_health(user_id)
         
         return jsonify({
             'success': True,
