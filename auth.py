@@ -334,7 +334,7 @@ class EmailService:
         if not base_url:
             base_url = os.environ.get('BASE_URL', 'http://localhost:5000')
         
-        magic_url = f"{base_url}/auth/verify?token={magic_token}"
+        magic_url = f"{base_url}/api/auth/verify?token={magic_token}"
         
         subject = "Sign in to Rhiz"
         html_content = f"""
