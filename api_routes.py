@@ -1689,24 +1689,13 @@ def register_core_routes(app):
 </body>
 </html>'''
 
-    # Onboarding route handlers
-    @app.route('/onboarding/welcome')
+    # Onboarding routes now redirect to React app
+    @app.route('/onboarding')
+    @app.route('/onboarding/<path:step>')
     @auth_required
-    def onboarding_welcome():
-        """Onboarding welcome page"""
-        return render_template('onboarding/welcome.html')
-
-    @app.route('/onboarding/sync')
-    @auth_required
-    def onboarding_sync():
-        """Onboarding contact sync page"""
-        return render_template('onboarding/sync.html')
-
-    @app.route('/onboarding/network')
-    @auth_required
-    def onboarding_network():
-        """Onboarding network mapping page"""
-        return render_template('onboarding/network.html')
+    def onboarding_redirect(step=None):
+        """Redirect onboarding to React app"""
+        return redirect('/app/onboarding')
     
     @app.route('/request-invite', methods=['POST'])
     def request_invite():

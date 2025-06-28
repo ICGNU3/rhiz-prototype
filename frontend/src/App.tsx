@@ -9,6 +9,7 @@ import Contacts from './pages/Contacts';
 import Intelligence from './pages/Intelligence';
 import TrustInsights from './pages/TrustInsights';
 import Settings from './pages/Settings';
+import OnboardingPage from './pages/OnboardingPage';
 import Login from './components/auth/Login';
 
 // Create a query client
@@ -45,12 +46,14 @@ function AppContent() {
       <main className="flex-1 p-6">
         <div className="max-w-7xl mx-auto">
           <Routes>
+            <Route path="/app/onboarding" element={<OnboardingPage />} />
             <Route path="/app/dashboard" element={<Dashboard />} />
             <Route path="/app/goals" element={<Goals />} />
             <Route path="/app/contacts" element={<Contacts />} />
             <Route path="/app/intelligence" element={<Intelligence />} />
             <Route path="/app/intelligence/trust-insights" element={<TrustInsights />} />
             <Route path="/app/settings" element={<Settings />} />
+            <Route path="/onboarding" element={<Navigate to="/app/onboarding" replace />} />
             <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
             <Route path="/goals" element={<Navigate to="/app/goals" replace />} />
             <Route path="/contacts" element={<Navigate to="/app/contacts" replace />} />
