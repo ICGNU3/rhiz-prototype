@@ -980,6 +980,7 @@ def import_csv_contacts():
     try:
         # Read file content
         file_content = file.read().decode('utf-8')
+        logging.info(f"Processing {file.filename} ({len(file_content)} chars) for user {user_id}")
         
         # Process the file based on type
         if file.filename.lower().endswith('.csv'):
@@ -988,6 +989,8 @@ def import_csv_contacts():
             imported_contacts = process_vcf_file(user_id, file_content, source)
         else:
             return jsonify({'error': 'Unsupported file type'}), 400
+            
+        logging.info(f"Import completed: {len(imported_contacts)} contacts imported")
         
         return jsonify({
             'success': True,
@@ -1006,7 +1009,26 @@ def process_csv_file(user_id, file_content, source):
     from io import StringIO
     
     contacts = []
-    reader = csv.DictReader(StringIO(file_content))
+    
+    # Handle LinkedIn CSV format which has notes at the top
+    lines = file_content.strip().split('\n')
+    csv_start = 0
+    
+    # Find the actual CSV header (LinkedIn files have notes at top)
+    for i, line in enumerate(lines):
+        if line.startswith('First Name,Last Name,') or line.startswith('Name,') or line.startswith('name,'):
+            csv_start = i
+            break
+    
+    # Use the CSV portion only
+    if csv_start > 0:
+        csv_data = '\n'.join(lines[csv_start:])
+    else:
+        csv_data = file_content
+    
+    reader = csv.DictReader(StringIO(csv_data))
+    
+    logging.info(f"CSV processing started, found header at line {csv_start}")
     
     # Common field mappings for different CSV formats
     field_mappings = {
@@ -1037,8 +1059,12 @@ def process_csv_file(user_id, file_content, source):
     
     db = get_db()
     
+    processed_count = 0
     for row in reader:
         try:
+            processed_count += 1
+            logging.info(f"Processing row {processed_count}: {row}")
+            
             # Map CSV fields to standard contact fields
             contact_data = {}
             
@@ -1054,8 +1080,12 @@ def process_csv_file(user_id, file_content, source):
                 if len(name_parts) > 1:
                     contact_data['last_name'] = name_parts[1]
             
-            # Skip if no name or email
+            # Skip if no name (but allow even if no email since LinkedIn often doesn't provide emails)
             if not (contact_data.get('first_name') or contact_data.get('name') or contact_data.get('email')):
+                continue
+            
+            # Skip empty rows (LinkedIn exports sometimes have these)
+            if not any(value.strip() for value in row.values() if value):
                 continue
             
             # Create contact name
