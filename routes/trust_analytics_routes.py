@@ -46,12 +46,12 @@ class TrustAnalyticsRoutes(RouteBase):
                         c.warmth_level,
                         c.notes,
                         COUNT(ci.id) as total_interactions,
-                        MAX(ci.created_at) as last_interaction,
+                        MAX(ci.interaction_date) as last_interaction,
                         AVG(CASE WHEN ci.sentiment = 'positive' THEN 1 
                                  WHEN ci.sentiment = 'neutral' THEN 0.5 
                                  ELSE 0 END) as avg_sentiment,
-                        COUNT(CASE WHEN ci.interaction_type = 'outbound' THEN 1 END) as outbound_count,
-                        COUNT(CASE WHEN ci.interaction_type = 'inbound' THEN 1 END) as inbound_count
+                        COUNT(CASE WHEN ci.direction = 'outbound' THEN 1 END) as outbound_count,
+                        COUNT(CASE WHEN ci.direction = 'inbound' THEN 1 END) as inbound_count
                     FROM contacts c
                     LEFT JOIN contact_interactions ci ON c.id = ci.contact_id
                     WHERE c.user_id = %s
@@ -228,14 +228,14 @@ class TrustAnalyticsRoutes(RouteBase):
         try:
             query = """
                 SELECT 
-                    created_at,
-                    interaction_type,
-                    channel,
+                    interaction_date as created_at,
+                    direction,
+                    method,
                     sentiment,
-                    notes
+                    content as notes
                 FROM contact_interactions 
                 WHERE contact_id = %s 
-                ORDER BY created_at DESC 
+                ORDER BY interaction_date DESC 
                 LIMIT %s
             """
             cur.execute(query, (contact_id, limit))
@@ -244,8 +244,8 @@ class TrustAnalyticsRoutes(RouteBase):
             return [
                 {
                     'date': interaction['created_at'].isoformat() if interaction['created_at'] else '',
-                    'type': 'outbound' if interaction['interaction_type'] == 'outbound' else 'inbound',
-                    'channel': interaction['channel'] or 'other',
+                    'type': interaction['direction'] or 'outbound',
+                    'channel': interaction['method'] or 'other',
                     'sentiment_score': 1 if interaction['sentiment'] == 'positive' else 0.5 if interaction['sentiment'] == 'neutral' else 0
                 }
                 for interaction in interactions
