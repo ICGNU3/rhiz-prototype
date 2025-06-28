@@ -78,7 +78,7 @@ def test_contact_import():
             cursor.execute('''
                 INSERT INTO contacts (id, user_id, name, email, phone, company, title, 
                                     notes, warmth_status, warmth_label, source, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ''', (
                 contact_id,
                 user_id,
@@ -103,12 +103,12 @@ def test_contact_import():
     print(f"\nTotal contacts imported: {contacts_imported}")
     
     # Verify import
-    cursor.execute("SELECT COUNT(*) FROM contacts WHERE user_id = ?", (user_id,))
+    cursor.execute("SELECT COUNT(*) FROM contacts WHERE user_id = %s", (user_id,))
     count = cursor.fetchone()[0]
     print(f"Contacts in database for test_user: {count}")
     
     # Show sample contacts
-    cursor.execute("SELECT name, email, company, warmth_label FROM contacts WHERE user_id = ? LIMIT 5", (user_id,))
+    cursor.execute("SELECT name, email, company, warmth_label FROM contacts WHERE user_id = %s LIMIT 5", (user_id,))
     samples = cursor.fetchall()
     print("\nSample imported contacts:")
     for sample in samples:

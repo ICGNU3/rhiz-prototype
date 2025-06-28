@@ -17,9 +17,10 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 # Database connection helper
 def get_db():
-    db = sqlite3.connect('db.sqlite3')
-    db.row_factory = sqlite3.Row
-    return db
+    import psycopg2
+    import psycopg2.extras
+    conn = psycopg2.connect(os.environ.get("DATABASE_URL"))
+    return conn
 
 # Authentication decorator
 def auth_required(f):
@@ -1116,25 +1117,26 @@ def process_csv_file(user_id, file_content, source):
             if contact_data.get('connection_date'):
                 import_notes += f" on {contact_data.get('connection_date')}"
             
-            # Insert into database
-            cursor = db.execute('''
-                INSERT INTO contacts (id, user_id, name, email, phone, company, title, 
-                                    notes, warmth_status, warmth_label, source, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                contact_id,
-                user_id,
-                full_name,
-                contact_data.get('email'),
-                contact_data.get('phone'),
-                contact_data.get('company'),
-                contact_data.get('title'),
-                import_notes,
-                warmth_status,
-                warmth_label,
-                source,
-                datetime.now().isoformat()
-            ))
+            # Insert into database using PostgreSQL
+            with db.cursor() as cursor:
+                cursor.execute('''
+                    INSERT INTO contacts (id, user_id, name, email, phone, company, title, 
+                                        notes, warmth_status, warmth_label, source, created_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ''', (
+                    contact_id,
+                    user_id,
+                    full_name,
+                    contact_data.get('email'),
+                    contact_data.get('phone'),
+                    contact_data.get('company'),
+                    contact_data.get('title'),
+                    import_notes,
+                    warmth_status,
+                    warmth_label,
+                    source,
+                    datetime.now().isoformat()
+                ))
             
             contact_id = cursor.lastrowid
             contacts.append({
