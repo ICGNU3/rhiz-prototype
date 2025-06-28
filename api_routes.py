@@ -725,13 +725,19 @@ def get_network_graph():
 @api_bp.route('/health', methods=['GET'])
 def health_check():
     try:
-        db = get_db()
-        db.execute('SELECT 1').fetchone()
-        db.close()
+        from database_helpers import DatabaseHelper
+        
+        # Test database connection
+        db_health = DatabaseHelper.health_check()
         
         return jsonify({
-            'status': 'healthy',
-            'database': 'connected',
+            'status': 'healthy' if db_health['database'] == 'healthy' else 'unhealthy',
+            'database': db_health['database'],
+            'services': {
+                'openai': 'configured' if os.environ.get('OPENAI_API_KEY') else 'not_configured',
+                'resend': 'configured' if os.environ.get('RESEND_API_KEY') else 'not_configured',
+                'stripe': 'configured' if os.environ.get('STRIPE_SECRET_KEY') else 'not_configured'
+            },
             'timestamp': datetime.now().isoformat()
         })
     except Exception as e:
