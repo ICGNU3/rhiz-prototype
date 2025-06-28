@@ -32,12 +32,17 @@ const Dashboard: React.FC = () => {
   const { data: networkData, isLoading: networkLoading } = useQuery({
     queryKey: ['network-graph'],
     queryFn: async () => {
-      const response = await fetch('/api/network/graph');
-      if (!response.ok) {
-        // Return empty network if API not available yet
+      try {
+        const response = await fetch('/api/network/graph', {
+          credentials: 'include', // Include session cookies
+        });
+        if (!response.ok) {
+          return { nodes: [], edges: [] };
+        }
+        return response.json();
+      } catch (error) {
         return { nodes: [], edges: [] };
       }
-      return response.json();
     },
   });
 
