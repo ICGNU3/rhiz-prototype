@@ -852,3 +852,400 @@ body {
 .mobile-skeleton.title { height: 24px; margin-bottom: 12px; }
 .mobile-skeleton.card { height: 120px; margin-bottom: 16px; border-radius: 8px; }
 
+/* === 2025 MOBILE PWA ENHANCEMENTS === */
+
+/* Quick Actions Interface */
+.quick-actions-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  z-index: 9999;
+  display: flex;
+  align-items: flex-end;
+  animation: fadeIn 0.3s ease;
+}
+
+.quick-actions-container {
+  width: 100%;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+  border-radius: 20px 20px 0 0;
+  padding: 20px;
+  transform: translateY(100%);
+  animation: slideUp 0.4s ease forwards;
+}
+
+.quick-actions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.quick-actions-header h3 {
+  color: white;
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.quick-actions-header button {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.quick-action-btn {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  padding: 20px 10px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.quick-action-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  transform: translateY(-2px);
+}
+
+.quick-action-btn i {
+  font-size: 1.5rem;
+  color: #60a5fa;
+}
+
+/* Voice Commands Interface */
+.voice-recording-indicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  padding: 20px;
+  border-radius: 50px;
+  z-index: 9999;
+  animation: pulse 1s infinite;
+}
+
+.voice-wave {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  border-radius: 50%;
+  animation: voiceWave 2s infinite;
+}
+
+/* Smart Notifications */
+.smart-notification {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(99, 102, 241, 0.9));
+  color: white;
+  padding: 15px;
+  border-radius: 12px;
+  z-index: 9999;
+  animation: slideDown 0.4s ease;
+  backdrop-filter: blur(10px);
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notification-icon {
+  font-size: 1.2rem;
+}
+
+.notification-text {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.notification-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.notification-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+/* Contextual AI Suggestions */
+.contextual-suggestion {
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  background: rgba(16, 185, 129, 0.9);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  z-index: 9999;
+  animation: bounceIn 0.5s ease;
+  max-width: 200px;
+}
+
+.contextual-suggestion::before {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  right: 20px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid rgba(16, 185, 129, 0.9);
+}
+
+/* Real-time Collaboration */
+.collaboration-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: pulse 2s infinite;
+}
+
+.presence-avatars {
+  display: flex;
+  gap: 5px;
+  position: absolute;
+  top: 10px;
+  right: 30px;
+}
+
+.presence-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #10b981;
+  background: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: white;
+}
+
+/* Network Status */
+.network-status {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 0.7rem;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.network-status.online {
+  background: rgba(16, 185, 129, 0.8);
+  color: white;
+}
+
+.network-status.offline {
+  background: rgba(239, 68, 68, 0.8);
+  color: white;
+}
+
+/* Biometric Authentication */
+.biometric-auth-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  color: white;
+}
+
+.biometric-icon {
+  font-size: 4rem;
+  color: #60a5fa;
+  margin-bottom: 20px;
+  animation: pulse 2s infinite;
+}
+
+/* Haptic Feedback Visualization */
+.haptic-feedback {
+  position: fixed;
+  pointer-events: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.3);
+  animation: hapticRipple 0.6s ease-out;
+}
+
+/* Advanced Pull-to-Refresh */
+.pull-to-refresh {
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #64748b;
+  text-align: center;
+  font-size: 0.8rem;
+  transition: all 0.3s ease;
+}
+
+.pull-to-refresh.active {
+  top: 20px;
+  color: #60a5fa;
+}
+
+.pull-refresh-icon {
+  font-size: 1.5rem;
+  animation: rotate 1s linear infinite;
+}
+
+/* Intelligent Caching Indicator */
+.cache-status {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #64748b;
+  padding: 5px 8px;
+  border-radius: 8px;
+  font-size: 0.6rem;
+  z-index: 1000;
+}
+
+/* Advanced Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes bounceIn {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.05); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes hapticRipple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes voiceWave {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Safe Area Support for 2025 Devices */
+@supports (padding: max(0px)) {
+  .bottom-tabs {
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+  
+  .quick-actions-container {
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  
+  .smart-notification {
+    top: max(20px, env(safe-area-inset-top));
+  }
+}
+
+/* Dark Mode Enhancements */
+@media (prefers-color-scheme: dark) {
+  .quick-actions-container {
+    background: linear-gradient(145deg, rgba(0, 0, 0, 0.95), rgba(15, 23, 42, 0.95));
+  }
+  
+  .smart-notification {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(51, 65, 85, 0.95));
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .quick-action-btn {
+    border: 2px solid #60a5fa;
+  }
+  
+  .notification-btn {
+    border: 1px solid white;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .quick-actions-container,
+  .smart-notification,
+  .contextual-suggestion {
+    animation: none;
+  }
+  
+  .pulse,
+  .haptic-feedback,
+  .voice-recording-indicator {
+    animation: none;
+  }
+}
+
