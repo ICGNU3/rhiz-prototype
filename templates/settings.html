@@ -8,101 +8,505 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="glass-card p-4">
-                <h1 class="h3 mb-2">Settings</h1>
-                <p class="text-muted mb-0">Configure your Rhiz experience</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Settings Sections -->
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            <div class="glass-card p-4">
-                <h5 class="mb-3">
-                    <i class="bi bi-envelope-gear me-2"></i>Email Integration
-                </h5>
-                <p class="text-muted small mb-3">Configure email sending for AI-powered outreach</p>
-                <a href="/email-setup" class="btn btn-primary btn-sm">Setup Email</a>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-4">
-            <div class="glass-card p-4">
-                <h5 class="mb-3">
-                    <i class="bi bi-calendar-event me-2"></i>Conference Mode
-                </h5>
-                <p class="text-muted small mb-3">Smart contact capture for networking events</p>
-                <a href="/conference-mode" class="btn btn-outline-primary btn-sm">Configure</a>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-4">
-            <div class="glass-card p-4">
-                <h5 class="mb-3">
-                    <i class="bi bi-sliders me-2"></i>Motivation Mode
-                </h5>
-                <p class="text-muted small mb-3">Customize gamification feedback level</p>
-                <button class="btn btn-outline-primary btn-sm" onclick="openGamificationSettings()">Adjust</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="glass-card p-4">
-                <h5 class="mb-3">
-                    <i class="bi bi-upload me-2"></i>Data Management
-                </h5>
-                <p class="text-muted small mb-3">Import contacts and manage your data</p>
-                <div class="d-flex gap-2">
-                    <a href="/contacts/import" class="btn btn-primary btn-sm">Import Contacts</a>
-                    <a href="/data-export" class="btn btn-outline-secondary btn-sm">Export Data</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 mb-4">
-            <div class="glass-card p-4">
-                <h5 class="mb-3">
-                    <i class="bi bi-person-gear me-2"></i>Account
-                </h5>
-                <p class="text-muted small mb-3">Manage your account and subscription</p>
-                <div class="d-flex gap-2">
-                    <a href="/subscription" class="btn btn-outline-primary btn-sm">Subscription</a>
-                    <a href="/logout" class="btn btn-outline-danger btn-sm">Sign Out</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Account Information -->
-    {% if session.get('user_email') %}
-    <div class="row">
-        <div class="col-12">
-            <div class="glass-card p-4">
-                <h5 class="mb-3">Account Information</h5>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="small text-muted mb-1">Email</div>
-                        <div>{{ session.get('user_email') }}</div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h2 mb-1 gradient-text">Settings & Preferences</h1>
+                        <p class="text-muted mb-0">Customize your Rhiz experience and manage your account</p>
                     </div>
-                    <div class="col-md-6">
-                        <div class="small text-muted mb-1">Member Since</div>
-                        <div>{{ session.get('created_at', 'Recently') }}</div>
+                    <div>
+                        <button class="btn btn-glass" onclick="exportData()">
+                            <i class="bi bi-download me-2"></i>Export Data
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    {% endif %}
+
+    <!-- Settings Navigation & Content -->
+    <div class="row">
+        <!-- Settings Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="glass-card p-3">
+                <div class="nav flex-column nav-pills" id="settings-tab" role="tablist" aria-orientation="vertical">
+                    <button class="nav-link active" id="profile-tab" data-bs-toggle="pill" data-bs-target="#profile" type="button" role="tab">
+                        <i class="bi bi-person me-2"></i>Profile
+                    </button>
+                    <button class="nav-link" id="notifications-tab" data-bs-toggle="pill" data-bs-target="#notifications" type="button" role="tab">
+                        <i class="bi bi-bell me-2"></i>Notifications
+                    </button>
+                    <button class="nav-link" id="integrations-tab" data-bs-toggle="pill" data-bs-target="#integrations" type="button" role="tab">
+                        <i class="bi bi-link-45deg me-2"></i>Integrations
+                    </button>
+                    <button class="nav-link" id="privacy-tab" data-bs-toggle="pill" data-bs-target="#privacy" type="button" role="tab">
+                        <i class="bi bi-shield-check me-2"></i>Privacy & Security
+                    </button>
+                    <button class="nav-link" id="subscription-tab" data-bs-toggle="pill" data-bs-target="#subscription" type="button" role="tab">
+                        <i class="bi bi-credit-card me-2"></i>Subscription
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Content -->
+        <div class="col-lg-9">
+            <div class="tab-content" id="settings-tabContent">
+                
+                <!-- Profile Settings -->
+                <div class="tab-pane fade show active" id="profile" role="tabpanel">
+                    <div class="glass-card p-4">
+                        <h4 class="mb-4">Profile Information</h4>
+                        
+                        <!-- Profile Photo -->
+                        <div class="row mb-4">
+                            <div class="col-md-4 text-center">
+                                <div class="position-relative d-inline-block">
+                                    <img src="https://ui-avatars.com/api/?name=Rhiz+User&background=667eea&color=fff&size=120" 
+                                         class="rounded-circle mb-3" width="120" height="120" id="profileImage">
+                                    <button class="btn btn-sm btn-glass position-absolute bottom-0 end-0 rounded-circle" 
+                                            onclick="document.getElementById('photoUpload').click()">
+                                        <i class="bi bi-camera"></i>
+                                    </button>
+                                </div>
+                                <input type="file" id="photoUpload" accept="image/*" style="display: none;" onchange="previewPhoto(this)">
+                            </div>
+                            <div class="col-md-8">
+                                <form id="profileForm" onsubmit="saveProfile(event)">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">First Name</label>
+                                            <input type="text" class="form-control" id="firstName" value="Demo" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Last Name</label>
+                                            <input type="text" class="form-control" id="lastName" value="User" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Email Address</label>
+                                        <input type="email" class="form-control" id="email" value="demo@rhiz.app" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Timezone</label>
+                                        <select class="form-select" id="timezone">
+                                            <option value="UTC">UTC</option>
+                                            <option value="America/New_York" selected>Eastern Time</option>
+                                            <option value="America/Chicago">Central Time</option>
+                                            <option value="America/Denver">Mountain Time</option>
+                                            <option value="America/Los_Angeles">Pacific Time</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check2 me-2"></i>Save Profile
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Settings -->
+                <div class="tab-pane fade" id="notifications" role="tabpanel">
+                    <div class="glass-card p-4">
+                        <h4 class="mb-4">Notification Preferences</h4>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Email Notifications</h6>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="emailReminders" checked>
+                                    <label class="form-check-label" for="emailReminders">
+                                        Follow-up reminders
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="emailDigest" checked>
+                                    <label class="form-check-label" for="emailDigest">
+                                        Weekly network digest
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="emailGoals">
+                                    <label class="form-check-label" for="emailGoals">
+                                        Goal matching notifications
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Frequency Settings</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">Check-in frequency</label>
+                                    <select class="form-select" id="checkinFrequency">
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly" selected>Weekly</option>
+                                        <option value="monthly">Monthly</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Quiet hours</label>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <input type="time" class="form-control" id="quietStart" value="22:00">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="time" class="form-control" id="quietEnd" value="08:00">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="saveNotifications()">
+                            <i class="bi bi-check2 me-2"></i>Save Preferences
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Integration Settings -->
+                <div class="tab-pane fade" id="integrations" role="tabpanel">
+                    <div class="glass-card p-4">
+                        <h4 class="mb-4">Connected Services</h4>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="d-flex justify-content-between align-items-center p-3 border rounded">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-linkedin text-primary me-3" style="font-size: 1.5rem;"></i>
+                                        <div>
+                                            <h6 class="mb-0">LinkedIn</h6>
+                                            <small class="text-muted">Sync contacts and connections</small>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="linkedinSync">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="d-flex justify-content-between align-items-center p-3 border rounded">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-google text-danger me-3" style="font-size: 1.5rem;"></i>
+                                        <div>
+                                            <h6 class="mb-0">Google Contacts</h6>
+                                            <small class="text-muted">Import Google contacts</small>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="googleSync">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="d-flex justify-content-between align-items-center p-3 border rounded">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-apple text-dark me-3" style="font-size: 1.5rem;"></i>
+                                        <div>
+                                            <h6 class="mb-0">iCloud Contacts</h6>
+                                            <small class="text-muted">Sync with Apple contacts</small>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="icloudSync">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <div class="d-flex justify-content-between align-items-center p-3 border rounded">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-calendar text-success me-3" style="font-size: 1.5rem;"></i>
+                                        <div>
+                                            <h6 class="mb-0">Calendar Sync</h6>
+                                            <small class="text-muted">Schedule follow-ups</small>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="calendarSync">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Integration setup requires additional authentication. Contact support for enterprise integrations.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Privacy & Security -->
+                <div class="tab-pane fade" id="privacy" role="tabpanel">
+                    <div class="glass-card p-4">
+                        <h4 class="mb-4">Privacy & Security</h4>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Password & Authentication</h6>
+                                <button class="btn btn-outline-primary mb-3" onclick="changePassword()">
+                                    <i class="bi bi-key me-2"></i>Change Password
+                                </button>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="enable2fa">
+                                    <label class="form-check-label" for="enable2fa">
+                                        Enable Two-Factor Authentication
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Data Management</h6>
+                                <button class="btn btn-outline-info mb-2 me-2" onclick="exportData()">
+                                    <i class="bi bi-download me-2"></i>Export My Data
+                                </button>
+                                <button class="btn btn-outline-danger mb-2" onclick="confirmDeleteAccount()">
+                                    <i class="bi bi-trash me-2"></i>Delete Account
+                                </button>
+                                <div class="small text-muted mt-2">
+                                    Data export includes all contacts, goals, and interaction history in JSON format.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <h6 class="mb-3">Privacy Settings</h6>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="profileVisible" checked>
+                            <label class="form-check-label" for="profileVisible">
+                                Make my profile visible to network connections
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="analyticsOptOut">
+                            <label class="form-check-label" for="analyticsOptOut">
+                                Opt out of usage analytics
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscription Settings -->
+                <div class="tab-pane fade" id="subscription" role="tabpanel">
+                    <div class="glass-card p-4">
+                        <h4 class="mb-4">Subscription & Billing</h4>
+                        
+                        <!-- Current Plan -->
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="stat-card me-4" style="min-width: 120px;">
+                                        <div class="h5 gradient-text mb-1">Demo</div>
+                                        <div class="small text-muted">Current Plan</div>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">Demo Access</h6>
+                                        <p class="text-muted mb-0">Full platform access for evaluation</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <div class="small text-muted">Goals</div>
+                                        <div class="fw-bold">Unlimited</div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="small text-muted">Contacts</div>
+                                        <div class="fw-bold">Unlimited</div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="small text-muted">AI Features</div>
+                                        <div class="fw-bold">Full Access</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <button class="btn btn-primary" onclick="upgradeSubscription()">
+                                    <i class="bi bi-arrow-up-circle me-2"></i>Upgrade Plan
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Method -->
+                        <h6 class="mb-3">Payment Method</h6>
+                        <div class="d-flex align-items-center p-3 border rounded mb-3">
+                            <i class="bi bi-credit-card me-3" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <div class="fw-bold">No payment method on file</div>
+                                <small class="text-muted">Add a payment method to upgrade your plan</small>
+                            </div>
+                            <button class="btn btn-outline-primary ms-auto" onclick="addPaymentMethod()">
+                                <i class="bi bi-plus"></i> Add Card
+                            </button>
+                        </div>
+                        
+                        <!-- Billing History -->
+                        <h6 class="mb-3">Billing History</h6>
+                        <div class="text-muted text-center py-4">
+                            <i class="bi bi-receipt" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <p class="mt-2">No billing history available</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<style>
-.glass-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
+<!-- Change Password Modal -->
+<div class="modal fade" id="passwordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark border-secondary">
+            <div class="modal-header">
+                <h5 class="modal-title">Change Password</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="passwordForm" onsubmit="updatePassword(event)">
+                    <div class="mb-3">
+                        <label class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="currentPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="newPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirmPassword" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="passwordForm" class="btn btn-primary">Update Password</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark border-danger">
+            <div class="modal-header border-danger">
+                <h5 class="modal-title text-danger">Delete Account</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone. All your data will be permanently deleted.
+                </div>
+                <p>Type <strong>DELETE</strong> to confirm:</p>
+                <input type="text" class="form-control" id="deleteConfirmation" placeholder="Type DELETE">
+            </div>
+            <div class="modal-footer border-danger">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="deleteAccount()" disabled id="deleteButton">
+                    Delete My Account
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Settings JavaScript functionality
+function previewPhoto(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('profileImage').src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
 }
-</style>
+
+function saveProfile(event) {
+    event.preventDefault();
+    // Show success toast
+    showToast('Profile updated successfully', 'success');
+}
+
+function saveNotifications() {
+    showToast('Notification preferences saved', 'success');
+}
+
+function changePassword() {
+    new bootstrap.Modal(document.getElementById('passwordModal')).show();
+}
+
+function updatePassword(event) {
+    event.preventDefault();
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        showToast('Passwords do not match', 'error');
+        return;
+    }
+    
+    bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
+    showToast('Password updated successfully', 'success');
+}
+
+function exportData() {
+    // Create mock data export
+    const data = {
+        profile: { name: 'Demo User', email: 'demo@rhiz.app' },
+        contacts: [],
+        goals: [],
+        exportDate: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'rhiz-data-export.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    showToast('Data export downloaded', 'success');
+}
+
+function confirmDeleteAccount() {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+    
+    // Enable delete button when user types DELETE
+    document.getElementById('deleteConfirmation').addEventListener('input', function(e) {
+        const deleteButton = document.getElementById('deleteButton');
+        deleteButton.disabled = e.target.value !== 'DELETE';
+    });
+}
+
+function deleteAccount() {
+    bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+    showToast('Account deletion initiated. Check your email for confirmation.', 'info');
+}
+
+function upgradeSubscription() {
+    showToast('Redirecting to upgrade page...', 'info');
+    // In a real app, redirect to Stripe checkout or pricing page
+}
+
+function addPaymentMethod() {
+    showToast('Payment method setup coming soon', 'info');
+    // In a real app, integrate with Stripe
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast show position-fixed top-0 end-0 m-3 bg-${type === 'error' ? 'danger' : type === 'info' ? 'info' : 'success'}`;
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `
+        <div class="toast-body text-white">
+            <i class="bi bi-${type === 'error' ? 'exclamation-circle' : type === 'info' ? 'info-circle' : 'check-circle'} me-2"></i>
+            ${message}
+        </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+
 {% endblock %}

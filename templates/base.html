@@ -20,25 +20,138 @@
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
-    <!-- Modern 2025 Glassmorphism Styles -->
+    <!-- Advanced 2025 Glassmorphism Design System -->
     <style>
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            /* Core Color Palette */
+            --bg-primary: #0A0A0F;
+            --bg-secondary: #1A1A24;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --text-accent: #E2E8F0;
+            
+            /* Gradient System */
+            --accent-purple: #8B5CF6;
+            --accent-blue: #06B6D4;
+            --accent-pink: #EC4899;
+            --accent-emerald: #10B981;
             --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            
+            /* Glass Effects */
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-bg-strong: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-border-strong: rgba(255, 255, 255, 0.15);
             --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --shadow-intense: 0 20px 60px rgba(0, 0, 0, 0.4);
         }
+
+        body {
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
         .glass-card {
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-radius: 16px;
             box-shadow: var(--shadow-glass);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        .glass-card:hover {
+            background: var(--glass-bg-strong);
+            border-color: var(--glass-border-strong);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-intense);
+        }
+
         .nav-glass {
             background: rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--glass-border);
+        }
+
+        .btn-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .btn-glass:hover {
+            background: var(--glass-bg-strong);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .gradient-text {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tab-content {
+            min-height: 400px;
+        }
+
+        .nav-pills .nav-link {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            margin: 0 4px;
+            border-radius: 12px;
+        }
+
+        .nav-pills .nav-link:hover {
+            background: var(--glass-bg);
+            border-color: var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .nav-pills .nav-link.active {
+            background: var(--gradient-primary);
+            border-color: transparent;
+            color: white;
         }
     </style>
     
@@ -272,6 +385,9 @@
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><h6 class="dropdown-header">Settings</h6></li>
+                            <li><a class="dropdown-item" href="/settings">
+                                <i class="bi bi-gear me-2"></i>Settings & Preferences
+                            </a></li>
                             <li><a class="dropdown-item" href="/email-setup">
                                 <i class="bi bi-envelope-gear me-2"></i>Email Setup
                             </a></li>

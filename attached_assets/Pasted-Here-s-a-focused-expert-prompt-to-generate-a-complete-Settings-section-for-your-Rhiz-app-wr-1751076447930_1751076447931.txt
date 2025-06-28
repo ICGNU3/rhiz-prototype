@@ -1,0 +1,62 @@
+Here’s a **focused expert prompt** to generate a complete **Settings section** for your Rhiz app, written to work within your existing Python backend + React frontend stack.
+
+---
+
+### ✅ Prompt: Build the Settings Section for Rhiz
+
+> You are adding a fully functional **Settings section** to an app called **Rhiz**, which helps users manage and deepen their real-world relationships through synced contacts, network mapping, reminders, and contributions.
+>
+> The app uses a **React frontend** and a **Python (Flask or FastAPI)** backend with PostgreSQL or SQLite. It already includes contact upload, goals, and network views. The new **Settings section** should:
+>
+> ### ⚙️ Core Features:
+>
+> 1. **User Profile Management**
+>      • Name, email, photo, timezone
+>      • Update profile info
+>      • Upload/change profile image (use file input and image preview)
+>
+> 2. **Notification Preferences**
+>      • Toggle email / SMS reminders
+>      • Choose daily/weekly/monthly frequency for check-ins
+>      • Set preferred quiet hours
+>
+> 3. **Integrations (stubs for now)**
+>      • LinkedIn sync toggle
+>      • Google Contacts sync
+>      • Apple/iCloud sync
+>      • Calendar sync for follow-ups
+>    (These should use placeholder switches and connection states that can be built out later.)
+>
+> 4. **Security & Privacy**
+>      • Change password
+>      • Enable 2FA (placeholder for now)
+>      • Data export (send JSON via email/download)
+>      • Data deletion (with confirmation modal)
+>
+> 5. **Account & Subscription**
+>      • Plan overview
+>      • Payment method (Stripe-compatible UI)
+>      • Upgrade/downgrade tier
+>      • Cancel account
+>
+> ### 🧩 Technical Requirements:
+>
+> * Use clean modular structure: `/components/settings/`, `/routes/settings`, `/api/settings`, `/services/settings.js`
+> * Use context or Redux if needed for real-time updates to settings
+> * Save all changes with proper validation, then persist via API to backend
+> * Style minimally with Tailwind (or Chakra UI if used)
+> * All backend routes should be authenticated and follow RESTful structure
+>
+> ### 📝 Deliverables:
+>
+> * A **Settings page** with tabs or sidebar nav (Profile, Notifications, Integrations, Privacy, Subscription)
+> * Each section as its own React component
+> * API endpoints for GET/PUT user settings
+> * Comments in code for clarity
+> * Frontend mock data for integrations if real APIs are unavailable
+>
+> **Do not break existing functionality.** Assume other parts of the app rely on shared auth/session. Ensure all new endpoints are protected, modular, and clearly structured.
+
+---
+
+Let me know if you want this converted into an actual GitHub issue template, project card prompt, or Replit AI instruction file.

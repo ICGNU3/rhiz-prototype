@@ -231,6 +231,15 @@ def demo_login():
         print(f"Demo fallback activated: {e}")
         return redirect('/dashboard')
 
+@app.route('/settings')
+def settings():
+    """Comprehensive Settings page with modern glassmorphism design"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect('/login', code=302)
+    
+    return render_template('settings.html')
+
 # Essential future-forward redirects for clean UX
 @app.route('/dashboard')
 def dashboard():

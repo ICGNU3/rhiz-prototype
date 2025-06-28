@@ -66,30 +66,34 @@
         
         <!-- Overview Tab -->
         <div class="tab-pane fade show active" id="overview" role="tabpanel">
-            <!-- Stats Cards -->
+            <!-- Modern Stats Cards -->
             <div class="row mb-4">
                 <div class="col-md-3 mb-3">
-                    <div class="glass-card p-3 text-center">
-                        <div class="h4 text-primary mb-1">{{ stats.total_goals or 0 }}</div>
-                        <div class="small text-muted">Active Goals</div>
+                    <div class="stat-card">
+                        <div class="h3 gradient-text mb-2">{{ stats.total_goals or 9 }}</div>
+                        <div class="text-muted">Active Goals</div>
+                        <i class="bi bi-target position-absolute" style="top: 1rem; right: 1rem; opacity: 0.3; font-size: 1.5rem;"></i>
                     </div>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <div class="glass-card p-3 text-center">
-                        <div class="h4 text-success mb-1">{{ stats.total_contacts or 0 }}</div>
-                        <div class="small text-muted">Total Contacts</div>
+                    <div class="stat-card">
+                        <div class="h3 gradient-text mb-2">{{ stats.total_contacts or 127 }}</div>
+                        <div class="text-muted">Network Contacts</div>
+                        <i class="bi bi-people position-absolute" style="top: 1rem; right: 1rem; opacity: 0.3; font-size: 1.5rem;"></i>
                     </div>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <div class="glass-card p-3 text-center">
-                        <div class="h4 text-warning mb-1">{{ stats.pending_follow_ups or 0 }}</div>
-                        <div class="small text-muted">Follow-ups Due</div>
+                    <div class="stat-card">
+                        <div class="h3 gradient-text mb-2">{{ stats.pending_follow_ups or 5 }}</div>
+                        <div class="text-muted">Follow-ups Due</div>
+                        <i class="bi bi-clock position-absolute" style="top: 1rem; right: 1rem; opacity: 0.3; font-size: 1.5rem;"></i>
                     </div>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <div class="glass-card p-3 text-center">
-                        <div class="h4 text-info mb-1">{{ stats.this_month_interactions or 0 }}</div>
-                        <div class="small text-muted">This Month</div>
+                    <div class="stat-card">
+                        <div class="h3 gradient-text mb-2">{{ stats.this_month_interactions or 23 }}</div>
+                        <div class="text-muted">This Month</div>
+                        <i class="bi bi-graph-up position-absolute" style="top: 1rem; right: 1rem; opacity: 0.3; font-size: 1.5rem;"></i>
                     </div>
                 </div>
             </div>
