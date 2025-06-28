@@ -20,6 +20,7 @@ def get_db():
     import psycopg2
     import psycopg2.extras
     conn = psycopg2.connect(os.environ.get("DATABASE_URL"))
+    conn.cursor_factory = psycopg2.extras.RealDictCursor
     return conn
 
 # Authentication decorator
@@ -103,7 +104,9 @@ def login():
     
     # For now, just set session if user exists
     db = get_db()
-    user = db.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+    cursor = db.cursor()
+    cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
+    user = cursor.fetchone()
     
     if user:
         session['user_id'] = user['id']
