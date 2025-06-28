@@ -8,7 +8,7 @@ from functools import wraps
 from models import Database, User, Contact, Goal, AISuggestion, ContactInteraction
 # OpenAI utilities now in consolidated services
 from services import get_production_utils
-from gamification import GamificationEngine
+from backend.features.gamification import GamificationEngine
 from auth import AuthManager, SubscriptionManager
 from utils.validation import validate_session_user_id, safe_get_user_id, ValidationError
 import logging
