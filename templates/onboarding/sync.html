@@ -186,6 +186,13 @@
                         <p class="mt-2 mb-1">Drop your file here or click to browse</p>
                         <small class="text-muted">Supports CSV, VCF files</small>
                         <input type="file" id="fileInput" class="d-none" accept=".csv,.vcf">
+                        <div class="file-info mt-2 text-muted small d-none" id="fileInfo"></div>
+                        <div class="upload-error mt-2 text-danger small d-none" id="uploadError"></div>
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-primary" onclick="uploadSelectedFile()" id="uploadBtn" disabled>
+                                <i class="bi bi-upload me-2"></i>Upload Contacts
+                            </button>
+                        </div>
                     </div>
                     
                     <!-- Progress indicator for sync -->
