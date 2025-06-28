@@ -288,7 +288,26 @@ def crm_pipeline():
 @app.route('/intelligence/mass-messaging')
 def mass_messaging():
     """Mass messaging campaign interface"""
-    return render_template('intelligence/mass_messaging.html')
+    # Mock campaign data for demonstration
+    campaigns = [
+        {
+            'title': 'Series A Investor Outreach',
+            'status': 'active',
+            'sent': 45,
+            'opened': 23,
+            'replied': 8,
+            'created': '2 days ago'
+        },
+        {
+            'title': 'Partnership Exploration',
+            'status': 'draft',
+            'sent': 0,
+            'opened': 0,
+            'replied': 0,
+            'created': '1 week ago'
+        }
+    ]
+    return render_template('intelligence/mass_messaging.html', campaigns=campaigns)
 
 @app.route('/intelligence/unknown-contacts')
 def unknown_contacts():
