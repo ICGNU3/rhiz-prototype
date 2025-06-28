@@ -1,7 +1,7 @@
 import os
 import logging
 import sqlite3
-from flask import Flask
+from flask import Flask, render_template
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Load environment variables from .env file if it exists
