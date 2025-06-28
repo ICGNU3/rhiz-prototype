@@ -13,9 +13,7 @@ register_mobile_api_routes(app)
 
 # Trust Insights system removed during cleanup
 
-# Register React integration routes
-from services.react_integration import register_react_integration
-register_react_integration(app)
+# React frontend served via static files - no conflicting routes needed
 
 # Clean routing architecture - all routes now in api_routes.py
 
