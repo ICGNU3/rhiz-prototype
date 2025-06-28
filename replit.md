@@ -83,6 +83,21 @@ The application follows an enhanced Flask MVC architecture with AI-powered conta
 
 ## Recent Changes
 
+- **June 28, 2025**: MAGIC LINK AUTHENTICATION SYSTEM WITH RESEND EMAIL INTEGRATION completed
+  - **COMPLETE MAGIC LINK AUTHENTICATION**: Implemented secure token-based authentication system with 15-minute expiry tokens and one-time use validation
+  - **RESEND EMAIL SERVICE INTEGRATION**: Built comprehensive email service using Resend API with HTML and text email templates for professional magic link delivery
+  - **AUTH TOKEN MODEL**: Created AuthToken model with secure token generation, expiry validation, and usage tracking in user_auth_tokens table
+  - **DUAL AUTHENTICATION ENDPOINTS**: 
+    - POST /api/auth/request-link → generates secure token, stores in database, sends via Resend email service
+    - GET /api/auth/verify?token= → validates token, creates/authenticates user, sets Flask session, supports both JSON and redirect responses
+  - **AUTOMATIC USER CREATION**: Magic link verification automatically creates new users with explorer subscription tier if they don't exist
+  - **SESSION MANAGEMENT**: Proper Flask session integration with user_id and authentication status for seamless app access
+  - **SECURITY FEATURES**: Cryptographically secure token generation, automatic old token cleanup, expiry validation, and one-time use enforcement
+  - **EMAIL TEMPLATE SYSTEM**: Professional HTML email templates with glassmorphism styling, security notes, and branded Rhiz design
+  - **PRODUCTION READY**: Complete error handling, database transaction management, and graceful fallbacks for email service issues
+  - **BACKWARD COMPATIBILITY**: Maintained existing signup/login endpoints while adding modern magic link authentication
+  - **VERIFICATION TESTING**: End-to-end testing confirmed - token generation → database storage → authentication verification → session creation → user response all operational
+
 - **June 28, 2025**: COMPLETE DATABASE MODEL ALIGNMENT AND BACKEND STABILIZATION completed
   - **CRITICAL DATABASE SCHEMA ALIGNMENT**: Successfully aligned all SQLAlchemy models (User, Contact, Goal) with actual PostgreSQL database structure, eliminating all "column does not exist" errors
   - **USER MODEL MODERNIZATION**: Updated User model from UUID to String primary keys, added all production fields (magic_link_token, subscription_tier, stripe_customer_id, etc.) matching actual database schema
