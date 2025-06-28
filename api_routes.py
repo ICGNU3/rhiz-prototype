@@ -501,6 +501,17 @@ def health_check():
             'timestamp': datetime.now().isoformat()
         }), 500
 
+@api_bp.route('/debug/session', methods=['GET'])
+def debug_session():
+    """Debug endpoint to check session data"""
+    return jsonify({
+        'session_data': dict(session),
+        'user_id': session.get('user_id'),
+        'authenticated': session.get('authenticated'),
+        'demo_mode': session.get('demo_mode'),
+        'session_keys': list(session.keys())
+    })
+
 # Analytics endpoints
 @api_bp.route('/analytics/dashboard', methods=['GET'])
 @auth_required
