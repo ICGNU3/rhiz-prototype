@@ -12,6 +12,7 @@ import CrmPage from './pages/CrmPage';
 import Settings from './pages/Settings';
 import OnboardingPage from './pages/OnboardingPage';
 import NetworkPage from './pages/NetworkPage';
+import LandingPage from './pages/LandingPage';
 import Login from './components/auth/Login';
 
 // Create a query client
@@ -38,36 +39,49 @@ function AppContent() {
     );
   }
 
-  if (!isAuthenticated || !user) {
-    return <Login />;
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex flex-col">
-      <Navbar user={user} onLogout={logout} />
-      <main className="flex-1 p-6">
-        <div className="max-w-7xl mx-auto">
-          <Routes>
-            <Route path="/app/onboarding" element={<OnboardingPage />} />
-            <Route path="/app/dashboard" element={<DashboardPage />} />
-            <Route path="/app/goals" element={<GoalsPage />} />
-            <Route path="/app/contacts" element={<ContactsPage />} />
-            <Route path="/app/intelligence" element={<IntelligencePage />} />
-            <Route path="/app/network" element={<NetworkPage />} />
-            <Route path="/app/trust" element={<TrustPage />} />
-            <Route path="/app/crm" element={<CrmPage />} />
-            <Route path="/app/settings" element={<Settings />} />
-            <Route path="/onboarding" element={<Navigate to="/app/onboarding" replace />} />
-            <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
-            <Route path="/goals" element={<Navigate to="/app/goals" replace />} />
-            <Route path="/contacts" element={<Navigate to="/app/contacts" replace />} />
-            <Route path="/intelligence" element={<Navigate to="/app/intelligence" replace />} />
-            <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
-            <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
-          </Routes>
-        </div>
-      </main>
-    </div>
+    <Routes>
+      {/* Public routes */}
+      <Route path="/" element={!isAuthenticated ? <LandingPage /> : <Navigate to="/app/dashboard" replace />} />
+      <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/app/dashboard" replace />} />
+      
+      {/* Protected app routes */}
+      {isAuthenticated && user ? (
+        <>
+          <Route path="/app/*" element={
+            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex flex-col">
+              <Navbar user={user} onLogout={logout} />
+              <main className="flex-1 p-6">
+                <div className="max-w-7xl mx-auto">
+                  <Routes>
+                    <Route path="onboarding" element={<OnboardingPage />} />
+                    <Route path="dashboard" element={<DashboardPage />} />
+                    <Route path="goals" element={<GoalsPage />} />
+                    <Route path="contacts" element={<ContactsPage />} />
+                    <Route path="intelligence" element={<IntelligencePage />} />
+                    <Route path="network" element={<NetworkPage />} />
+                    <Route path="trust" element={<TrustPage />} />
+                    <Route path="crm" element={<CrmPage />} />
+                    <Route path="settings" element={<Settings />} />
+                  </Routes>
+                </div>
+              </main>
+            </div>
+          } />
+          
+          {/* Legacy route redirects */}
+          <Route path="/onboarding" element={<Navigate to="/app/onboarding" replace />} />
+          <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+          <Route path="/goals" element={<Navigate to="/app/goals" replace />} />
+          <Route path="/contacts" element={<Navigate to="/app/contacts" replace />} />
+          <Route path="/intelligence" element={<Navigate to="/app/intelligence" replace />} />
+          <Route path="/settings" element={<Navigate to="/app/settings" replace />} />
+        </>
+      ) : (
+        /* Redirect unauthenticated users to landing page */
+        <Route path="*" element={<Navigate to="/" replace />} />
+      )}
+    </Routes>
   );
 }
 

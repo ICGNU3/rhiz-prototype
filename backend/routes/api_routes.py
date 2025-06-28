@@ -1920,8 +1920,8 @@ def register_core_routes(app):
     
     @app.route('/')
     def landing():
-        """Landing page"""
-        return render_template('landing.html')
+        """Serve React app for landing page"""
+        return render_template('app.html')
 
     @app.route('/login')
     def login_page():
