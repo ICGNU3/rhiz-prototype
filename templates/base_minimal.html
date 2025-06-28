@@ -11,22 +11,142 @@
     
     <!-- Custom CSS -->
     <style>
-        body { 
-            background: #1a1a1a; 
-            color: white; 
-            font-family: 'Inter', sans-serif; 
+        /* Modern CSS Variables */
+        :root {
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-muted: #a0a0a0;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-bg-strong: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-border-strong: rgba(255, 255, 255, 0.2);
+            --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --shadow-intense: 0 20px 40px rgba(0, 0, 0, 0.4);
         }
+
+        body {
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: var(--shadow-glass);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            background: var(--glass-bg-strong);
+            border-color: var(--glass-border-strong);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-intense);
+        }
+
+        .btn-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .btn-glass:hover {
+            background: var(--glass-bg-strong);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 600;
+        }
+
+        /* Background Orbs */
+        .background-orbs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(45deg, rgba(139, 92, 246, 0.3), rgba(6, 182, 212, 0.3));
+            filter: blur(40px);
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .orb-1 {
+            width: 200px;
+            height: 200px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            top: 60%;
+            right: 15%;
+            animation-delay: 2s;
+        }
+        
+        .orb-3 {
+            width: 150px;
+            height: 150px;
+            bottom: 20%;
+            left: 60%;
+            animation-delay: 4s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
         .navbar-brand { 
             font-weight: bold; 
             color: #8b5cf6 !important; 
-        }
-        .btn-primary { 
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6); 
-            border: none; 
-        }
-        .btn-primary:hover { 
-            transform: translateY(-1px); 
-            box-shadow: 0 8px 15px rgba(59,130,246,0.3); 
         }
     </style>
 </head>
