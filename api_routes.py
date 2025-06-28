@@ -328,8 +328,13 @@ def verify_magic_link():
         session['user_id'] = user['id']
         session['authenticated'] = True
         
-        # Redirect to landing page with success message
-        return redirect('/?login=success')
+        # Check if user has completed onboarding
+        if user.get('onboarding_completed'):
+            # Existing user - redirect to landing page
+            return redirect('/?login=success')
+        else:
+            # New user - redirect to onboarding flow
+            return redirect('/onboarding/welcome')
         
     except Exception as e:
         return redirect('/login?error=authentication_failed')
@@ -1346,6 +1351,25 @@ def register_core_routes(app):
     </script>
 </body>
 </html>'''
+
+    # Onboarding route handlers
+    @app.route('/onboarding/welcome')
+    @auth_required
+    def onboarding_welcome():
+        """Onboarding welcome page"""
+        return render_template('onboarding/welcome.html')
+
+    @app.route('/onboarding/sync')
+    @auth_required
+    def onboarding_sync():
+        """Onboarding contact sync page"""
+        return render_template('onboarding/sync.html')
+
+    @app.route('/onboarding/network')
+    @auth_required
+    def onboarding_network():
+        """Onboarding network mapping page"""
+        return render_template('onboarding/network.html')
 
     @app.route('/app/<path:route>')
     def serve_react_app(route):
