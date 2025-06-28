@@ -19,24 +19,34 @@ except ImportError:
 # Simplified authentication for immediate compatibility
 def create_session_user(user_id, email=None, demo_mode=False):
     """Create a user session without complex database operations"""
-    # For demo mode, use the actual demo_user ID from database
+    # For demo mode, use a valid user ID from database
     if demo_mode or user_id == 'demo_user':
         import sqlite3
         conn = sqlite3.connect('db.sqlite3')
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
-        demo_user = cursor.execute(
-            'SELECT id FROM users WHERE email = ?', ('demo_user',)
+        # Get any valid user with a real ID (not None)
+        valid_user = cursor.execute(
+            'SELECT id FROM users WHERE id IS NOT NULL LIMIT 1'
         ).fetchone()
         
-        if demo_user:
-            session['user_id'] = demo_user['id']
+        if valid_user:
+            session['user_id'] = valid_user['id']
+            print(f"Set session user_id to: {valid_user['id']}")
         else:
-            session['user_id'] = 11  # fallback to seeded demo user ID
+            # Create a simple demo user with integer ID
+            cursor.execute(
+                'INSERT INTO users (id, email, subscription_tier, created_at) VALUES (?, ?, ?, ?)',
+                ('demo_user_id', 'demo@rhiz.app', 'founder_plus', '2025-06-28T01:00:00')
+            )
+            session['user_id'] = 'demo_user_id'
+            conn.commit()
+            print("Created demo user with ID: demo_user_id")
         conn.close()
     else:
         session['user_id'] = user_id
+        print(f"Set session user_id to: {user_id}")
         
     session['authenticated'] = True
     if email:
