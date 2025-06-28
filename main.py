@@ -5,7 +5,6 @@ import logging
 from datetime import datetime
 from api_routes import register_api_routes
 from api_routes_mobile import register_mobile_api_routes
-import simple_routes  # Import the routes module to register them
 
 # Register API routes for React frontend
 register_api_routes(app)
