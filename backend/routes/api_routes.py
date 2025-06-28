@@ -3548,6 +3548,18 @@ def get_weekly_prompt():
             'weekly_insights': {'weekly_stats': {}, 'top_contacts': []}
         })
 
+# ============= BRAND & CONTENT PAGES =============
+
+@api_bp.route('/about')
+def about_page():
+    """Story-driven About page explaining why Rhiz exists"""
+    return render_template('about.html')
+
+@api_bp.route('/founders-log')  
+def founders_log():
+    """Transparent weekly updates and changelogs from the founding team"""
+    return render_template('founders-log.html')
+
 def register_api_routes(app):
     """Register API routes with the Flask app"""
     app.register_blueprint(api_bp)

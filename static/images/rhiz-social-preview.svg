@@ -1,0 +1,58 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0A0A0F;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#1A1A24;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0A0A0F;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="glowGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:0.3" />
+      <stop offset="50%" style="stop-color:#06B6D4;stop-opacity:0.2" />
+      <stop offset="100%" style="stop-color:#EC4899;stop-opacity:0.1" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+  
+  <!-- Glow overlay -->
+  <circle cx="300" cy="150" r="200" fill="url(#glowGradient)" opacity="0.4"/>
+  <circle cx="900" cy="480" r="150" fill="url(#glowGradient)" opacity="0.3"/>
+  
+  <!-- Main content -->
+  <g transform="translate(100, 150)">
+    <!-- Rhiz logo/title -->
+    <text x="0" y="80" font-family="Inter, sans-serif" font-size="84" font-weight="700" fill="#F8FAFC">
+      Rhiz
+    </text>
+    
+    <!-- Tagline -->
+    <text x="0" y="140" font-family="Inter, sans-serif" font-size="32" font-weight="400" fill="#94A3B8">
+      High-context relationship intelligence
+    </text>
+    <text x="0" y="180" font-family="Inter, sans-serif" font-size="28" font-weight="400" fill="#94A3B8">
+      for builders who activate meaningful connections
+    </text>
+    
+    <!-- CTA -->
+    <rect x="0" y="240" width="280" height="60" rx="30" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+    <text x="140" y="275" font-family="Inter, sans-serif" font-size="20" font-weight="600" fill="#F8FAFC" text-anchor="middle">
+      Request Invite
+    </text>
+  </g>
+  
+  <!-- Decorative network elements -->
+  <g opacity="0.6">
+    <!-- Nodes -->
+    <circle cx="800" cy="120" r="8" fill="#8B5CF6"/>
+    <circle cx="850" cy="180" r="6" fill="#06B6D4"/>
+    <circle cx="920" cy="140" r="7" fill="#EC4899"/>
+    <circle cx="880" cy="220" r="5" fill="#10B981"/>
+    
+    <!-- Connections -->
+    <line x1="800" y1="120" x2="850" y2="180" stroke="rgba(139,92,246,0.4)" stroke-width="2"/>
+    <line x1="850" y1="180" x2="920" y2="140" stroke="rgba(6,182,212,0.4)" stroke-width="2"/>
+    <line x1="920" y1="140" x2="880" y2="220" stroke="rgba(236,72,153,0.4)" stroke-width="2"/>
+  </g>
+</svg>
