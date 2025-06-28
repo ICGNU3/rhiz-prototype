@@ -4,16 +4,8 @@ import os
 import logging
 from datetime import datetime
 from flask import request, session, redirect
-from backend.routes.api_routes import register_api_routes
 
-# Register API routes for React frontend
-register_api_routes(app)
-
-# Trust Insights system removed during cleanup
-
-# React frontend served via static files - no conflicting routes needed
-
-# Clean routing architecture - all routes now in api_routes.py
+# Routes are now imported through app.py to maintain compatibility
 
 
 
