@@ -5,28 +5,34 @@ import { Target, Users, Brain, TrendingUp, Plus, Sparkles } from 'lucide-react';
 import RhizomaticGraph from '../components/network/RhizomaticGraph';
 
 const Dashboard: React.FC = () => {
-  const { data: goals = [], isLoading: goalsLoading } = useQuery({
+  const { data: goals = [], isLoading: goalsLoading, error: goalsError } = useQuery({
     queryKey: ['goals'],
     queryFn: async () => {
       const response = await goalsAPI.getAll();
       return response.data;
     },
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { data: contacts = [], isLoading: contactsLoading } = useQuery({
+  const { data: contacts = [], isLoading: contactsLoading, error: contactsError } = useQuery({
     queryKey: ['contacts'],
     queryFn: async () => {
       const response = await contactsAPI.getAll();
       return response.data;
     },
+    retry: 2,
+    staleTime: 5 * 60 * 1000,
   });
 
-  const { data: suggestions = [], isLoading: suggestionsLoading } = useQuery({
+  const { data: suggestions = [], isLoading: suggestionsLoading, error: suggestionsError } = useQuery({
     queryKey: ['ai-suggestions'],
     queryFn: async () => {
       const response = await intelligenceAPI.getAISuggestions();
       return response.data;
     },
+    retry: 2,
+    staleTime: 2 * 60 * 1000, // 2 minutes for AI suggestions
   });
 
   const { data: networkData, isLoading: networkLoading } = useQuery({
@@ -47,6 +53,30 @@ const Dashboard: React.FC = () => {
   });
 
   const isLoading = goalsLoading || contactsLoading || suggestionsLoading;
+  const hasError = goalsError || contactsError || suggestionsError;
+
+  // Error state
+  if (hasError) {
+    return (
+      <div className="space-y-6">
+        <div className="glass-card p-8 text-center">
+          <div className="text-red-400 mb-4">
+            <Brain className="w-12 h-12 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Connection Issue</h3>
+            <p className="text-gray-300 mb-4">
+              Having trouble loading your data. This usually resolves quickly.
+            </p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="btn-primary px-6 py-2"
+            >
+              Refresh Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
