@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from dataclasses import asdict
 from backend.services.database_helpers import DatabaseHelper
 from services.google_contacts_sync import GoogleContactsSync
+from services.linkedin_csv_sync import LinkedInCSVSync, TwitterCSVSync
 
 # Create API blueprint
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -2929,6 +2930,105 @@ def google_oauth_status():
     except Exception as e:
         logging.error(f"Error checking Google OAuth status: {e}")
         return jsonify({'error': 'Failed to check status'}), 500
+
+# ===== LINKEDIN/TWITTER CSV IMPORT ROUTES =====
+
+@api_bp.route('/contacts/import/linkedin-csv', methods=['POST'])
+@auth_required 
+def import_linkedin_csv():
+    """Import LinkedIn connections from CSV file"""
+    try:
+        user_id = session.get('user_id')
+        
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file uploaded'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        if not file.filename.lower().endswith('.csv'):
+            return jsonify({'error': 'File must be a CSV'}), 400
+        
+        # Import using LinkedIn CSV sync
+        linkedin_sync = LinkedInCSVSync()
+        result = linkedin_sync.import_linkedin_csv(user_id, file, file.filename)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logging.error(f"Error importing LinkedIn CSV: {e}")
+        return jsonify({'error': 'Import failed'}), 500
+
+@api_bp.route('/contacts/import/twitter-csv', methods=['POST'])
+@auth_required
+def import_twitter_csv():
+    """Import Twitter/X connections from CSV file"""
+    try:
+        user_id = session.get('user_id')
+        
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file uploaded'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        if not file.filename.lower().endswith('.csv'):
+            return jsonify({'error': 'File must be a CSV'}), 400
+        
+        # Import using Twitter CSV sync
+        twitter_sync = TwitterCSVSync()
+        result = twitter_sync.import_linkedin_csv(user_id, file, file.filename)  # Uses same base method
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logging.error(f"Error importing Twitter CSV: {e}")
+        return jsonify({'error': 'Import failed'}), 500
+
+@api_bp.route('/contacts/import/formats', methods=['GET'])
+@auth_required
+def get_import_formats():
+    """Get supported CSV import formats and instructions"""
+    try:
+        linkedin_sync = LinkedInCSVSync()
+        twitter_sync = TwitterCSVSync()
+        
+        return jsonify({
+            'linkedin': linkedin_sync.get_supported_formats(),
+            'twitter': twitter_sync.get_supported_formats(),
+            'general_tips': [
+                'Ensure CSV files are UTF-8 encoded',
+                'Include column headers in first row',
+                'Remove any empty rows',
+                'Maximum file size: 10MB',
+                'Contact information will be validated before import'
+            ]
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting import formats: {e}")
+        return jsonify({'error': 'Failed to get formats'}), 500
+
+@api_bp.route('/contacts/import/history', methods=['GET'])
+@auth_required
+def get_import_history():
+    """Get CSV import history for user"""
+    try:
+        user_id = session.get('user_id')
+        
+        linkedin_sync = LinkedInCSVSync()
+        history = linkedin_sync.get_import_history(user_id)
+        
+        return jsonify({
+            'history': history,
+            'total': len(history)
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting import history: {e}")
+        return jsonify({'error': 'Failed to get history'}), 500
 
 def register_api_routes(app):
     """Register API routes with the Flask app"""
