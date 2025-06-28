@@ -8,6 +8,7 @@ import GoalsPage from './pages/GoalsPage';
 import ContactsPage from './pages/ContactsPage';
 import IntelligencePage from './pages/IntelligencePage';
 import TrustPage from './pages/TrustPage';
+import TrustInsightsPage from './pages/TrustInsightsPage';
 import CrmPage from './pages/CrmPage';
 import Settings from './pages/Settings';
 import OnboardingPage from './pages/OnboardingPage';
@@ -61,6 +62,7 @@ function AppContent() {
                     <Route path="intelligence" element={<IntelligencePage />} />
                     <Route path="network" element={<NetworkPage />} />
                     <Route path="trust" element={<TrustPage />} />
+                    <Route path="trust-insights" element={<TrustInsightsPage />} />
                     <Route path="crm" element={<CrmPage />} />
                     <Route path="settings" element={<Settings />} />
                   </Routes>

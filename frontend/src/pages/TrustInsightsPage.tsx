@@ -349,7 +349,7 @@ const TrustInsightsPage: React.FC = () => {
 
             {/* Contact Cards with Trust Metrics */}
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {processedMetrics.map((contact: TrustMetrics) => (
+              {processedMetrics.map((contact: any) => (
                 <div 
                   key={contact.contact_id} 
                   className="glass-card p-6 cursor-pointer hover:border-blue-400/50 transition-all"
