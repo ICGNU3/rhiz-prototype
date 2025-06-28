@@ -1,0 +1,75 @@
+You are working on Rhiz, a web app originally built in Python, now running on a React frontend, designed to help users map, strengthen, and activate their real-world networks. The app is evolving toward protocol readiness.
+
+The current site is partially refactored, but there are still legacy fragments, broken state logic, unconnected modules, and missing UX polish. You must now:
+
+🔧 Refactor & Reorganize:
+Remove legacy views from old frontend (pre-React). Fully migrate to React pages. Eliminate unused components and templates.
+
+Organize folders using best modern practices: components/, pages/, hooks/, services/, api/, and assets/.
+
+Make sure the backend and frontend communicate cleanly. Use an /api structure for Flask/FastAPI, with documented endpoints.
+
+Enable centralized state for user session, contacts, and insights (via Context API or Redux Toolkit).
+
+🚀 Next-Level Features to Build or Polish:
+Synced Contact Management
+
+Replace current one-by-one upload.
+
+Add import tools or placeholders for:
+  • Google Contacts
+  • iCloud (CSV for now)
+  • LinkedIn (manual upload for now)
+
+Add sorting, tagging, and filtering (e.g., by status, last touchpoint, priority).
+
+Network Visualization
+
+Preserve and enhance existing network graph view.
+
+Make it responsive, interactive, and show relationship tags, trust score, and interaction frequency.
+
+Tooltip or modal on node click with quick actions (message, tag, update).
+
+Trust & Contribution Insights
+
+Design and implement a “Trust Panel” per contact showing:
+  • Sentiment score
+  • Interaction history
+  • Contribution record (what you’ve done for them / vice versa)
+
+Visual trust and reciprocity meters
+
+Warm-Up Messaging Tool
+
+Mass message via SMS, Email, or DM (stub now, active later)
+
+Include pre-filled prompts for check-ins, feedback, or contribution asks
+
+Allow message preview, customization, and batch sending
+
+Settings Section
+
+Add full profile management, notification controls, sync toggles, and privacy/export options
+
+Landing Page Polish
+
+Replace hero section with bold value prop
+
+Expand focus beyond early founders to VCs, organizers, nonprofits
+
+Clean modern visuals, smooth animations, testimonial or use case band
+
+🧠 Developer Notes:
+Use Tailwind CSS (or Chakra if preferred) for styling
+
+Break down components to atomic design if possible
+
+Comment and clean code, prep for open-source release
+
+Ensure no page or feature is broken in the transition
+
+Use modular design to prep for token integration and protocol work
+
+Final deliverable:
+A fully working, clean, modern React frontend connected to Python backend, with clear flows, a great user experience, network insights, and full readiness to onboard different verticals.
