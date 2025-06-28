@@ -239,13 +239,16 @@ def get_contacts():
     for contact in contacts:
         contact_dict = dict(contact)
         
-        # Get sync source information
-        source_info = db.execute(
-            'SELECT source FROM contact_sources WHERE contact_id = ? AND is_primary = 1',
-            (contact['id'],)
-        ).fetchone()
-        
-        contact_dict['sync_status'] = source_info['source'] if source_info else 'manual'
+        # Get sync source information (with fallback if table doesn't exist)
+        try:
+            source_info = db.execute(
+                'SELECT source FROM contact_sources WHERE contact_id = ? AND is_primary = 1',
+                (contact['id'],)
+            ).fetchone()
+            contact_dict['sync_status'] = source_info['source'] if source_info else 'manual'
+        except sqlite3.OperationalError:
+            # Table doesn't exist yet, use manual as default
+            contact_dict['sync_status'] = 'manual'
         
         # Parse social handles if present
         if contact_dict.get('social_handles'):
