@@ -214,7 +214,7 @@ def send_magic_link():
         except Exception as e:
             return jsonify({'error': 'Failed to create user account'}), 500
     else:
-        user_id = user[0]  # user id is first column
+        user_id = user['id']  # access by column name
     
     # Generate magic link token
     import secrets
