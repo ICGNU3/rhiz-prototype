@@ -49,7 +49,7 @@ def login():
 
 @app.route('/auth/magic-link', methods=['POST'])
 def send_magic_link():
-    """Handle magic link requests with modernized authentication"""
+    """Handle magic link requests with Resend email service"""
     try:
         data = request.get_json()
         email = data.get('email')
@@ -57,18 +57,81 @@ def send_magic_link():
         if not email:
             return jsonify({'error': 'Email is required'}), 400
         
-        # Use simplified session creation for immediate compatibility
-        user_id = f"user_{email.split('@')[0]}"
-        if create_session_user(user_id, email):
+        # Try to send actual magic link email using Resend
+        try:
+            from utils.email import ResendEmailService
+            email_service = ResendEmailService()
+            
+            # Generate a simple token for demo
+            magic_token = f"token_{email.split('@')[0]}"
+            
+            # Send magic link email
+            email_sent = email_service.send_magic_link_email(email, magic_token)
+            
+            if email_sent:
+                # Create session after successful email send
+                user_id = f"user_{email.split('@')[0]}"
+                create_session_user(user_id, email)
+                
+                return jsonify({
+                    'message': f'Magic link sent to {email} via Resend',
+                    'email_service': 'resend',
+                    'redirect': '/app/dashboard'
+                }), 200
+            else:
+                # Fallback to session creation if email fails
+                user_id = f"user_{email.split('@')[0]}"
+                create_session_user(user_id, email)
+                
+                return jsonify({
+                    'message': f'Login processed for {email} (email service unavailable)',
+                    'email_service': 'fallback',
+                    'redirect': '/app/dashboard'
+                }), 200
+                
+        except Exception as email_error:
+            # Fallback to simple session creation
+            user_id = f"user_{email.split('@')[0]}"
+            create_session_user(user_id, email)
+            
             return jsonify({
-                'message': f'Magic link sent to {email}',
-                'redirect': '/app/dashboard'
+                'message': f'Login processed for {email}',
+                'email_service': 'fallback',
+                'redirect': '/app/dashboard',
+                'email_error': str(email_error)
             }), 200
-        else:
-            return jsonify({'error': 'Authentication failed'}), 500
             
     except Exception as e:
-        return jsonify({'error': 'Magic link service temporarily unavailable'}), 500
+        return jsonify({'error': 'Authentication service temporarily unavailable'}), 500
+
+@app.route('/test-email')
+def test_email():
+    """Test endpoint to verify Resend email service"""
+    try:
+        from utils.email import ResendEmailService
+        email_service = ResendEmailService()
+        
+        # Test email configuration
+        if email_service.is_configured:
+            return jsonify({
+                'status': 'configured',
+                'service': 'resend',
+                'from_email': email_service.from_email,
+                'message': 'Resend email service is properly configured'
+            })
+        else:
+            return jsonify({
+                'status': 'not_configured',
+                'service': 'resend',
+                'message': 'RESEND_API_KEY not found in environment'
+            })
+            
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'service': 'resend',
+            'error': str(e)
+        }), 500
 
 @app.route('/demo-login')
 def demo_login():

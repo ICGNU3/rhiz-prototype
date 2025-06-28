@@ -346,7 +346,7 @@ def get_contact_interactions(contact_id):
     return jsonify([dict(interaction) for interaction in interactions])
 
 # Intelligence endpoints
-@api_bp.route('/intelligence/suggestions', methods=['GET'])
+@api_bp.route('/ai-suggestions', methods=['GET'])
 @auth_required
 def get_ai_suggestions():
     user_id = session.get('user_id')
@@ -358,45 +358,42 @@ def get_ai_suggestions():
            JOIN contacts c ON s.contact_id = c.id
            JOIN goals g ON s.goal_id = g.id
            WHERE g.user_id = ?
-           ORDER BY s.confidence DESC, s.created_at DESC''',
+           ORDER BY s.confidence DESC
+           LIMIT 20''',
         (user_id,)
     ).fetchall()
     
     return jsonify([dict(suggestion) for suggestion in suggestions])
 
-@api_bp.route('/intelligence/insights', methods=['GET'])
+@api_bp.route('/insights', methods=['GET'])
 @auth_required
 def get_insights():
     user_id = session.get('user_id')
     db = get_db()
     
-    # Basic insights
+    # Get basic network insights
     stats = {}
     
-    # Contact count by warmth
-    warmth_stats = db.execute(
-        'SELECT warmth_label, COUNT(*) as count FROM contacts WHERE user_id = ? GROUP BY warmth_label',
-        (user_id,)
-    ).fetchall()
-    stats['warmth_distribution'] = [dict(row) for row in warmth_stats]
+    # Count active goals
+    stats['active_goals'] = db.execute(
+        'SELECT COUNT(*) as count FROM goals WHERE user_id = ?', (user_id,)
+    ).fetchone()['count']
     
-    # Goals count
-    goals_count = db.execute(
-        'SELECT COUNT(*) as count FROM goals WHERE user_id = ?',
-        (user_id,)
-    ).fetchone()
-    stats['total_goals'] = goals_count['count']
+    # Count contacts by warmth
+    stats['warm_contacts'] = db.execute(
+        'SELECT COUNT(*) as count FROM contacts WHERE user_id = ? AND warmth_status >= 3', (user_id,)
+    ).fetchone()['count']
     
-    # Recent activity
-    recent_interactions = db.execute(
-        '''SELECT COUNT(*) as count FROM contact_interactions ci
-           JOIN contacts c ON ci.contact_id = c.id
-           WHERE c.user_id = ? AND ci.timestamp > datetime('now', '-7 days')''',
-        (user_id,)
-    ).fetchone()
-    stats['recent_interactions'] = recent_interactions['count']
+    # Count AI suggestions
+    stats['ai_suggestions'] = db.execute(
+        '''SELECT COUNT(*) as count FROM ai_suggestions s
+           JOIN goals g ON s.goal_id = g.id
+           WHERE g.user_id = ?''', (user_id,)
+    ).fetchone()['count']
     
     return jsonify(stats)
+
+
 
 # Network endpoints
 @api_bp.route('/network/graph', methods=['GET'])
