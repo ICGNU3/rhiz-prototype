@@ -72,8 +72,179 @@ def signup():
 
 @app.route('/login')
 def login():
-    """Login page route"""
-    return render_template('login.html')
+    """Login page route - serves React login interface"""
+    return '''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Rhiz</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .floating-orb {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            opacity: 0.1;
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        .floating-orb:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: -150px;
+            left: -150px;
+            animation-delay: 0s;
+        }
+        
+        .floating-orb:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            top: 50%;
+            right: -100px;
+            animation-delay: -7s;
+        }
+        
+        .floating-orb:nth-child(3) {
+            width: 150px;
+            height: 150px;
+            bottom: -75px;
+            left: 30%;
+            animation-delay: -14s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-30px) rotate(120deg); }
+            66% { transform: translateY(15px) rotate(240deg); }
+        }
+        
+        .btn-glassmorphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-glassmorphism:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-orb"></div>
+    <div class="floating-orb"></div>
+    <div class="floating-orb"></div>
+    
+    <div class="container-fluid d-flex align-items-center justify-content-center min-vh-100">
+        <div class="card glassmorphism border-0 shadow-lg" style="max-width: 400px; width: 100%;">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <h1 class="h3 gradient-text fw-bold mb-2">Welcome to Rhiz</h1>
+                    <p class="text-light-emphasis">Your intelligent relationship network</p>
+                </div>
+                
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="email" class="form-label text-light">Email address</label>
+                        <input type="email" class="form-control bg-dark border-secondary text-light" id="email" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 btn-glassmorphism mb-3">
+                        Send Magic Link
+                    </button>
+                </form>
+                
+                <div class="text-center">
+                    <div class="mb-3">
+                        <span class="text-light-emphasis">or</span>
+                    </div>
+                    <button id="demoBtn" class="btn btn-outline-light w-100 btn-glassmorphism">
+                        Try Demo
+                    </button>
+                </div>
+                
+                <div id="status" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const status = document.getElementById('status');
+            
+            status.innerHTML = '<div class="alert alert-info">Sending magic link...</div>';
+            
+            try {
+                const response = await fetch('/auth/magic-link', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email: email })
+                });
+                
+                if (response.ok) {
+                    status.innerHTML = '<div class="alert alert-success">Magic link sent! Check your email.</div>';
+                } else {
+                    status.innerHTML = '<div class="alert alert-warning">Failed to send magic link. Please try again.</div>';
+                }
+            } catch (error) {
+                status.innerHTML = '<div class="alert alert-danger">Error sending magic link. Please try again.</div>';
+            }
+        });
+        
+        document.getElementById('demoBtn').addEventListener('click', async function() {
+            const status = document.getElementById('status');
+            status.innerHTML = '<div class="alert alert-info">Setting up demo...</div>';
+            
+            try {
+                const response = await fetch('/demo-login', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    status.innerHTML = '<div class="alert alert-success">Demo setup complete! Redirecting...</div>';
+                    setTimeout(() => {
+                        window.location.href = '/app/dashboard';
+                    }, 1000);
+                } else {
+                    status.innerHTML = '<div class="alert alert-danger">Demo setup failed. Please try again.</div>';
+                }
+            } catch (error) {
+                status.innerHTML = '<div class="alert alert-danger">Error setting up demo. Please try again.</div>';
+            }
+        });
+    </script>
+</body>
+</html>'''
 
 @app.route('/auth/verify')
 @app.route('/auth/verify/<token>')
@@ -209,7 +380,7 @@ def test_email():
         }), 500
 
 @app.route('/demo')
-@app.route('/demo-login')
+@app.route('/demo-login', methods=['GET', 'POST'])
 def demo_login():
     """Full demo experience with complete test data"""
     try:
