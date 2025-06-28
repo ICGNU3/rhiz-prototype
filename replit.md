@@ -95,6 +95,7 @@ The application follows an enhanced Flask MVC architecture with AI-powered conta
   - **TRANSPARENCY FEATURES**: Weekly build stats, commit counts, technical insights, and honest reflection on development challenges
   - **CONSISTENT DESIGN**: All new pages maintain glassmorphism aesthetic with backdrop blur, gradient animations, and responsive layouts
   - **NAVIGATION INTEGRATION**: Updated navigation bars across all templates to include About and Founder's Log links
+  - **HUMAN-STYLE WRITING**: Removed AI writing quirks (em dashes, sentences starting with "But", formal transitions) for more natural, human-sounding content
 
 - **June 28, 2025**: REAL CONTACT SYNC INTEGRATIONS AND OAUTH2 IMPLEMENTATION completed
   - **GOOGLE CONTACTS OAUTH2 SYNC**: Created comprehensive GoogleContactsSync service with full OAuth2 authentication flow, token management, and real-time contact syncing from Google Contacts API
