@@ -156,28 +156,140 @@ def send_magic_link():
     if not email:
         return jsonify({'error': 'Email required'}), 400
     
-    # In production, this would send an actual email
-    # For now, we'll just create/login the user
+    # Validate email format
+    import re
+    if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+        return jsonify({'error': 'Invalid email format'}), 400
+    
     db = get_db()
     
-    # Check if user exists
+    # Check if user exists, create if not
     user = db.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
     
     if not user:
-        # Create new user
-        cursor = db.execute(
-            'INSERT INTO users (email, subscription_tier, created_at) VALUES (?, ?, ?)',
-            (email, 'explorer', datetime.now().isoformat())
-        )
-        user_id = cursor.lastrowid
-        db.commit()
+        # Create new user with UUID
+        import uuid
+        user_id = str(uuid.uuid4())
+        try:
+            db.execute('''
+                INSERT INTO users (id, email, subscription_tier, created_at)
+                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            ''', (user_id, email, 'explorer'))
+            db.commit()
+        except Exception as e:
+            return jsonify({'error': 'Failed to create user account'}), 500
     else:
         user_id = user['id']
     
-    # Set session
-    session['user_id'] = user_id
+    # Generate magic link token
+    import secrets
+    from datetime import datetime, timedelta
     
-    return jsonify({'success': True, 'message': 'Magic link sent'})
+    token = secrets.token_urlsafe(32)
+    expires_at = datetime.now() + timedelta(minutes=15)
+    
+    # Store token in database
+    try:
+        db.execute('''
+            UPDATE users 
+            SET magic_link_token = ?, magic_link_expires = ? 
+            WHERE email = ?
+        ''', (token, expires_at.isoformat(), email))
+        db.commit()
+    except Exception as e:
+        return jsonify({'error': 'Failed to generate magic link'}), 500
+    
+    # Send email using Resend
+    try:
+        import resend
+        import os
+        
+        resend.api_key = os.environ.get("RESEND_API_KEY")
+        
+        # Get base URL for magic link
+        base_url = request.host_url.rstrip('/')
+        magic_link = f"{base_url}/auth/verify?token={token}"
+        
+        # Send email
+        r = resend.Emails.send({
+            "from": "onboarding@resend.dev",
+            "to": email,
+            "subject": "Your Rhiz Login Link",
+            "html": f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 0; background: #0a0a0f; color: #ffffff; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 40px 20px; }}
+                    .content {{ background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 40px; text-align: center; }}
+                    .button {{ display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; padding: 12px 30px; border-radius: 8px; font-weight: 600; margin: 20px 0; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="content">
+                        <h1>Welcome to Rhiz</h1>
+                        <p>Click the button below to securely sign in to your account:</p>
+                        <a href="{magic_link}" class="button">Sign In to Rhiz</a>
+                        <p><small>This link expires in 15 minutes.</small></p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+        })
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Magic link sent to {email}. Check your email to sign in.'
+        })
+        
+    except Exception as e:
+        # Log error but don't expose details to user
+        print(f"Email sending error: {e}")
+        return jsonify({'error': 'Failed to send magic link email. Please try again.'}), 500
+
+@api_bp.route('/auth/verify', methods=['GET'])
+def verify_magic_link():
+    """Verify magic link token and authenticate user"""
+    token = request.args.get('token')
+    
+    if not token:
+        return redirect('/login?error=invalid_token')
+    
+    db = get_db()
+    
+    # Find user with valid token
+    user = db.execute('''
+        SELECT * FROM users 
+        WHERE magic_link_token = ? 
+        AND datetime(magic_link_expires) > datetime('now')
+    ''', (token,)).fetchone()
+    
+    if not user:
+        return redirect('/login?error=expired_token')
+    
+    # Clear the token and create session
+    try:
+        db.execute('''
+            UPDATE users 
+            SET magic_link_token = NULL, magic_link_expires = NULL 
+            WHERE id = ?
+        ''', (user['id'],))
+        db.commit()
+        
+        # Create authenticated session
+        session['user_id'] = user['id']
+        session['authenticated'] = True
+        
+        # Redirect to dashboard
+        return redirect('/app/dashboard')
+        
+    except Exception as e:
+        return redirect('/login?error=authentication_failed')
 
 @api_bp.route('/auth/logout', methods=['POST'])
 def logout():
