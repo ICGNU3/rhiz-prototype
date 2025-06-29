@@ -302,8 +302,8 @@ def serve_react_app(path=''):
                 'debug_info': f'Looking for: {FRONTEND_INDEX_PATH}'
             }), 500
         
-        # Serve React index.html for app routes
-        return send_file(FRONTEND_INDEX_PATH)
+        # Serve React index.html for app routes with explicit mimetype
+        return send_file(FRONTEND_INDEX_PATH, mimetype='text/html')
     except Exception as e:
         return jsonify({
             'error': 'Frontend serving failed',
