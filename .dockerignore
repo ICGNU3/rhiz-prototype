@@ -1,0 +1,104 @@
+# Git and version control
+.git
+.gitignore
+.github
+
+# Documentation
+README.md
+RELEASE_NOTES.md
+*.md
+docs/
+
+# Development files
+.env
+.env.local
+.env.development
+.env.test
+*.log
+logs/
+
+# Python development
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.coverage
+.tox/
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Node.js development
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Frontend development
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/coverage/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output
+test-results/
+playwright-report/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Deployment
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile*
+.dockerignore
+
+# Secrets and configuration
+secrets/
+ssl/
+monitoring/
+
+# Development scripts
+deploy-*.sh
+*.sh
