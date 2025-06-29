@@ -29,10 +29,7 @@ def health_check():
     }
 
 
-@core_bp.route('/login')
-def login_page():
-    """Login page using React frontend"""
-    return render_template('app.html')
+# Login route moved to main.py for better styling and functionality
 
 
 @core_bp.route('/app')

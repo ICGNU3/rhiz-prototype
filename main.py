@@ -766,7 +766,20 @@ def verify_magic_link():
     
     return redirect('/app/dashboard')
 
-
+@app.route('/api/auth/demo-login', methods=['POST'])
+def demo_login():
+    """Demo login for development"""
+    try:
+        # Create demo session
+        session['user_id'] = 'demo_user'
+        session['email'] = 'demo@rhiz.app'
+        session['authenticated'] = True
+        
+        logging.info("Demo login successful")
+        return jsonify({'success': True, 'user_id': 'demo_user'})
+    except Exception as e:
+        logging.error(f"Demo login failed: {e}")
+        return jsonify({'error': 'Demo login failed. Please try again.'}), 500
 
 @app.route('/api/dashboard/analytics')
 def dashboard_analytics_api():
