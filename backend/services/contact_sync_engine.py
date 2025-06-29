@@ -63,12 +63,29 @@ class ContactSyncEngine:
             
             db.session.commit()
             
+            # Build contacts list for response
+            created_contacts = []
+            if created_count > 0:
+                # Get recently created contacts for this user
+                recent_contacts = Contact.query.filter_by(
+                    user_id=user_id, 
+                    source='csv'
+                ).order_by(Contact.created_at.desc()).limit(created_count).all()
+                
+                created_contacts = [{
+                    'id': contact.id,
+                    'name': contact.name,
+                    'email': contact.email,
+                    'company': contact.company
+                } for contact in recent_contacts]
+            
             return {
                 'success': True,
-                'created': created_count,
-                'updated': updated_count,
-                'errors': errors,
-                'total_processed': len(contacts_data)
+                'imported': created_count,
+                'duplicates': updated_count,  # treating updates as duplicates for frontend compatibility
+                'errors': len(errors),
+                'contacts': created_contacts,
+                'error_details': errors if errors else None
             }
             
         except Exception as e:
@@ -76,8 +93,10 @@ class ContactSyncEngine:
             return {
                 'success': False,
                 'error': str(e),
-                'created': 0,
-                'updated': 0
+                'imported': 0,
+                'duplicates': 0,
+                'errors': 1,
+                'contacts': []
             }
     
     def import_csv_file(self, user_id: str, file) -> Dict[str, Any]:

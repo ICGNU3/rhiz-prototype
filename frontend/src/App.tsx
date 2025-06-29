@@ -7,6 +7,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Contacts from './pages/Contacts'
 import Goals from './pages/Goals'
+import ContactUploadTest from './pages/ContactUploadTest'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -84,6 +85,12 @@ function App() {
           path="/goals" 
           element={
             user ? <Goals user={user} onLogout={handleLogout} /> : <Navigate to="/login" replace />
+          } 
+        />
+        <Route 
+          path="/upload-test" 
+          element={
+            user ? <ContactUploadTest /> : <Navigate to="/login" replace />
           } 
         />
         <Route path="/404" element={<NotFound />} />
