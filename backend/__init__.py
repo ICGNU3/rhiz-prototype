@@ -62,15 +62,13 @@ def initialize_extensions(app):
     migrate.init_app(app, db)
     cors.init_app(app, origins=["*"], supports_credentials=True)
     
-    # Create tables within application context
+    # Import models to ensure they're registered with Flask-Migrate
     with app.app_context():
         try:
-            # Import models to ensure they're registered
-            from .models import User, Contact, Goal, AISuggestion, ContactInteraction
-            db.create_all()
-            logging.info("Database tables created successfully")
+            from .models import User, Contact, Goal, AISuggestion, ContactInteraction, AuthToken
+            logging.info("Models imported successfully for Flask-Migrate")
         except Exception as e:
-            logging.error(f"Database initialization error: {e}")
+            logging.error(f"Model import error: {e}")
 
 def register_blueprints(app):
     """Register all application blueprints"""
