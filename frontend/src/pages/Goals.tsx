@@ -36,11 +36,13 @@ export default function Goals({ user, onLogout }: GoalsProps) {
 
   const handleAddGoal = async (e: React.FormEvent) => {
     e.preventDefault()
-    const response = await apiService.createGoal(newGoal)
-    if (response.success && response.data) {
-      setGoals([...goals, response.data])
+    try {
+      const goal = await apiService.createGoal(newGoal)
+      setGoals([...goals, goal])
       setNewGoal({ title: '', description: '', goal_type: 'Professional', priority_level: 'Medium', target_date: '' })
       setShowAddForm(false)
+    } catch (error) {
+      console.error('Failed to create goal:', error)
     }
   }
 
