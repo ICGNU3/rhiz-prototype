@@ -6,7 +6,7 @@ from datetime import datetime
 from sqlalchemy import Column, String, Text, DateTime, Integer, Float, Boolean, ForeignKey, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from backend.extensions import db
+from .extensions import db
 
 
 class User(db.Model):

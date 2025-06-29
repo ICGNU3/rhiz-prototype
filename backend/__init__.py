@@ -4,15 +4,10 @@ Backend Package - Flask Application Factory
 import os
 import logging
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_cors import CORS
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-# Initialize extensions
-db = SQLAlchemy()
-migrate = Migrate()
-cors = CORS()
+# Import extensions
+from .extensions import db, migrate, cors
 
 def create_app(config_name=None):
     """
