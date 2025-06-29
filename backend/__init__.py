@@ -18,7 +18,10 @@ def create_app(config_name=None):
     """
     Application factory pattern for Flask app creation
     """
-    app = Flask(__name__)
+    # Create Flask app with template and static folders relative to project root
+    app = Flask(__name__, 
+                template_folder='../templates',
+                static_folder='../static')
     
     # Configure the app
     configure_app(app, config_name)
