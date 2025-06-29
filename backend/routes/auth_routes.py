@@ -12,6 +12,7 @@ auth_service = AuthService()
 
 
 @auth_bp.route('/request-link', methods=['POST'])
+@auth_bp.route('/magic-link', methods=['POST'])  # Alias for backward compatibility
 def request_magic_link():
     """Generate and send magic link via email"""
     try:

@@ -240,7 +240,7 @@ def serve_login_page():
             message.innerHTML = '';
 
             try {
-                const response = await fetch('/api/auth/magic-link', {
+                const response = await fetch('/api/auth/request-link', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: email })
