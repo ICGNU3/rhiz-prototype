@@ -455,6 +455,50 @@ def get_contacts():
         }
     ])
 
+@app.route('/api/auth/request-link', methods=['POST'])
+def request_magic_link():
+    """Handle magic link request"""
+    try:
+        if request.is_json:
+            data = request.get_json()
+            email = data.get('email')
+        else:
+            email = request.form.get('email')
+        
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+        
+        # For demo purposes, we'll create a session immediately
+        # In production, you'd send an actual magic link email
+        session['user_id'] = 'demo_user'
+        session['email'] = email
+        session['authenticated'] = True
+        
+        return jsonify({
+            'message': 'Magic link sent successfully',
+            'demo_mode': True,
+            'redirect': '/app/dashboard'
+        })
+        
+    except Exception as e:
+        logging.error(f"Magic link request failed: {e}")
+        return jsonify({'error': 'Failed to send magic link'}), 500
+
+@app.route('/api/auth/verify')
+def verify_magic_link():
+    """Verify magic link token"""
+    token = request.args.get('token')
+    
+    if not token:
+        return jsonify({'error': 'Token is required'}), 400
+    
+    # For demo purposes, accept any token
+    session['user_id'] = 'demo_user'
+    session['email'] = 'demo@rhiz.app'
+    session['authenticated'] = True
+    
+    return redirect('/app/dashboard')
+
 @app.route('/goals')
 def serve_goals():
     """Serve React goals page"""
