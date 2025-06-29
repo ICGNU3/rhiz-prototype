@@ -78,6 +78,7 @@ def register_blueprints(app):
     from .routes.goal_routes import goal_bp
     from .routes.core_routes import core_bp
     from .routes.service_routes import service_bp
+    from .routes.intelligence_routes import intelligence_bp
     
     # Register blueprints with URL prefixes
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
@@ -85,6 +86,7 @@ def register_blueprints(app):
     app.register_blueprint(contact_bp, url_prefix='/api/contacts')
     app.register_blueprint(goal_bp, url_prefix='/api/goals')
     app.register_blueprint(service_bp, url_prefix='/api/services')
+    app.register_blueprint(intelligence_bp)  # Already has /api/intelligence prefix
     app.register_blueprint(core_bp)  # Core routes (/, /health, etc.)
 
 def configure_logging(app):
