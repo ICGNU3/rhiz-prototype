@@ -40,7 +40,7 @@ class ContactSyncEngine:
             # Clean and prepare data
             contacts_data = []
             for _, row in df.iterrows():
-                contact_data = self._map_csv_row_to_contact(row.to_dict())
+                contact_data = self._normalize_csv_row(row.to_dict())
                 if contact_data:
                     contacts_data.append(contact_data)
             
@@ -63,12 +63,8 @@ class ContactSyncEngine:
                 'contacts': []
             }
             
-            # Parse CSV content
-            csv_reader = csv.DictReader(io.StringIO(csv_content))
-            
-            for row_num, row in enumerate(csv_reader, 1):
+            for row_num, contact_data in enumerate(contacts_data, 1):
                 try:
-                    contact_data = self._normalize_csv_row(row)
                     if not contact_data.get('name') and not contact_data.get('email'):
                         results['errors'] += 1
                         continue
@@ -79,7 +75,7 @@ class ContactSyncEngine:
                         continue
                     
                     # Create contact
-                    contact_id = self._create_contact(user_id, contact_data, source)
+                    contact_id = self._create_contact(user_id, contact_data, 'csv')
                     if contact_id:
                         results['imported'] += 1
                         results['contacts'].append({
@@ -92,7 +88,7 @@ class ContactSyncEngine:
                         results['errors'] += 1
                         
                 except Exception as e:
-                    logger.error(f"Error processing CSV row {row_num}: {e}")
+                    logging.error(f"Error processing contact row {row_num}: {e}")
                     results['errors'] += 1
             
             return results
@@ -138,84 +134,72 @@ class ContactSyncEngine:
     def _is_duplicate_contact(self, user_id: str, contact_data: Dict[str, Any]) -> bool:
         """Check if contact already exists"""
         try:
-            if not self.db:
-                return False
-                
-            cursor = self.db.cursor()
+            from backend.models import Contact
+            from sqlalchemy import func
             
             # Check by email first (most reliable)
             email = contact_data.get('email')
             if email:
-                cursor.execute("""
-                    SELECT id FROM contacts 
-                    WHERE user_id = %s AND LOWER(email) = LOWER(%s)
-                """, (user_id, email))
-                if cursor.fetchone():
+                existing = Contact.query.filter(
+                    Contact.user_id == user_id,
+                    func.lower(Contact.email) == func.lower(email)
+                ).first()
+                if existing:
                     return True
             
             # Check by name if no email
             name = contact_data.get('name')
             if name and not email:
-                cursor.execute("""
-                    SELECT id FROM contacts 
-                    WHERE user_id = %s AND LOWER(name) = LOWER(%s)
-                """, (user_id, name))
-                if cursor.fetchone():
+                existing = Contact.query.filter(
+                    Contact.user_id == user_id,
+                    func.lower(Contact.name) == func.lower(name)
+                ).first()
+                if existing:
                     return True
             
             return False
             
         except Exception as e:
-            logger.error(f"Error checking for duplicate contact: {e}")
+            logging.error(f"Error checking for duplicate contact: {e}")
             return False
 
     def _create_contact(self, user_id: str, contact_data: Dict[str, Any], source: str) -> Optional[str]:
         """Create new contact in database"""
         try:
-            if not self.db:
-                return None
-                
-            cursor = self.db.cursor()
+            from backend.models import Contact
+            from backend.extensions import db
             
-            # Generate contact ID
-            contact_id = self._generate_contact_id(contact_data)
+            contact_id = str(uuid.uuid4())
             
-            cursor.execute("""
-                INSERT INTO contacts (
-                    id, user_id, name, email, phone, company, title, 
-                    linkedin, location, notes, relationship_type, 
-                    warmth_status, warmth_label, priority_level, 
-                    created_at, source
-                ) VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, 
-                    %s, %s, %s, %s, 
-                    %s, %s, %s, 
-                    %s, %s
-                )
-            """, (
-                contact_id, user_id,
-                contact_data.get('name'),
-                contact_data.get('email'),
-                contact_data.get('phone'),
-                contact_data.get('company'),
-                contact_data.get('title'),
-                contact_data.get('linkedin'),
-                contact_data.get('location'),
-                contact_data.get('notes'),
-                'Contact',  # default relationship_type
-                1,  # default warmth_status (Cold)
-                'Cold',  # default warmth_label
-                'Medium',  # default priority_level
-                datetime.now(),
-                source
-            ))
+            contact = Contact(
+                id=contact_id,
+                user_id=user_id,
+                name=contact_data.get('name'),
+                email=contact_data.get('email'),
+                phone=contact_data.get('phone'),
+                company=contact_data.get('company'),
+                title=contact_data.get('title'),
+                linkedin=contact_data.get('linkedin'),
+                location=contact_data.get('location'),
+                notes=contact_data.get('notes'),
+                relationship_type='Contact',
+                warmth_status=1,
+                warmth_label='Cold',
+                priority_level='Medium',
+                source=source
+            )
             
-            self.db.commit()
+            db.session.add(contact)
+            db.session.commit()
             return contact_id
             
         except Exception as e:
-            logger.error(f"Error creating contact: {e}")
-            self.db.rollback()
+            logging.error(f"Error creating contact: {e}")
+            try:
+                from backend.extensions import db
+                db.session.rollback()
+            except:
+                pass
             return None
 
     def _generate_contact_id(self, contact_data: Dict[str, Any]) -> str:
