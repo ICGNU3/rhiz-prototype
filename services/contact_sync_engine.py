@@ -20,6 +20,14 @@ class ContactSyncEngine:
     def __init__(self, db_connection=None):
         self.db = db_connection
         self.supported_sources = ['csv', 'google', 'linkedin', 'outlook', 'manual']
+    
+    def get_status(self) -> Dict[str, str]:
+        """Return service status"""
+        return {
+            "status": "operational",
+            "service": "contact_sync_engine",
+            "sources": len(self.supported_sources)
+        }
         
     def import_csv_contacts(self, user_id: str, csv_content: str, source: str = 'csv') -> Dict[str, Any]:
         """Import contacts from CSV content"""

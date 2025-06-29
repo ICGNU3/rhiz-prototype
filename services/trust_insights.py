@@ -27,6 +27,14 @@ class TrustInsights:
         except Exception as e:
             logger.error(f"Error initializing OpenAI client: {e}")
             self.openai_client = None
+    
+    def get_status(self) -> Dict[str, str]:
+        """Return service status"""
+        return {
+            "status": "operational",
+            "service": "trust_insights",
+            "ai_enabled": bool(self.openai_client)
+        }
 
     def get_trust_insights(self, user_id: str) -> Dict[str, Any]:
         """Get comprehensive trust insights for user"""

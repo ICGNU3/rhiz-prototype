@@ -19,6 +19,14 @@ class SocialIntegrations:
         self.supported_platforms = ['google', 'linkedin', 'twitter', 'outlook']
         self.oauth_configs = self._load_oauth_configs()
     
+    def get_status(self) -> Dict[str, str]:
+        """Return service status"""
+        return {
+            "status": "operational",
+            "service": "social_integrations",
+            "platforms": len(self.supported_platforms)
+        }
+    
     def _load_oauth_configs(self) -> Dict[str, Dict[str, str]]:
         """Load OAuth configurations for supported platforms"""
         return {

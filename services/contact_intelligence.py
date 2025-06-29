@@ -27,6 +27,14 @@ class ContactIntelligence:
         except Exception as e:
             logger.error(f"Error initializing OpenAI client: {e}")
             self.openai_client = None
+    
+    def get_status(self) -> Dict[str, str]:
+        """Return service status"""
+        return {
+            "status": "operational",
+            "service": "contact_intelligence",
+            "ai_enabled": bool(self.openai_client)
+        }
 
     def generate_daily_suggestions(self, user_id: str, limit: int = 10) -> List[Dict[str, Any]]:
         """Generate daily outreach suggestions based on contact data"""
