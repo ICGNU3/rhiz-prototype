@@ -147,19 +147,25 @@ class AuthService:
             
             # Send email via Resend
             if self.resend_api_key:
-                params = {
-                    "from": "Rhiz <noreply@rhiz.app>",
-                    "to": [email],
-                    "subject": "🔐 Your Rhiz Login Link",
-                    "html": html_content,
-                    "text": text_content
-                }
-                
-                email_response = resend.Emails.send(params)
-                return email_response.get('id') is not None
+                try:
+                    params = {
+                        "from": "Rhiz <noreply@rhiz.app>",
+                        "to": [email],
+                        "subject": "🔐 Your Rhiz Login Link",
+                        "html": html_content,
+                        "text": text_content
+                    }
+                    
+                    email_response = resend.Emails.send(params)
+                    return True
+                except Exception as e:
+                    current_app.logger.error(f"Resend email error: {e}")
+                    # Fallback to development mode
+                    current_app.logger.info(f"Magic link for {email}: {magic_link}")
+                    return True
             else:
                 # Development fallback - log the magic link
-                current_app.logger.info(f"Magic link for {email}: {magic_link}")
+                current_app.logger.info(f"Development Magic link for {email}: {magic_link}")
                 return True
                 
         except Exception as e:

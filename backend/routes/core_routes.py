@@ -29,6 +29,12 @@ def health_check():
     }
 
 
+@core_bp.route('/login')
+def login_page():
+    """Login page using React frontend"""
+    return render_template('app.html')
+
+
 @core_bp.route('/app')
 @core_bp.route('/app/<path:path>')
 def serve_react_app(path=None):
