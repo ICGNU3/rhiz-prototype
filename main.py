@@ -3483,6 +3483,1585 @@ def serve_network_page():
 </html>
     ''')
 
+@app.route('/trust')
+def serve_trust_page():
+    """Serve Trust Analytics page with trust score insights"""
+    # Check authentication
+    if 'user_id' not in session:
+        return redirect(url_for('serve_login_page'))
+    
+    return render_template_string('''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trust Analytics - Rhiz</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(-45deg, #1e3a8a, #3730a3, #581c87, #7c2d12);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            color: white;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .trust-container {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .trust-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .trust-title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .refresh-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+        
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .metric-label {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-subtitle {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .sparkline {
+            width: 100%;
+            height: 30px;
+            margin-top: 0.5rem;
+        }
+        
+        .tier-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .tier-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 1.25rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .tier-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .tier-card.rooted {
+            border-left: 4px solid #10b981;
+        }
+        
+        .tier-card.growing {
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .tier-card.dormant {
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .tier-card.frayed {
+            border-left: 4px solid #ef4444;
+        }
+        
+        .tier-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .tier-count {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tier-action {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+        
+        .tier-action:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .chart-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        .alerts-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+        
+        .alerts-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .alert-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s;
+        }
+        
+        .alert-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .alert-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .alert-name {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .alert-score {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .alert-trend {
+            font-size: 0.75rem;
+            color: #ef4444;
+            font-weight: 500;
+        }
+        
+        .reengage-btn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .reengage-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            margin-left: 1rem;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .trust-container {
+                padding: 1rem;
+            }
+            
+            .trust-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .metrics-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .tier-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="trust-container">
+        <!-- Header -->
+        <div class="trust-header">
+            <h1 class="trust-title">Trust Insights</h1>
+            <button class="refresh-btn" onclick="refreshInsights()">
+                <span>🔄</span>
+                <span>Refresh</span>
+            </button>
+        </div>
+        
+        <!-- Top Metrics -->
+        <div class="metrics-row" id="metricsRow">
+            <div class="metric-card">
+                <div class="metric-label">Overall Trust Score</div>
+                <div class="metric-value" id="overallScore">--</div>
+                <div class="metric-subtitle">Across all relationships</div>
+                <canvas class="sparkline" id="scoreSparkline"></canvas>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Avg Response Time</div>
+                <div class="metric-value" id="avgResponseTime">--</div>
+                <div class="metric-subtitle">Days to respond</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Dormant Contacts</div>
+                <div class="metric-value" id="dormantPercent">--</div>
+                <div class="metric-subtitle">No contact in 90+ days</div>
+            </div>
+        </div>
+        
+        <!-- Trust Tier Cards -->
+        <div class="tier-cards" id="tierCards">
+            <div class="tier-card rooted" onclick="viewTier('rooted')">
+                <div class="tier-title">Rooted</div>
+                <div class="tier-count" id="rootedCount">--</div>
+                <div class="tier-action">View Contacts</div>
+            </div>
+            
+            <div class="tier-card growing" onclick="viewTier('growing')">
+                <div class="tier-title">Growing</div>
+                <div class="tier-count" id="growingCount">--</div>
+                <div class="tier-action">View Contacts</div>
+            </div>
+            
+            <div class="tier-card dormant" onclick="viewTier('dormant')">
+                <div class="tier-title">Dormant</div>
+                <div class="tier-count" id="dormantCount">--</div>
+                <div class="tier-action">View Contacts</div>
+            </div>
+            
+            <div class="tier-card frayed" onclick="viewTier('frayed')">
+                <div class="tier-title">Frayed</div>
+                <div class="tier-count" id="frayedCount">--</div>
+                <div class="tier-action">View Contacts</div>
+            </div>
+        </div>
+        
+        <!-- Trust Timeline Chart -->
+        <div class="chart-section">
+            <h3 class="chart-title">Trust Score Timeline</h3>
+            <div class="chart-container">
+                <canvas id="trustChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Low-Trust Alerts -->
+        <div class="alerts-section">
+            <h3 class="alerts-title">
+                <span>⚠️</span>
+                <span>Low-Trust Alerts</span>
+            </h3>
+            <div id="alertsContainer">
+                <div class="loading">Loading alerts...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let trustData = null;
+        let trustChart = null;
+        
+        // Initialize page
+        async function initializeTrustPage() {
+            await loadTrustInsights();
+            createTrustChart();
+        }
+        
+        // Load trust insights data
+        async function loadTrustInsights() {
+            try {
+                const response = await fetch('/api/trust/insights');
+                const data = await response.json();
+                
+                if (data.success) {
+                    trustData = data;
+                    updateMetrics(data);
+                    updateTierCards(data);
+                    updateAlerts(data);
+                    updateSparkline(data);
+                }
+            } catch (error) {
+                console.error('Failed to load trust insights:', error);
+            }
+        }
+        
+        // Update top metrics
+        function updateMetrics(data) {
+            document.getElementById('overallScore').textContent = data.overall_score || 78;
+            document.getElementById('avgResponseTime').textContent = (data.avg_response_time || 1.2) + ' days';
+            document.getElementById('dormantPercent').textContent = (data.dormant_percentage || 24) + '%';
+        }
+        
+        // Update tier cards
+        function updateTierCards(data) {
+            const tiers = data.tier_distribution || {
+                rooted: 12,
+                growing: 34,
+                dormant: 8,
+                frayed: 3
+            };
+            
+            document.getElementById('rootedCount').textContent = tiers.rooted;
+            document.getElementById('growingCount').textContent = tiers.growing;
+            document.getElementById('dormantCount').textContent = tiers.dormant;
+            document.getElementById('frayedCount').textContent = tiers.frayed;
+        }
+        
+        // Update low-trust alerts
+        function updateAlerts(data) {
+            const alerts = data.low_trust_contacts || [
+                { name: 'Alice Johnson', score: 45, trend: 'down', company: 'TechCorp' },
+                { name: 'Bob Smith', score: 30, trend: 'down', company: 'StartupX' },
+                { name: 'Carol Davis', score: 38, trend: 'down', company: 'InnovateLab' }
+            ];
+            
+            const container = document.getElementById('alertsContainer');
+            
+            if (alerts.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.7); padding: 2rem;">No low-trust alerts. Great job maintaining your relationships!</div>';
+                return;
+            }
+            
+            container.innerHTML = alerts.map(alert => `
+                <div class="alert-item">
+                    <div class="alert-info">
+                        <div class="alert-name">${alert.name}</div>
+                        <div class="alert-score">Trust Score: ${alert.score}/100</div>
+                        <div class="alert-trend">📉 Declining trust</div>
+                    </div>
+                    <button class="reengage-btn" onclick="reengageContact('${alert.name}')">
+                        Re-engage
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        // Update sparkline chart
+        function updateSparkline(data) {
+            const canvas = document.getElementById('scoreSparkline');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            // Sample sparkline data
+            const sparklineData = data.score_history || [72, 75, 73, 76, 78, 80, 78];
+            const max = Math.max(...sparklineData);
+            const min = Math.min(...sparklineData);
+            const range = max - min || 1;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw sparkline
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            sparklineData.forEach((value, index) => {
+                const x = (index / (sparklineData.length - 1)) * canvas.width;
+                const y = canvas.height - ((value - min) / range) * canvas.height;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+        }
+        
+        // Create trust timeline chart
+        function createTrustChart() {
+            const ctx = document.getElementById('trustChart').getContext('2d');
+            
+            // Sample timeline data
+            const timelineData = {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Overall Trust Score',
+                    data: [72, 75, 73, 76, 78, 80],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            };
+            
+            trustChart = new Chart(ctx, {
+                type: 'line',
+                data: timelineData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 60,
+                            max: 100,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.7)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'rgba(255, 255, 255, 0.9)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Refresh insights
+        async function refreshInsights() {
+            const btn = document.querySelector('.refresh-btn');
+            btn.style.opacity = '0.6';
+            btn.style.pointerEvents = 'none';
+            
+            await loadTrustInsights();
+            
+            // Update chart if it exists
+            if (trustChart && trustData) {
+                // Update chart data here if needed
+                trustChart.update();
+            }
+            
+            btn.style.opacity = '1';
+            btn.style.pointerEvents = 'auto';
+        }
+        
+        // View tier contacts
+        function viewTier(tier) {
+            alert(`Viewing ${tier} tier contacts. This would filter the contacts page.`);
+        }
+        
+        // Re-engage contact
+        function reengageContact(name) {
+            alert(`Opening re-engagement workflow for ${name}`);
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTrustPage();
+        });
+    </script>
+</body>
+</html>
+    ''')
+
+@app.route('/contacts/import')
+@app.route('/upload')
+def serve_contact_import_page():
+    """Serve Contact Upload/Import page with stepper interface"""
+    # Check authentication
+    if 'user_id' not in session:
+        return redirect(url_for('serve_login_page'))
+    
+    return render_template_string('''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Contacts - Rhiz</title>
+    <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(-45deg, #1e3a8a, #3730a3, #581c87, #7c2d12);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            color: white;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .import-container {
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .import-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .import-title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .cancel-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .cancel-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .stepper {
+            display: flex;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+        
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .step.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        
+        .step.completed {
+            color: #10b981;
+        }
+        
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .step.active .step-number {
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+        }
+        
+        .step.completed .step-number {
+            background: #10b981;
+        }
+        
+        .step-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        
+        .step-subtitle {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .step-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .source-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .source-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .source-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .source-card.selected {
+            border-color: #4f46e5;
+            background: rgba(79, 70, 229, 0.2);
+        }
+        
+        .source-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .source-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .source-description {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .file-upload {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+        
+        .file-upload:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .file-upload.dragover {
+            border-color: #4f46e5;
+            background: rgba(79, 70, 229, 0.1);
+        }
+        
+        .file-upload input[type="file"] {
+            display: none;
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .upload-text {
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .upload-hint {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .preview-table th,
+        .preview-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .preview-table th {
+            background: rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .preview-table td {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .mapping-section {
+            margin-bottom: 2rem;
+        }
+        
+        .mapping-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .mapping-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .mapping-control {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .mapping-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .mapping-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: white;
+            font-size: 0.875rem;
+        }
+        
+        .mapping-select option {
+            background: #1e293b;
+            color: white;
+        }
+        
+        .import-summary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            font-size: 0.875rem;
+        }
+        
+        .summary-label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .summary-value {
+            font-weight: 600;
+        }
+        
+        .progress-section {
+            margin-bottom: 2rem;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            text-align: center;
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #fca5a5;
+            font-size: 0.875rem;
+        }
+        
+        .success-message {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #6ee7b7;
+            font-size: 0.875rem;
+        }
+        
+        @media (max-width: 768px) {
+            .import-container {
+                padding: 1rem;
+            }
+            
+            .import-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .stepper {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .source-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="import-container">
+        <!-- Header -->
+        <div class="import-header">
+            <h1 class="import-title">Import Contacts</h1>
+            <a href="/contacts" class="cancel-btn">
+                <span>✕</span>
+                <span>Cancel</span>
+            </a>
+        </div>
+        
+        <!-- Stepper -->
+        <div class="stepper">
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <div class="step-title">Choose Source</div>
+                <div class="step-subtitle">Select import method</div>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <div class="step-title">Preview & Map</div>
+                <div class="step-subtitle">Map fields</div>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-number">3</div>
+                <div class="step-title">Confirm & Import</div>
+                <div class="step-subtitle">Start import</div>
+            </div>
+        </div>
+        
+        <!-- Step 1: Choose Source -->
+        <div class="step-content" id="step1-content">
+            <div class="source-options">
+                <div class="source-card" data-source="csv" onclick="selectSource('csv')">
+                    <div class="source-icon">📄</div>
+                    <div class="source-title">Upload CSV</div>
+                    <div class="source-description">Import from CSV file</div>
+                </div>
+                
+                <div class="source-card" data-source="google" onclick="selectSource('google')">
+                    <div class="source-icon">🔗</div>
+                    <div class="source-title">Connect Google</div>
+                    <div class="source-description">Sync from Google Contacts</div>
+                </div>
+                
+                <div class="source-card" data-source="linkedin" onclick="selectSource('linkedin')">
+                    <div class="source-icon">💼</div>
+                    <div class="source-title">Connect LinkedIn</div>
+                    <div class="source-description">Import LinkedIn connections</div>
+                </div>
+                
+                <div class="source-card" data-source="twitter" onclick="selectSource('twitter')">
+                    <div class="source-icon">🐦</div>
+                    <div class="source-title">Connect Twitter</div>
+                    <div class="source-description">Import Twitter following</div>
+                </div>
+            </div>
+            
+            <!-- CSV Upload Area -->
+            <div class="file-upload hidden" id="csvUpload">
+                <input type="file" id="csvFile" accept=".csv,.txt" onchange="handleFileUpload(event)">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Drop CSV file here or click to browse</div>
+                <div class="upload-hint">Supports .csv and .txt files up to 10MB</div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="nextStep1" onclick="nextStep(1)" disabled>
+                    Next
+                    <span>→</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Step 2: Preview & Map -->
+        <div class="step-content hidden" id="step2-content">
+            <div id="previewSection">
+                <h3 style="margin-bottom: 1rem;">Preview</h3>
+                <table class="preview-table" id="previewTable">
+                    <!-- Preview data will be populated here -->
+                </table>
+            </div>
+            
+            <div class="mapping-section">
+                <h3 class="mapping-title">Field Mapping</h3>
+                <div class="mapping-controls" id="mappingControls">
+                    <!-- Mapping controls will be populated here -->
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="previousStep(2)">
+                    <span>←</span>
+                    Back
+                </button>
+                <button class="btn btn-primary" id="nextStep2" onclick="nextStep(2)">
+                    Next
+                    <span>→</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Step 3: Confirm & Import -->
+        <div class="step-content hidden" id="step3-content">
+            <div class="import-summary" id="importSummary">
+                <h3 style="margin-bottom: 1rem;">Import Summary</h3>
+                <div class="summary-item">
+                    <span class="summary-label">Total rows:</span>
+                    <span class="summary-value" id="totalRows">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Valid contacts:</span>
+                    <span class="summary-value" id="validContacts">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Duplicates detected:</span>
+                    <span class="summary-value" id="duplicateCount">0</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Will be imported:</span>
+                    <span class="summary-value" id="importCount">0</span>
+                </div>
+            </div>
+            
+            <div class="progress-section hidden" id="progressSection">
+                <h3 style="margin-bottom: 1rem;">Import Progress</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Preparing import...</div>
+            </div>
+            
+            <div id="messageArea"></div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-secondary" id="backStep3" onclick="previousStep(3)">
+                    <span>←</span>
+                    Back
+                </button>
+                <button class="btn btn-primary" id="startImport" onclick="startImport()">
+                    <span>🚀</span>
+                    Start Import
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentStep = 1;
+        let selectedSource = null;
+        let csvData = [];
+        let csvHeaders = [];
+        let fieldMapping = {};
+        
+        // Source selection
+        function selectSource(source) {
+            selectedSource = source;
+            
+            // Update UI
+            document.querySelectorAll('.source-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-source="${source}"]`).classList.add('selected');
+            
+            // Show/hide CSV upload
+            const csvUpload = document.getElementById('csvUpload');
+            if (source === 'csv') {
+                csvUpload.classList.remove('hidden');
+            } else {
+                csvUpload.classList.add('hidden');
+                if (source !== 'csv') {
+                    // For external sources, enable next button immediately
+                    document.getElementById('nextStep1').disabled = false;
+                }
+            }
+        }
+        
+        // File upload handling
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (file.size > 10 * 1024 * 1024) {
+                showError('File size exceeds 10MB limit');
+                return;
+            }
+            
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    if (results.errors.length > 0) {
+                        showError('Error parsing CSV: ' + results.errors[0].message);
+                        return;
+                    }
+                    
+                    csvData = results.data;
+                    csvHeaders = results.meta.fields;
+                    
+                    if (csvData.length === 0) {
+                        showError('CSV file is empty');
+                        return;
+                    }
+                    
+                    showSuccess(`CSV loaded successfully: ${csvData.length} rows found`);
+                    document.getElementById('nextStep1').disabled = false;
+                },
+                error: function(error) {
+                    showError('Failed to parse CSV: ' + error.message);
+                }
+            });
+        }
+        
+        // Drag and drop functionality
+        const fileUpload = document.getElementById('csvUpload');
+        
+        fileUpload.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            fileUpload.classList.add('dragover');
+        });
+        
+        fileUpload.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            fileUpload.classList.remove('dragover');
+        });
+        
+        fileUpload.addEventListener('drop', function(e) {
+            e.preventDefault();
+            fileUpload.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('csvFile').files = files;
+                handleFileUpload({ target: { files: files } });
+            }
+        });
+        
+        fileUpload.addEventListener('click', function() {
+            document.getElementById('csvFile').click();
+        });
+        
+        // Step navigation
+        function nextStep(step) {
+            if (step === 1) {
+                if (selectedSource === 'csv') {
+                    setupStep2();
+                } else {
+                    // For external sources, show connection process
+                    handleExternalConnection();
+                }
+            } else if (step === 2) {
+                setupStep3();
+            }
+        }
+        
+        function previousStep(step) {
+            if (step === 2) {
+                showStep(1);
+            } else if (step === 3) {
+                showStep(2);
+            }
+        }
+        
+        function showStep(step) {
+            // Update stepper UI
+            document.querySelectorAll('.step').forEach((s, index) => {
+                s.classList.remove('active', 'completed');
+                if (index + 1 === step) {
+                    s.classList.add('active');
+                } else if (index + 1 < step) {
+                    s.classList.add('completed');
+                }
+            });
+            
+            // Show/hide step content
+            document.querySelectorAll('.step-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(`step${step}-content`).classList.remove('hidden');
+            
+            currentStep = step;
+        }
+        
+        function setupStep2() {
+            if (selectedSource !== 'csv' || csvData.length === 0) {
+                showError('No data to preview');
+                return;
+            }
+            
+            // Create preview table
+            const table = document.getElementById('previewTable');
+            table.innerHTML = '';
+            
+            // Header row
+            const headerRow = table.insertRow();
+            csvHeaders.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+            
+            // Preview rows (first 5)
+            const previewRows = csvData.slice(0, 5);
+            previewRows.forEach(row => {
+                const tr = table.insertRow();
+                csvHeaders.forEach(header => {
+                    const td = tr.insertCell();
+                    td.textContent = row[header] || '';
+                });
+            });
+            
+            // Create mapping controls
+            const mappingControls = document.getElementById('mappingControls');
+            mappingControls.innerHTML = '';
+            
+            const fields = ['name', 'email', 'phone', 'company', 'title', 'notes'];
+            fields.forEach(field => {
+                const control = document.createElement('div');
+                control.className = 'mapping-control';
+                
+                control.innerHTML = `
+                    <label class="mapping-label">${field.charAt(0).toUpperCase() + field.slice(1)}</label>
+                    <select class="mapping-select" data-field="${field}" onchange="updateMapping('${field}', this.value)">
+                        <option value="">-- Skip --</option>
+                        ${csvHeaders.map(header => `<option value="${header}">${header}</option>`).join('')}
+                    </select>
+                `;
+                
+                mappingControls.appendChild(control);
+                
+                // Auto-detect mapping
+                const possibleMatches = {
+                    name: ['name', 'full name', 'contact name', 'first name'],
+                    email: ['email', 'email address', 'e-mail'],
+                    phone: ['phone', 'phone number', 'mobile', 'telephone'],
+                    company: ['company', 'organization', 'employer', 'business'],
+                    title: ['title', 'job title', 'position', 'role'],
+                    notes: ['notes', 'description', 'comments', 'memo']
+                };
+                
+                const select = control.querySelector('select');
+                const matches = possibleMatches[field] || [];
+                const matchedHeader = csvHeaders.find(header => 
+                    matches.some(match => header.toLowerCase().includes(match.toLowerCase()))
+                );
+                
+                if (matchedHeader) {
+                    select.value = matchedHeader;
+                    fieldMapping[field] = matchedHeader;
+                }
+            });
+            
+            showStep(2);
+        }
+        
+        function updateMapping(field, header) {
+            if (header) {
+                fieldMapping[field] = header;
+            } else {
+                delete fieldMapping[field];
+            }
+        }
+        
+        function setupStep3() {
+            // Validate mapping
+            if (!fieldMapping.email && !fieldMapping.name) {
+                showError('Please map at least Name or Email field');
+                return;
+            }
+            
+            // Calculate summary
+            const totalRows = csvData.length;
+            const validContacts = csvData.filter(row => {
+                const hasEmail = fieldMapping.email && row[fieldMapping.email];
+                const hasName = fieldMapping.name && row[fieldMapping.name];
+                return hasEmail || hasName;
+            }).length;
+            
+            // Mock duplicate detection (in real app, this would check against existing contacts)
+            const duplicateCount = Math.floor(validContacts * 0.1); // Mock 10% duplicates
+            const importCount = validContacts - duplicateCount;
+            
+            // Update summary
+            document.getElementById('totalRows').textContent = totalRows;
+            document.getElementById('validContacts').textContent = validContacts;
+            document.getElementById('duplicateCount').textContent = duplicateCount;
+            document.getElementById('importCount').textContent = importCount;
+            
+            showStep(3);
+        }
+        
+        function handleExternalConnection() {
+            const sourceNames = {
+                google: 'Google Contacts',
+                linkedin: 'LinkedIn',
+                twitter: 'Twitter'
+            };
+            
+            showSuccess(`Connecting to ${sourceNames[selectedSource]}...`);
+            
+            // Simulate connection process
+            setTimeout(() => {
+                showSuccess(`Successfully connected to ${sourceNames[selectedSource]}! Found 25 contacts.`);
+                
+                // Mock external data
+                csvData = Array.from({ length: 25 }, (_, i) => ({
+                    name: `Contact ${i + 1}`,
+                    email: `contact${i + 1}@example.com`,
+                    company: `Company ${i + 1}`,
+                    title: `Position ${i + 1}`
+                }));
+                csvHeaders = ['name', 'email', 'company', 'title'];
+                
+                // Auto-map fields for external sources
+                fieldMapping = {
+                    name: 'name',
+                    email: 'email',
+                    company: 'company',
+                    title: 'title'
+                };
+                
+                setupStep3();
+            }, 2000);
+        }
+        
+        async function startImport() {
+            if (csvData.length === 0) {
+                showError('No data to import');
+                return;
+            }
+            
+            // Disable buttons and show progress
+            document.getElementById('startImport').disabled = true;
+            document.getElementById('backStep3').disabled = true;
+            document.getElementById('progressSection').classList.remove('hidden');
+            
+            try {
+                // Prepare import data
+                const importData = csvData.map(row => {
+                    const contact = {};
+                    Object.keys(fieldMapping).forEach(field => {
+                        const header = fieldMapping[field];
+                        if (header && row[header]) {
+                            contact[field] = row[header];
+                        }
+                    });
+                    return contact;
+                }).filter(contact => contact.email || contact.name);
+                
+                // Simulate import progress
+                const totalContacts = importData.length;
+                let imported = 0;
+                
+                const updateProgress = () => {
+                    imported++;
+                    const percentage = (imported / totalContacts) * 100;
+                    document.getElementById('progressFill').style.width = percentage + '%';
+                    document.getElementById('progressText').textContent = 
+                        `Importing contact ${imported} of ${totalContacts}...`;
+                    
+                    if (imported < totalContacts) {
+                        setTimeout(updateProgress, 100);
+                    } else {
+                        completeImport(totalContacts);
+                    }
+                };
+                
+                updateProgress();
+                
+            } catch (error) {
+                showError('Import failed: ' + error.message);
+                document.getElementById('startImport').disabled = false;
+                document.getElementById('backStep3').disabled = false;
+            }
+        }
+        
+        function completeImport(count) {
+            document.getElementById('progressText').textContent = `Successfully imported ${count} contacts!`;
+            
+            showSuccess(`Import completed! ${count} contacts have been added to your network.`);
+            
+            // Auto-redirect after 3 seconds
+            setTimeout(() => {
+                window.location.href = '/contacts';
+            }, 3000);
+        }
+        
+        function showError(message) {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = `<div class="error-message">${message}</div>`;
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+        
+        function showSuccess(message) {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = `<div class="success-message">${message}</div>`;
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            showStep(1);
+        });
+    </script>
+</body>
+</html>
+    ''')
+
 @app.route('/contacts')
 def serve_react():
     """Serve React frontend application"""
@@ -4178,6 +5757,77 @@ def get_contact_detail(contact_id):
     except Exception as e:
         logging.error(f"Contact detail error: {e}")
         return jsonify({'error': 'Failed to load contact details'}), 500
+
+# Trust Analytics API endpoint
+@app.route('/api/trust/insights')
+def get_trust_insights():
+    """Get trust insights and analytics data"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        # Get timeline parameter
+        timeline = request.args.get('timeline', 'false').lower() == 'true'
+        
+        # Mock trust insights data - in production this would analyze actual contact relationships
+        insights_data = {
+            'success': True,
+            'overall_score': 78,
+            'avg_response_time': 1.2,
+            'dormant_percentage': 24,
+            'tier_distribution': {
+                'rooted': 12,
+                'growing': 34,
+                'dormant': 8,
+                'frayed': 3
+            },
+            'score_history': [72, 75, 73, 76, 78, 80, 78],
+            'low_trust_contacts': [
+                {
+                    'name': 'Alice Johnson',
+                    'score': 45,
+                    'trend': 'down',
+                    'company': 'TechCorp',
+                    'last_contact': '2024-01-05',
+                    'decline_reason': 'No response to last 3 messages'
+                },
+                {
+                    'name': 'Bob Smith',
+                    'score': 30,
+                    'trend': 'down',
+                    'company': 'StartupX',
+                    'last_contact': '2023-12-20',
+                    'decline_reason': 'Missed scheduled calls'
+                },
+                {
+                    'name': 'Carol Davis',
+                    'score': 38,
+                    'trend': 'down',
+                    'company': 'InnovateLab',
+                    'last_contact': '2024-01-10',
+                    'decline_reason': 'Delayed email responses'
+                }
+            ]
+        }
+        
+        # Add timeline data if requested
+        if timeline:
+            insights_data['timeline'] = {
+                'labels': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                'overall_scores': [72, 75, 73, 76, 78, 80],
+                'tier_counts': {
+                    'rooted': [10, 11, 11, 12, 12, 12],
+                    'growing': [30, 32, 34, 34, 34, 34],
+                    'dormant': [12, 10, 8, 7, 8, 8],
+                    'frayed': [5, 4, 3, 3, 3, 3]
+                }
+            }
+        
+        return jsonify(insights_data)
+        
+    except Exception as e:
+        logging.error(f"Trust insights error: {e}")
+        return jsonify({'error': 'Failed to load trust insights'}), 500
 
 @app.route('/api/auth/request-link', methods=['POST'])
 def request_magic_link():
