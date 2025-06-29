@@ -15,15 +15,26 @@ def serve_assets(filename):
     """Serve React static assets"""
     return send_from_directory(os.path.join('frontend', 'dist', 'assets'), filename)
 
+@app.route('/vite.svg')
+def serve_vite_svg():
+    """Serve Vite favicon"""
+    try:
+        return send_from_directory(os.path.join('frontend', 'dist'), 'vite.svg')
+    except FileNotFoundError:
+        return '', 404
+
 # Serve React frontend routes
 @app.route('/')
-@app.route('/app/<path:path>')
+@app.route('/dashboard')
+@app.route('/contacts') 
+@app.route('/goals')
+@app.route('/404')
 def serve_react():
     """Serve React frontend application"""
     try:
         return send_file(os.path.join('frontend', 'dist', 'index.html'))
     except FileNotFoundError:
-        # Fallback HTML if React build not available
+        # Fallback HTML if React build not available - development mode
         return render_template_string('''
 <!DOCTYPE html>
 <html lang="en">
@@ -629,15 +640,7 @@ def service_status():
             "message": "Service status check failed"
         }), 500
 
-@app.route('/goals')
-def serve_goals():
-    """Serve React goals page"""
-    return redirect('/dashboard')  # Simple redirect for now
-
-@app.route('/contacts')
-def serve_contacts():
-    """Serve React contacts page"""
-    return redirect('/dashboard')  # Simple redirect for now
+# React routes are handled by serve_react() above
 
 
 
