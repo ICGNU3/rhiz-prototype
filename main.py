@@ -499,6 +499,109 @@ def verify_magic_link():
     
     return redirect('/app/dashboard')
 
+@app.route('/login')
+def serve_login():
+    """Serve login page"""
+    return render_template_string('''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Rhiz</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; }
+        .container { min-height: 100vh; background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); display: flex; align-items: center; justify-content: center; }
+        .card { background: white; padding: 3rem; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); max-width: 500px; width: 90%; text-align: center; }
+        .logo { font-size: 2rem; font-weight: bold; background: linear-gradient(135deg, #4f46e5, #9333ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; }
+        .title { font-size: 2.5rem; font-weight: bold; color: #1f2937; margin-bottom: 1rem; }
+        .subtitle { font-size: 1.2rem; color: #6b7280; margin-bottom: 2rem; }
+        .form { margin-bottom: 2rem; }
+        .input { width: 100%; padding: 1rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem; margin-bottom: 1rem; }
+        .input:focus { outline: none; border-color: #4f46e5; }
+        .btn { width: 100%; padding: 1rem; background: linear-gradient(135deg, #4f46e5, #9333ea); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .message { padding: 1rem; border-radius: 8px; margin-top: 1rem; }
+        .message.success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+        .message.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .spinner { width: 20px; height: 20px; border: 2px solid transparent; border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="logo">Rhiz</div>
+            <h1 class="title">Welcome Back</h1>
+            <p class="subtitle">Sign in to your relationship intelligence platform</p>
+            
+            <form class="form" id="authForm">
+                <input type="email" id="email" class="input" placeholder="Enter your email address" required>
+                <button type="submit" class="btn" id="submitBtn">
+                    Get Magic Link
+                </button>
+            </form>
+            
+            <div id="message" class="message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('authForm');
+        const emailInput = document.getElementById('email');
+        const submitBtn = document.getElementById('submitBtn');
+        const messageDiv = document.getElementById('message');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = emailInput.value;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Signing in...';
+            
+            try {
+                const response = await fetch('/api/auth/request-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showMessage('Signing you in...', 'success');
+                    // Redirect immediately for demo mode
+                    setTimeout(() => {
+                        window.location.href = '/app/dashboard';
+                    }, 1000);
+                } else {
+                    const data = await response.json();
+                    showMessage(data.error || 'Something went wrong. Please try again.', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error. Please try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Get Magic Link';
+            }
+        });
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            setTimeout(() => {
+                if (type !== 'success') {
+                    messageDiv.style.display = 'none';
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
+    ''')
+
 @app.route('/goals')
 def serve_goals():
     """Serve React goals page"""
