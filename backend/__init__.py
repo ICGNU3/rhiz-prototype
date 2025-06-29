@@ -4,23 +4,23 @@ Backend Package - Flask Application Factory
 import os
 import logging
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from flask_cors import CORS
-from backend.extensions import db, migrate
-# Direct blueprint imports will be done in register_blueprints function
+from werkzeug.middleware.proxy_fix import ProxyFix
 
+# Initialize extensions
+db = SQLAlchemy()
+migrate = Migrate()
+cors = CORS()
 
 def create_app(config_name=None):
     """
     Application factory pattern for Flask app creation
     """
-    app = Flask(__name__, 
-                static_folder='../static',
-                template_folder='../templates')
+    app = Flask(__name__)
     
-    # Configure CORS for React frontend
-    CORS(app, supports_credentials=True, origins=['http://localhost:5173', 'https://*.replit.app'])
-    
-    # Load configuration
+    # Configure the app
     configure_app(app, config_name)
     
     # Initialize extensions
@@ -34,19 +34,14 @@ def create_app(config_name=None):
     
     return app
 
-
 def configure_app(app, config_name=None):
     """Configure Flask application"""
-    # Load environment variables
-    try:
-        from dotenv import load_dotenv
-        load_dotenv()
-        logging.info("Environment variables loaded from .env file")
-    except ImportError:
-        logging.info("Loading environment variables from system")
     
-    # Basic configuration
-    app.config['SECRET_KEY'] = os.environ.get('SESSION_SECRET', 'dev-secret-key')
+    # Basic Flask configuration
+    app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+    
+    # Database configuration - PostgreSQL via DATABASE_URL
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
         "pool_recycle": 300,
@@ -54,49 +49,65 @@ def configure_app(app, config_name=None):
     }
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
-    # Additional configuration
-    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-    app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), '..', 'uploads')
-
+    # Environment-specific configuration
+    environment = os.environ.get('REPLIT_DEPLOYMENT', 'development')
+    if environment == 'production':
+        app.config['DEBUG'] = False
+        app.config['TESTING'] = False
+    else:
+        app.config['DEBUG'] = True
+        app.config['TESTING'] = False
 
 def initialize_extensions(app):
     """Initialize Flask extensions"""
     db.init_app(app)
     migrate.init_app(app, db)
+    cors.init_app(app, origins=["*"], supports_credentials=True)
     
-    # Create tables if they don't exist
+    # Create tables within application context
     with app.app_context():
-        db.create_all()
-
+        try:
+            # Import models to ensure they're registered
+            from backend.models import User, Contact, Goal, AISuggestion, ContactInteraction
+            db.create_all()
+            logging.info("Database tables created successfully")
+        except Exception as e:
+            logging.error(f"Database initialization error: {e}")
 
 def register_blueprints(app):
     """Register all application blueprints"""
-    # Temporarily disable auth_bp to use simple demo authentication
-    # from backend.routes.auth_routes import auth_bp
+    from backend.routes.auth_routes import auth_bp
+    from backend.routes.api_routes import api_bp
     from backend.routes.contact_routes import contact_bp
     from backend.routes.goal_routes import goal_bp
-    from backend.routes.trust_routes import trust_bp
-    from backend.routes.dashboard_routes import dashboard_bp
     from backend.routes.core_routes import core_bp
-    from backend.routes.simple_health_routes import health_bp
     
-    # app.register_blueprint(auth_bp, url_prefix='/api/auth')  # Disabled for demo
+    # Register blueprints with URL prefixes
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(contact_bp, url_prefix='/api/contacts')
     app.register_blueprint(goal_bp, url_prefix='/api/goals')
-    app.register_blueprint(trust_bp, url_prefix='/api/trust')
-    app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
-    app.register_blueprint(health_bp, url_prefix='/api')
-    
-    # Register core routes without prefix for compatibility
-    app.register_blueprint(core_bp)
-
+    app.register_blueprint(core_bp)  # Core routes (/, /health, etc.)
 
 def configure_logging(app):
     """Configure application logging"""
-    if not app.debug:
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s %(levelname)s: %(message)s'
-        )
+    if not app.debug and not app.testing:
+        # Production logging
+        import logging
+        from logging.handlers import RotatingFileHandler
+        
+        if not os.path.exists('logs'):
+            os.mkdir('logs')
+        
+        file_handler = RotatingFileHandler('logs/rhiz.log', maxBytes=10240, backupCount=10)
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+        ))
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
+        
+        app.logger.setLevel(logging.INFO)
+        app.logger.info('Rhiz application startup')
     else:
+        # Development logging
         logging.basicConfig(level=logging.DEBUG)
