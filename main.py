@@ -11,12 +11,18 @@ import os
 # Create Flask app with factory pattern
 app = create_app()
 
+# Get absolute paths for reliable file serving
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_DIST_DIR = os.path.join(BASE_DIR, 'frontend', 'dist')
+FRONTEND_ASSETS_DIR = os.path.join(FRONTEND_DIST_DIR, 'assets')
+FRONTEND_INDEX_PATH = os.path.join(FRONTEND_DIST_DIR, 'index.html')
+
 # Serve React frontend static assets
 @app.route('/assets/<path:filename>')
 def serve_assets(filename):
     """Serve React static assets"""
     try:
-        return send_from_directory(os.path.join('frontend', 'dist', 'assets'), filename)
+        return send_from_directory(FRONTEND_ASSETS_DIR, filename)
     except FileNotFoundError:
         return '', 404
 
@@ -24,7 +30,7 @@ def serve_assets(filename):
 def serve_vite_svg():
     """Serve Vite favicon"""
     try:
-        return send_from_directory(os.path.join('frontend', 'dist'), 'vite.svg')
+        return send_from_directory(FRONTEND_DIST_DIR, 'vite.svg')
     except FileNotFoundError:
         return '', 404
 
@@ -38,10 +44,21 @@ def serve_react_app(path=''):
         return '', 404
     
     try:
+        # Verify the file exists before serving
+        if not os.path.exists(FRONTEND_INDEX_PATH):
+            return jsonify({
+                'error': 'Frontend not built. Run: cd frontend && npm run build',
+                'debug_info': f'Looking for: {FRONTEND_INDEX_PATH}'
+            }), 500
+        
         # Serve React index.html for all frontend routes
-        return send_file(os.path.join('frontend', 'dist', 'index.html'))
-    except FileNotFoundError:
-        return jsonify({'error': 'Frontend not built. Run: cd frontend && npm run build'}), 500
+        return send_file(FRONTEND_INDEX_PATH)
+    except Exception as e:
+        return jsonify({
+            'error': 'Frontend serving failed',
+            'details': str(e),
+            'path_checked': FRONTEND_INDEX_PATH
+        }), 500
 
 if __name__ == '__main__':
     # Development server
