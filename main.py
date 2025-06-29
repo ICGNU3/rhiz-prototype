@@ -1,7 +1,7 @@
 from backend import create_app
 
 app = create_app()
-from flask import jsonify, send_from_directory, render_template_string, send_file, render_template
+from flask import jsonify, send_from_directory, render_template_string, send_file, render_template, url_for
 import os
 import logging
 from datetime import datetime
@@ -1114,6 +1114,585 @@ def serve_goals_page():
 </html>
     ''')
 
+@app.route('/intelligence')
+def serve_intelligence_page():
+    """Serve AI Intelligence page with chat interface"""
+    # Check authentication
+    if 'user_id' not in session:
+        return redirect(url_for('serve_login_page'))
+    
+    return render_template_string('''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligence - Rhiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(-45deg, #1e3a8a, #3730a3, #581c87, #7c2d12);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            color: white;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .intelligence-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .hero-bar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .hero-title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero-subtitle {
+            margin-top: 0.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+        }
+        
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+            flex: 1;
+            min-height: 0;
+        }
+        
+        .chat-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .chat-history {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-height: 400px;
+        }
+        
+        .chat-message {
+            display: flex;
+            gap: 0.75rem;
+            max-width: 80%;
+        }
+        
+        .chat-message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        
+        .message-bubble {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 0.75rem 1rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .chat-message.user .message-bubble {
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+        }
+        
+        .chat-input-area {
+            padding: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .chat-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 0.75rem;
+            color: white;
+            outline: none;
+            resize: none;
+            font-family: inherit;
+        }
+        
+        .chat-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .send-btn {
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+        }
+        
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .insights-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .insights-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .recommendation-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+        
+        .recommendation-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .contact-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .contact-info {
+            flex: 1;
+        }
+        
+        .contact-name {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .contact-reason {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 0.25rem;
+        }
+        
+        .go-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.375rem 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        
+        .go-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .alert-item {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #10b981;
+        }
+        
+        .alert-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+        
+        .quick-prompts {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .prompt-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.75rem;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+        
+        .prompt-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
+        }
+        
+        .loading-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr auto;
+            }
+            
+            .insights-panel {
+                max-height: 400px;
+                overflow-y: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="intelligence-container">
+        <!-- Hero Bar -->
+        <div class="hero-bar">
+            <div>
+                <h1 class="hero-title">Rhiz AI Assistant</h1>
+                <p class="hero-subtitle">Get personalized relationship advice and opportunity insights</p>
+            </div>
+            <button class="refresh-btn" onclick="refreshInsights()">Refresh Insights</button>
+        </div>
+        
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Left Chat Panel -->
+            <div class="chat-panel">
+                <div class="chat-header">Chat History</div>
+                <div class="chat-history" id="chatHistory">
+                    <div class="chat-message">
+                        <div class="message-bubble">
+                            👋 Hello! I'm your Rhiz AI assistant. I can help you with relationship advice, contact prioritization, and opportunity insights. What would you like to know about your network?
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <textarea class="chat-input" id="chatInput" placeholder="Ask me about your contacts, goals, or relationship strategy..." rows="2"></textarea>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+            
+            <!-- Right Insights Panel -->
+            <div class="insights-panel">
+                <!-- Contact Recommendations -->
+                <div class="insights-section">
+                    <h3 class="section-title">Contact Recommendations</h3>
+                    <div id="recommendations">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            Loading recommendations...
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Opportunity Alerts -->
+                <div class="insights-section">
+                    <h3 class="section-title">Opportunity Alerts</h3>
+                    <div id="alerts">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            Loading alerts...
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Prompts -->
+                <div class="insights-section">
+                    <h3 class="section-title">Quick Prompts</h3>
+                    <div class="quick-prompts">
+                        <button class="prompt-btn" onclick="askQuickPrompt('Who should I reach out to for funding opportunities?')">
+                            💰 Show me best people to ask for funding
+                        </button>
+                        <button class="prompt-btn" onclick="askQuickPrompt('Which contacts haven\\'t I spoken to in a while?')">
+                            🔄 Find contacts I should reconnect with
+                        </button>
+                        <button class="prompt-btn" onclick="askQuickPrompt('Who in my network could help with hiring?')">
+                            👥 Identify hiring connections
+                        </button>
+                        <button class="prompt-btn" onclick="askQuickPrompt('What relationship building opportunities do I have this week?')">
+                            📅 Weekly relationship opportunities
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let isLoading = false;
+        
+        // Initialize page
+        loadInsights();
+        
+        // Auto-resize textarea
+        document.getElementById('chatInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+        
+        // Send message on Enter (but allow Shift+Enter for new lines)
+        document.getElementById('chatInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message || isLoading) return;
+            
+            // Add user message to chat
+            addMessageToChat(message, 'user');
+            input.value = '';
+            input.style.height = 'auto';
+            
+            // Show loading
+            setLoading(true);
+            
+            try {
+                const response = await fetch('/api/intelligence/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addMessageToChat(data.response, 'ai');
+                } else {
+                    addMessageToChat('Sorry, I encountered an error. Please try again.', 'ai');
+                }
+            } catch (error) {
+                console.error('Chat error:', error);
+                addMessageToChat('Sorry, I couldn\\'t process your message right now. Please try again.', 'ai');
+            }
+            
+            setLoading(false);
+        }
+        
+        function addMessageToChat(message, sender) {
+            const chatHistory = document.getElementById('chatHistory');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${sender}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-bubble">
+                    ${message}
+                </div>
+            `;
+            
+            chatHistory.appendChild(messageDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+        
+        function askQuickPrompt(prompt) {
+            const input = document.getElementById('chatInput');
+            input.value = prompt;
+            sendMessage();
+        }
+        
+        function setLoading(loading) {
+            isLoading = loading;
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = loading;
+            sendBtn.textContent = loading ? 'Sending...' : 'Send';
+        }
+        
+        async function loadInsights() {
+            try {
+                const response = await fetch('/api/insights');
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateRecommendations(data.recommendations || []);
+                    updateAlerts(data.alerts || []);
+                }
+            } catch (error) {
+                console.error('Failed to load insights:', error);
+                showInsightsError();
+            }
+        }
+        
+        function updateRecommendations(recommendations) {
+            const container = document.getElementById('recommendations');
+            
+            if (recommendations.length === 0) {
+                container.innerHTML = '<p style="color: rgba(255, 255, 255, 0.7); font-style: italic;">No recommendations available.</p>';
+                return;
+            }
+            
+            container.innerHTML = recommendations.map(rec => `
+                <div class="recommendation-item">
+                    <div class="contact-avatar">${rec.name.charAt(0)}</div>
+                    <div class="contact-info">
+                        <div class="contact-name">${rec.name}</div>
+                        <div class="contact-reason">${rec.reason}</div>
+                    </div>
+                    <button class="go-btn" onclick="openContactDetail('${rec.id}')">Go</button>
+                </div>
+            `).join('');
+        }
+        
+        function updateAlerts(alerts) {
+            const container = document.getElementById('alerts');
+            
+            if (alerts.length === 0) {
+                container.innerHTML = '<p style="color: rgba(255, 255, 255, 0.7); font-style: italic;">No new alerts.</p>';
+                return;
+            }
+            
+            container.innerHTML = alerts.map(alert => `
+                <div class="alert-item">
+                    <div class="alert-text">${alert.text}</div>
+                </div>
+            `).join('');
+        }
+        
+        function showInsightsError() {
+            document.getElementById('recommendations').innerHTML = '<p style="color: rgba(255, 255, 255, 0.7);">Failed to load recommendations.</p>';
+            document.getElementById('alerts').innerHTML = '<p style="color: rgba(255, 255, 255, 0.7);">Failed to load alerts.</p>';
+        }
+        
+        async function refreshInsights() {
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = 'Refreshing...';
+            button.disabled = true;
+            
+            await loadInsights();
+            
+            button.textContent = originalText;
+            button.disabled = false;
+        }
+        
+        function openContactDetail(contactId) {
+            // TODO: Implement contact detail drawer
+            console.log('Opening contact detail for:', contactId);
+            alert('Contact detail feature coming soon!');
+        }
+    </script>
+</body>
+</html>
+    ''')
+
 @app.route('/contacts')
 def serve_react():
     """Serve React frontend application"""
@@ -1331,6 +1910,145 @@ def get_contacts():
             'notes': 'Interested in relationship intelligence for their sales team. Follow up needed.'
         }
     ])
+
+# Intelligence/AI API endpoints
+@app.route('/api/intelligence/chat', methods=['POST'])
+def intelligence_chat():
+    """Handle AI chat messages"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        data = request.get_json()
+        user_message = data.get('message', '').strip()
+        
+        if not user_message:
+            return jsonify({'error': 'Message is required'}), 400
+        
+        # Import OpenAI here to handle missing API key gracefully
+        try:
+            import openai
+            import os
+            
+            # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
+            # do not change this unless explicitly requested by the user
+            openai_client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+            
+            # Get user context from session/database
+            user_id = session.get('user_id')
+            
+            # Create a context-aware prompt
+            system_prompt = f"""You are Rhiz, an AI assistant specialized in relationship intelligence and networking advice. 
+            You help users build meaningful professional relationships and identify opportunities in their network.
+            
+            Your responses should be:
+            - Helpful and actionable
+            - Focused on relationship building and networking strategy
+            - Professional but warm in tone
+            - Based on relationship intelligence principles
+            
+            The user ({user_id}) is asking: {user_message}
+            
+            Provide specific, actionable advice that helps them build better relationships and identify opportunities."""
+            
+            response = openai_client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_message}
+                ],
+                max_tokens=300,
+                temperature=0.7
+            )
+            
+            ai_response = response.choices[0].message.content
+            
+            return jsonify({
+                'success': True,
+                'response': ai_response
+            })
+            
+        except Exception as openai_error:
+            logging.error(f"OpenAI API error: {openai_error}")
+            
+            # Provide helpful fallback response
+            fallback_responses = {
+                'funding': "For funding opportunities, focus on investors who share your vision. Look for warm introductions through your existing network and research investors who have funded similar companies.",
+                'hiring': "When hiring through your network, be specific about the role and skills needed. Ask trusted contacts for referrals and consider offering referral bonuses.",
+                'partnerships': "Successful partnerships start with aligned goals. Identify companies that complement your strengths and reach out through mutual connections.",
+                'reconnect': "Reconnecting works best with a specific reason to reach out. Share something valuable, congratulate them on recent achievements, or suggest a relevant opportunity."
+            }
+            
+            # Simple keyword matching for fallback
+            message_lower = user_message.lower()
+            fallback_response = "I'd be happy to help with relationship advice! Try asking about specific topics like funding, hiring, partnerships, or reconnecting with contacts."
+            
+            for keyword, response in fallback_responses.items():
+                if keyword in message_lower:
+                    fallback_response = response
+                    break
+            
+            return jsonify({
+                'success': True,
+                'response': fallback_response
+            })
+            
+    except Exception as e:
+        logging.error(f"Chat error: {e}")
+        return jsonify({'error': 'Failed to process message'}), 500
+
+@app.route('/api/insights')
+def get_insights():
+    """Get AI insights including recommendations and alerts"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        # Mock data for demonstration - in production this would come from AI analysis
+        recommendations = [
+            {
+                'id': 'rec1',
+                'name': 'Sarah Chen',
+                'reason': 'Recently promoted to VP Engineering - great time to reconnect about technical partnerships'
+            },
+            {
+                'id': 'rec2',
+                'name': 'Marcus Rodriguez',
+                'reason': 'Active in startup funding - could be valuable for your Series A discussions'
+            },
+            {
+                'id': 'rec3',
+                'name': 'Jennifer Kim',
+                'reason': 'Posted about hiring challenges - opportunity to offer your recruiting solution'
+            },
+            {
+                'id': 'rec4',
+                'name': 'Alex Thompson',
+                'reason': 'Haven\'t spoken in 6 months - good time for a coffee catch-up'
+            }
+        ]
+        
+        alerts = [
+            {
+                'text': 'Sarah Chen just changed jobs to VP Engineering at TechCorp - perfect timing for outreach'
+            },
+            {
+                'text': 'Marcus Rodriguez mentioned looking for AI startups on LinkedIn yesterday'
+            },
+            {
+                'text': 'Jennifer Kim is attending the same conference as you next week - schedule a meetup'
+            }
+        ]
+        
+        return jsonify({
+            'success': True,
+            'recommendations': recommendations,
+            'alerts': alerts
+        })
+        
+    except Exception as e:
+        logging.error(f"Insights error: {e}")
+        return jsonify({'error': 'Failed to load insights'}), 500
 
 @app.route('/api/auth/request-link', methods=['POST'])
 def request_magic_link():
