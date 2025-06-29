@@ -88,6 +88,31 @@ def verify_magic_link():
     except Exception as e:
         return jsonify({'error': 'Authentication failed'}), 401
 
+@auth_bp.route('/profile', methods=['GET'])
+def get_user_profile():
+    """Get current user profile"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        user = User.query.get(session['user_id'])
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        return jsonify({
+            'user': user.to_dict(),
+            'profile': {
+                'name': user.email.split('@')[0].title(),
+                'email': user.email,
+                'subscription_tier': user.subscription_tier,
+                'member_since': user.created_at.strftime('%B %Y'),
+                'is_guest': user.is_guest
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'error': 'Failed to load profile'}), 500
+
 
 @auth_bp.route('/me', methods=['GET'])
 def get_current_user():
