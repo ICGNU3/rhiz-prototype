@@ -1,7 +1,7 @@
 from backend import create_app
 
 app = create_app()
-from flask import jsonify, send_from_directory, render_template_string
+from flask import jsonify, send_from_directory, render_template_string, send_file
 import os
 import logging
 from datetime import datetime
@@ -9,11 +9,22 @@ from flask import request, session, redirect
 
 # Routes are now imported through app.py to maintain compatibility
 
+# Serve React static assets
+@app.route('/assets/<path:filename>')
+def serve_assets(filename):
+    """Serve React static assets"""
+    return send_from_directory(os.path.join('frontend', 'dist', 'assets'), filename)
+
 # Serve React frontend routes
 @app.route('/')
-def serve_landing():
-    """Serve React landing page"""
-    return render_template_string('''
+@app.route('/app/<path:path>')
+def serve_react():
+    """Serve React frontend application"""
+    try:
+        return send_file(os.path.join('frontend', 'dist', 'index.html'))
+    except FileNotFoundError:
+        # Fallback HTML if React build not available
+        return render_template_string('''
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -319,6 +330,130 @@ def serve_dashboard():
 </body>
 </html>
     ''')
+
+# API endpoints for React frontend
+@app.route('/api/auth/me')
+def get_current_user():
+    """Get current authenticated user"""
+    # Mock user for now - replace with real authentication
+    return jsonify({
+        'id': 'demo_user',
+        'email': 'demo@rhiz.app',
+        'subscription_tier': 'free',
+        'goals_count': 3,
+        'contacts_count': 8,
+        'ai_suggestions_used': 5
+    })
+
+@app.route('/api/dashboard/analytics')
+def dashboard_analytics():
+    """Dashboard analytics data for React frontend"""
+    return jsonify({
+        'goals': 3,
+        'contacts': 8,
+        'ai_suggestions': 5,
+        'trust_score': 85
+    })
+
+@app.route('/api/goals')
+def get_goals():
+    """Get all goals for the current user"""
+    return jsonify([
+        {
+            'id': '1',
+            'title': 'Raise Series A Funding',
+            'description': 'Secure $2M Series A funding from aligned investors',
+            'goal_type': 'fundraising',
+            'timeline': '6 months',
+            'status': 'active',
+            'priority_level': 'high',
+            'progress_percentage': 35,
+            'created_at': '2024-01-15'
+        },
+        {
+            'id': '2',
+            'title': 'Hire Senior Backend Engineer',
+            'description': 'Find and hire a senior backend engineer with ML experience',
+            'goal_type': 'hiring',
+            'timeline': '3 months',
+            'status': 'active',
+            'priority_level': 'high',
+            'progress_percentage': 60,
+            'created_at': '2024-02-01'
+        },
+        {
+            'id': '3',
+            'title': 'Partnership with Integration Platform',
+            'description': 'Establish strategic partnership for platform integrations',
+            'goal_type': 'partnerships',
+            'timeline': '4 months',
+            'status': 'active',
+            'priority_level': 'medium',
+            'progress_percentage': 20,
+            'created_at': '2024-02-15'
+        }
+    ])
+
+@app.route('/api/contacts')
+def get_contacts():
+    """Get all contacts for the current user"""
+    return jsonify([
+        {
+            'id': '1',
+            'name': 'Sarah Chen',
+            'email': 'sarah@example.com',
+            'company': 'Vertex Ventures',
+            'title': 'Partner',
+            'relationship_type': 'investor',
+            'warmth_level': 'warm',
+            'last_interaction_date': '2024-02-20',
+            'notes': 'Met at TechCrunch. Interested in B2B SaaS. Prefers companies with proven traction.'
+        },
+        {
+            'id': '2',
+            'name': 'Marcus Rivera',
+            'email': 'marcus@techcorp.com',
+            'company': 'TechCorp',
+            'title': 'CTO',
+            'relationship_type': 'partner',
+            'warmth_level': 'cool',
+            'last_interaction_date': '2024-01-15',
+            'notes': 'Potential integration partner. Looking for relationship intelligence tools.'
+        },
+        {
+            'id': '3',
+            'name': 'Jessica Thompson',
+            'email': 'jessica@dev.com',
+            'company': 'DevCorp',
+            'title': 'Senior Backend Engineer',
+            'relationship_type': 'employee',
+            'warmth_level': 'warm',
+            'last_interaction_date': '2024-02-25',
+            'notes': 'Excellent Python and ML background. Available for new opportunities.'
+        },
+        {
+            'id': '4',
+            'name': 'David Kim',
+            'email': 'david@startup.io',
+            'company': 'StartupIO',
+            'title': 'Founder',
+            'relationship_type': 'mentor',
+            'warmth_level': 'warm',
+            'last_interaction_date': '2024-02-18',
+            'notes': 'Successful B2B founder. Great strategic advice on product-market fit.'
+        },
+        {
+            'id': '5',
+            'name': 'Emily Zhang',
+            'email': 'emily@growth.com',
+            'company': 'Growth Labs',
+            'title': 'VP Marketing',
+            'relationship_type': 'customer',
+            'warmth_level': 'cold',
+            'last_interaction_date': '2024-01-10',
+            'notes': 'Interested in relationship intelligence for their sales team. Follow up needed.'
+        }
+    ])
 
 @app.route('/goals')
 def serve_goals():
