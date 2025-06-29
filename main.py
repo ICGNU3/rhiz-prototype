@@ -469,20 +469,21 @@ def request_magic_link():
             return jsonify({'error': 'Email is required'}), 400
         
         # For demo purposes, we'll create a session immediately
-        # In production, you'd send an actual magic link email
+        # Skip email sending and go straight to authentication
         session['user_id'] = 'demo_user'
         session['email'] = email
         session['authenticated'] = True
         
         return jsonify({
-            'message': 'Magic link sent successfully',
+            'message': 'Authentication successful',
+            'success': True,
             'demo_mode': True,
             'redirect': '/app/dashboard'
         })
         
     except Exception as e:
-        logging.error(f"Magic link request failed: {e}")
-        return jsonify({'error': 'Failed to send magic link'}), 500
+        logging.error(f"Authentication failed: {e}")
+        return jsonify({'error': 'Authentication failed. Please try again.'}), 500
 
 @app.route('/api/auth/verify')
 def verify_magic_link():

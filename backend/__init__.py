@@ -71,7 +71,8 @@ def initialize_extensions(app):
 
 def register_blueprints(app):
     """Register all application blueprints"""
-    from backend.routes.auth_routes import auth_bp
+    # Temporarily disable auth_bp to use simple demo authentication
+    # from backend.routes.auth_routes import auth_bp
     from backend.routes.contact_routes import contact_bp
     from backend.routes.goal_routes import goal_bp
     from backend.routes.trust_routes import trust_bp
@@ -79,7 +80,7 @@ def register_blueprints(app):
     from backend.routes.core_routes import core_bp
     from backend.routes.simple_health_routes import health_bp
     
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    # app.register_blueprint(auth_bp, url_prefix='/api/auth')  # Disabled for demo
     app.register_blueprint(contact_bp, url_prefix='/api/contacts')
     app.register_blueprint(goal_bp, url_prefix='/api/goals')
     app.register_blueprint(trust_bp, url_prefix='/api/trust')
