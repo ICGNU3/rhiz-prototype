@@ -25,9 +25,11 @@ export default function Goals({ user, onLogout }: GoalsProps) {
   }, [])
 
   const loadGoals = async () => {
-    const response = await apiService.getGoals()
-    if (response.success && response.data) {
-      setGoals(response.data)
+    try {
+      const goals = await apiService.getGoals()
+      setGoals(goals)
+    } catch (error) {
+      console.error('Failed to load goals:', error)
     }
     setLoading(false)
   }

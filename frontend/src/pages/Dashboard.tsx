@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { User } from '../types'
 import { useDashboardAnalytics } from '../hooks/useApi'
 import Navigation from '../components/Navigation'
-import LoadingSpinner, { LoadingStats } from '../components/LoadingSpinner'
+import { LoadingStats } from '../components/LoadingSpinner'
 import ErrorBoundary from '../components/ErrorBoundary'
 
 interface DashboardProps {

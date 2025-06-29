@@ -1,7 +1,7 @@
 // React Query hooks for API operations with comprehensive error handling
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { apiService, User, Contact, Goal, DashboardAnalytics } from '../services/api'
+import { apiService, Contact, Goal } from '../services/api'
 
 // Query keys for consistent cache management
 export const queryKeys = {

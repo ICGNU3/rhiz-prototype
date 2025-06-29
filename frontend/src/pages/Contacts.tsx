@@ -26,20 +26,24 @@ export default function Contacts({ user, onLogout }: ContactsProps) {
   }, [])
 
   const loadContacts = async () => {
-    const response = await apiService.getContacts()
-    if (response.success && response.data) {
-      setContacts(response.data)
+    try {
+      const contacts = await apiService.getContacts()
+      setContacts(contacts)
+    } catch (error) {
+      console.error('Failed to load contacts:', error)
     }
     setLoading(false)
   }
 
   const handleAddContact = async (e: React.FormEvent) => {
     e.preventDefault()
-    const response = await apiService.createContact(newContact)
-    if (response.success && response.data) {
-      setContacts([...contacts, response.data])
+    try {
+      const contact = await apiService.createContact(newContact)
+      setContacts([...contacts, contact])
       setNewContact({ name: '', email: '', company: '', title: '', notes: '' })
       setShowAddForm(false)
+    } catch (error) {
+      console.error('Failed to create contact:', error)
     }
   }
 
