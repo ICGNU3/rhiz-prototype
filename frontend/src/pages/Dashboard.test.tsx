@@ -48,13 +48,10 @@ describe('Dashboard', () => {
   it('renders welcome message with user name', async () => {
     const { apiService } = await import('../services/api')
     vi.mocked(apiService.getDashboardAnalytics).mockResolvedValue({
-      success: true,
-      data: {
-        contacts: 5,
-        goals: 3,
-        interactions: 12,
-        ai_suggestions: 7
-      }
+      contacts: 5,
+      goals: 3,
+      interactions: 12,
+      ai_suggestions: 7
     })
 
     renderDashboard()

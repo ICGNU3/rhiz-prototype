@@ -35,8 +35,8 @@ export default function LandingPage({ onAuth }: LandingPageProps) {
 
     const response = await apiService.demoLogin()
     
-    if (response.success && response.data) {
-      onAuth(response.data)
+    if (response.success && response.user) {
+      onAuth(response.user)
     } else {
       setMessage('Demo login failed. Please try again.')
     }

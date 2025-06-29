@@ -2,7 +2,7 @@
 
 import { User, Contact, Goal } from '../types'
 
-export { User, Contact, Goal }
+export type { User, Contact, Goal }
 
 export interface DashboardAnalytics {
   contacts: number
@@ -68,7 +68,7 @@ async function apiRequest<T>(
   }
 
   const maxRetries = 2
-  let lastError: Error
+  let lastError: Error | undefined
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -219,6 +219,65 @@ class ApiService {
 
   async deleteGoal(id: string): Promise<void> {
     return apiRequest<void>(`/api/goals/${id}`, { method: 'DELETE' })
+  }
+
+  // Individual contact
+  async getContact(id: string): Promise<Contact> {
+    return apiRequest<Contact>(`/api/contacts/${id}`)
+  }
+
+  // Individual goal
+  async getGoal(id: string): Promise<Goal> {
+    return apiRequest<Goal>(`/api/goals/${id}`)
+  }
+
+  // Contact upload
+  async uploadContacts(file: File): Promise<{ imported: number; duplicates: number; errors: number }> {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    return apiRequest<{ imported: number; duplicates: number; errors: number }>('/api/contacts/upload', {
+      method: 'POST',
+      body: formData,
+      headers: {} // Let browser set Content-Type with boundary
+    })
+  }
+
+  // AI suggestions
+  async getAiSuggestions(): Promise<any[]> {
+    return apiRequest<any[]>('/api/ai-suggestions')
+  }
+
+  // Chat
+  async sendChatMessage(message: string): Promise<{ response: string }> {
+    return apiRequest<{ response: string }>('/api/intelligence/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message })
+    })
+  }
+
+  // Trust insights
+  async getTrustInsights(): Promise<any> {
+    return apiRequest<any>('/api/trust/insights')
+  }
+
+  // Network graph
+  async getNetworkGraph(): Promise<any> {
+    return apiRequest<any>('/api/network/graph')
+  }
+
+  // Authentication
+  async requestMagicLink(email: string): Promise<{ success: boolean; message: string }> {
+    return apiRequest<{ success: boolean; message: string }>('/api/auth/request-link', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    })
+  }
+
+  async demoLogin(): Promise<{ success: boolean; user: User }> {
+    return apiRequest<{ success: boolean; user: User }>('/api/auth/demo-login', {
+      method: 'POST'
+    })
   }
 
   // Health check
