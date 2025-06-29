@@ -9,6 +9,269 @@ from flask import request, session, redirect
 
 # Routes are now imported through app.py to maintain compatibility
 
+# Login route - must be defined before general routes
+@app.route('/login')
+def serve_login_page():
+    """Serve login page with proper styling"""
+    return render_template_string('''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Rhiz</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container { 
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 3rem; 
+            border-radius: 20px; 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); 
+            max-width: 450px; 
+            width: 90%; 
+            text-align: center; 
+        }
+        .logo { 
+            font-size: 2.5rem; 
+            font-weight: bold; 
+            background: linear-gradient(135deg, #4f46e5, #9333ea); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            margin-bottom: 1rem; 
+        }
+        .title { 
+            font-size: 2rem; 
+            font-weight: bold; 
+            color: #1f2937; 
+            margin-bottom: 0.5rem; 
+        }
+        .subtitle { 
+            font-size: 1.1rem; 
+            color: #6b7280; 
+            margin-bottom: 2.5rem; 
+            line-height: 1.6;
+        }
+        .form { margin-bottom: 2rem; }
+        .input { 
+            width: 100%; 
+            padding: 1.2rem; 
+            border: 2px solid #e5e7eb; 
+            border-radius: 12px; 
+            font-size: 1rem; 
+            margin-bottom: 1.5rem;
+            background: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+        .input:focus { 
+            outline: none; 
+            border-color: #4f46e5; 
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        .btn { 
+            width: 100%; 
+            padding: 1.2rem; 
+            background: linear-gradient(135deg, #4f46e5, #9333ea); 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 1.1rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+        .btn:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
+        }
+        .btn:disabled { 
+            opacity: 0.6; 
+            cursor: not-allowed; 
+            transform: none;
+        }
+        .demo-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            margin-top: 1rem;
+        }
+        .demo-btn:hover {
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
+        }
+        .message { 
+            padding: 1rem; 
+            border-radius: 12px; 
+            margin-top: 1rem; 
+            font-weight: 500;
+        }
+        .message.success { 
+            background: rgba(209, 250, 229, 0.9); 
+            color: #065f46; 
+            border: 1px solid #a7f3d0; 
+        }
+        .message.error { 
+            background: rgba(254, 226, 226, 0.9); 
+            color: #991b1b; 
+            border: 1px solid #fca5a5; 
+        }
+        .spinner { 
+            width: 20px; 
+            height: 20px; 
+            border: 2px solid transparent; 
+            border-top: 2px solid white; 
+            border-radius: 50%; 
+            animation: spin 1s linear infinite; 
+            display: inline-block; 
+        }
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        .divider {
+            text-align: center;
+            color: #9ca3af;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e5e7eb;
+        }
+        .divider span {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0 1rem;
+        }
+        .back-link {
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-top: 2rem;
+            display: inline-block;
+            transition: color 0.3s ease;
+        }
+        .back-link:hover {
+            color: #4f46e5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">Rhiz</div>
+        <h1 class="title">Welcome Back</h1>
+        <p class="subtitle">Sign in to continue building meaningful relationships with AI-powered insights</p>
+        
+        <form class="form" id="authForm">
+            <input type="email" id="email" class="input" placeholder="Enter your email address" required>
+            <button type="submit" class="btn" id="submitBtn">
+                Send Magic Link
+            </button>
+        </form>
+        
+        <div class="divider">
+            <span>or</span>
+        </div>
+        
+        <button type="button" class="btn demo-btn" id="demoBtn">
+            Try Demo Access
+        </button>
+        
+        <div id="message" class="message" style="display: none;"></div>
+        
+        <a href="/" class="back-link">← Back to Home</a>
+    </div>
+
+    <script>
+        const form = document.getElementById('authForm');
+        const emailInput = document.getElementById('email');
+        const submitBtn = document.getElementById('submitBtn');
+        const demoBtn = document.getElementById('demoBtn');
+        const messageDiv = document.getElementById('message');
+
+        // Magic link form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = emailInput.value;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> Sending Magic Link...';
+            
+            try {
+                const response = await fetch('/api/auth/request-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                if (response.ok) {
+                    showMessage('Magic link sent! Check your email to sign in.', 'success');
+                    emailInput.value = '';
+                } else {
+                    const data = await response.json();
+                    showMessage(data.error || 'Something went wrong. Please try again.', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error. Please try again.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Send Magic Link';
+            }
+        });
+
+        // Demo access button
+        demoBtn.addEventListener('click', async () => {
+            demoBtn.disabled = true;
+            demoBtn.innerHTML = '<span class="spinner"></span> Accessing Demo...';
+            
+            try {
+                const response = await fetch('/api/auth/demo-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    showMessage('Demo access granted! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
+                } else {
+                    showMessage('Demo access temporarily unavailable. Please try magic link.', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error. Please try magic link instead.', 'error');
+            } finally {
+                demoBtn.disabled = false;
+                demoBtn.innerHTML = 'Try Demo Access';
+            }
+        });
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            setTimeout(() => {
+                if (type !== 'success') {
+                    messageDiv.style.display = 'none';
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
+    ''')
+
 # Serve React static assets
 @app.route('/assets/<path:filename>')
 def serve_assets(filename):
@@ -503,108 +766,7 @@ def verify_magic_link():
     
     return redirect('/app/dashboard')
 
-@app.route('/login')
-def serve_login():
-    """Serve login page"""
-    return render_template_string('''
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Rhiz</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: system-ui, -apple-system, sans-serif; }
-        .container { min-height: 100vh; background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); display: flex; align-items: center; justify-content: center; }
-        .card { background: white; padding: 3rem; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); max-width: 500px; width: 90%; text-align: center; }
-        .logo { font-size: 2rem; font-weight: bold; background: linear-gradient(135deg, #4f46e5, #9333ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem; }
-        .title { font-size: 2.5rem; font-weight: bold; color: #1f2937; margin-bottom: 1rem; }
-        .subtitle { font-size: 1.2rem; color: #6b7280; margin-bottom: 2rem; }
-        .form { margin-bottom: 2rem; }
-        .input { width: 100%; padding: 1rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem; margin-bottom: 1rem; }
-        .input:focus { outline: none; border-color: #4f46e5; }
-        .btn { width: 100%; padding: 1rem; background: linear-gradient(135deg, #4f46e5, #9333ea); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
-        .btn:hover { transform: translateY(-2px); }
-        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .message { padding: 1rem; border-radius: 8px; margin-top: 1rem; }
-        .message.success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
-        .message.error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-        .spinner { width: 20px; height: 20px; border: 2px solid transparent; border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="card">
-            <div class="logo">Rhiz</div>
-            <h1 class="title">Welcome Back</h1>
-            <p class="subtitle">Sign in to your relationship intelligence platform</p>
-            
-            <form class="form" id="authForm">
-                <input type="email" id="email" class="input" placeholder="Enter your email address" required>
-                <button type="submit" class="btn" id="submitBtn">
-                    Get Magic Link
-                </button>
-            </form>
-            
-            <div id="message" class="message" style="display: none;"></div>
-        </div>
-    </div>
 
-    <script>
-        const form = document.getElementById('authForm');
-        const emailInput = document.getElementById('email');
-        const submitBtn = document.getElementById('submitBtn');
-        const messageDiv = document.getElementById('message');
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = emailInput.value;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner"></span> Signing in...';
-            
-            try {
-                const response = await fetch('/api/auth/request-link', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    showMessage('Signing you in...', 'success');
-                    // Redirect immediately for demo mode
-                    setTimeout(() => {
-                        window.location.href = '/app/dashboard';
-                    }, 1000);
-                } else {
-                    const data = await response.json();
-                    showMessage(data.error || 'Something went wrong. Please try again.', 'error');
-                }
-            } catch (error) {
-                showMessage('Network error. Please try again.', 'error');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Get Magic Link';
-            }
-        });
-
-        function showMessage(text, type) {
-            messageDiv.textContent = text;
-            messageDiv.className = `message ${type}`;
-            messageDiv.style.display = 'block';
-            setTimeout(() => {
-                if (type !== 'success') {
-                    messageDiv.style.display = 'none';
-                }
-            }, 5000);
-        }
-    </script>
-</body>
-</html>
-    ''')
 
 @app.route('/api/dashboard/analytics')
 def dashboard_analytics_api():
