@@ -603,6 +603,19 @@ def serve_login():
 </html>
     ''')
 
+@app.route('/api/service-status')
+def service_status():
+    """Check status of all placeholder services"""
+    try:
+        from service_status import get_all_service_status
+        return jsonify(get_all_service_status())
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "error": str(e),
+            "message": "Service status check failed"
+        }), 500
+
 @app.route('/goals')
 def serve_goals():
     """Serve React goals page"""
