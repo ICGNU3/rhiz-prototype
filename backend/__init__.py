@@ -66,7 +66,7 @@ def initialize_extensions(app):
     with app.app_context():
         try:
             # Import models to ensure they're registered
-            from backend.models import User, Contact, Goal, AISuggestion, ContactInteraction
+            from .models import User, Contact, Goal, AISuggestion, ContactInteraction
             db.create_all()
             logging.info("Database tables created successfully")
         except Exception as e:
@@ -74,11 +74,11 @@ def initialize_extensions(app):
 
 def register_blueprints(app):
     """Register all application blueprints"""
-    from backend.routes.auth_routes import auth_bp
-    from backend.routes.api_routes import api_bp
-    from backend.routes.contact_routes import contact_bp
-    from backend.routes.goal_routes import goal_bp
-    from backend.routes.core_routes import core_bp
+    from .routes.auth_routes import auth_bp
+    from .routes.api_routes import api_bp
+    from .routes.contact_routes import contact_bp
+    from .routes.goal_routes import goal_bp
+    from .routes.core_routes import core_bp
     
     # Register blueprints with URL prefixes
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
