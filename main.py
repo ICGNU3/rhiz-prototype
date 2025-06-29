@@ -603,6 +603,27 @@ def serve_login():
 </html>
     ''')
 
+@app.route('/api/dashboard/analytics')
+def dashboard_analytics_api():
+    """Dashboard analytics data for React frontend"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    return jsonify({
+        'contacts': 12,
+        'goals': 6,
+        'interactions': 24,
+        'ai_suggestions': 8,
+        'trust_score': 85,
+        'network_growth': 15,
+        'recent_activity': {
+            'contacts_added': 3,
+            'goals_completed': 1,
+            'messages_sent': 5
+        },
+        'status': 'success'
+    })
+
 @app.route('/api/service-status')
 def service_status():
     """Check status of all placeholder services"""
