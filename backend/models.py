@@ -106,6 +106,7 @@ class Contact(db.Model):
     # Relationships
     user = relationship('User', back_populates='contacts')
     interactions = relationship('ContactInteraction', back_populates='contact', cascade='all, delete-orphan')
+    ai_suggestions = relationship('AISuggestion', back_populates='contact', cascade='all, delete-orphan')
     
     def to_dict(self):
         return {
