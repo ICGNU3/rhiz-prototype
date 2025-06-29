@@ -6,7 +6,11 @@ import Navigation from './Navigation'
 const mockUser = {
   id: '1',
   email: 'test@example.com',
-  name: 'Test User'
+  name: 'Test User',
+  subscription_tier: 'explorer',
+  goals_count: 3,
+  contacts_count: 5,
+  ai_suggestions_used: 12
 }
 
 const mockOnLogout = vi.fn()

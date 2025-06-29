@@ -6,7 +6,11 @@ import Dashboard from './Dashboard'
 const mockUser = {
   id: '1',
   email: 'test@example.com',
-  name: 'Test User'
+  name: 'Test User',
+  subscription_tier: 'explorer',
+  goals_count: 3,
+  contacts_count: 5,
+  ai_suggestions_used: 12
 }
 
 const mockOnLogout = vi.fn()
@@ -59,13 +63,11 @@ describe('Dashboard', () => {
     expect(screen.getByText('test')).toBeInTheDocument() // email prefix
   })
 
-  it('displays loading state initially', () => {
-    const { apiService } = import('../services/api')
-    vi.mocked(apiService).then(api => {
-      vi.mocked(api.apiService.getDashboardAnalytics).mockImplementation(
-        () => new Promise(() => {}) // Never resolves
-      )
-    })
+  it('displays loading state initially', async () => {
+    const { apiService } = await import('../services/api')
+    vi.mocked(apiService.getDashboardAnalytics).mockImplementation(
+      () => new Promise(() => {}) // Never resolves
+    )
 
     renderDashboard()
     

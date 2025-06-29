@@ -92,7 +92,9 @@ class TestDatabase:
         with app.app_context():
             from backend.extensions import db
             # Should not raise an exception
-            db.engine.execute('SELECT 1')
+            with db.engine.connect() as connection:
+                result = connection.execute(db.text('SELECT 1'))
+                assert result is not None
     
     def test_user_model_creation(self, app, sample_user_data):
         """Test user model can be created."""

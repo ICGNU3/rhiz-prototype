@@ -1,141 +1,98 @@
-import { User, Contact, Goal, AISuggestion, DashboardAnalytics, ApiResponse } from '../types';
+// API service for making requests to the backend
 
-const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:5000';
+export interface User {
+  id: string
+  email: string
+  name: string
+  subscription_tier: string
+  goals_count: number
+  contacts_count: number
+  ai_suggestions_used: number
+}
+
+export interface DashboardAnalytics {
+  contacts: number
+  goals: number
+  interactions: number
+  ai_suggestions: number
+  recent_activity?: {
+    contacts_added: number
+    goals_completed: number
+    messages_sent: number
+  }
+}
+
+export interface ApiResponse<T> {
+  success: boolean
+  data: T | null
+  error?: string
+}
 
 class ApiService {
+  private baseUrl: string
+
+  constructor() {
+    this.baseUrl = '/api'
+  }
+
   private async request<T>(
-    endpoint: string, 
+    endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        credentials: 'include',
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
         headers: {
           'Content-Type': 'application/json',
           ...options.headers,
         },
         ...options,
-      });
+      })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      const data = await response.json();
-      return { success: true, data };
+      const data = await response.json()
+      return { success: true, data }
     } catch (error) {
-      console.error('API request failed:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      };
+      console.error('API request failed:', error)
+      return {
+        success: false,
+        data: null,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
     }
   }
 
-  // Authentication
   async getCurrentUser(): Promise<ApiResponse<User>> {
-    return this.request<User>('/api/auth/me');
+    return this.request<User>('/auth/me')
   }
 
-  async requestMagicLink(email: string): Promise<ApiResponse<{message: string}>> {
-    return this.request<{message: string}>('/api/auth/magic-link', {
-      method: 'POST',
-      body: JSON.stringify({ email }),
-    });
-  }
-
-  async demoLogin(): Promise<ApiResponse<User>> {
-    return this.request<User>('/api/auth/demo-login', {
-      method: 'POST',
-    });
-  }
-
-  // Dashboard
   async getDashboardAnalytics(): Promise<ApiResponse<DashboardAnalytics>> {
-    return this.request<DashboardAnalytics>('/api/dashboard/analytics');
+    return this.request<DashboardAnalytics>('/dashboard/analytics')
   }
 
-  // Contacts
-  async getContacts(): Promise<ApiResponse<Contact[]>> {
-    return this.request<Contact[]>('/api/contacts');
+  async getContacts(): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>('/contacts')
   }
 
-  async getContact(id: string): Promise<ApiResponse<Contact>> {
-    return this.request<Contact>(`/api/contacts/${id}`);
+  async getGoals(): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>('/goals')
   }
 
-  async createContact(contact: Partial<Contact>): Promise<ApiResponse<Contact>> {
-    return this.request<Contact>('/api/contacts', {
+  async createContact(contactData: any): Promise<ApiResponse<any>> {
+    return this.request<any>('/contacts', {
       method: 'POST',
-      body: JSON.stringify(contact),
-    });
+      body: JSON.stringify(contactData),
+    })
   }
 
-  async updateContact(id: string, contact: Partial<Contact>): Promise<ApiResponse<Contact>> {
-    return this.request<Contact>(`/api/contacts/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(contact),
-    });
-  }
-
-  async deleteContact(id: string): Promise<ApiResponse<{message: string}>> {
-    return this.request<{message: string}>(`/api/contacts/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
-  // Goals
-  async getGoals(): Promise<ApiResponse<Goal[]>> {
-    return this.request<Goal[]>('/api/goals');
-  }
-
-  async getGoal(id: string): Promise<ApiResponse<Goal>> {
-    return this.request<Goal>(`/api/goals/${id}`);
-  }
-
-  async createGoal(goal: Partial<Goal>): Promise<ApiResponse<Goal>> {
-    return this.request<Goal>('/api/goals', {
+  async createGoal(goalData: any): Promise<ApiResponse<any>> {
+    return this.request<any>('/goals', {
       method: 'POST',
-      body: JSON.stringify(goal),
-    });
-  }
-
-  async updateGoal(id: string, goal: Partial<Goal>): Promise<ApiResponse<Goal>> {
-    return this.request<Goal>(`/api/goals/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(goal),
-    });
-  }
-
-  async deleteGoal(id: string): Promise<ApiResponse<{message: string}>> {
-    return this.request<{message: string}>(`/api/goals/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
-  // AI Suggestions
-  async getAISuggestions(): Promise<ApiResponse<AISuggestion[]>> {
-    return this.request<AISuggestion[]>('/api/ai-suggestions');
-  }
-
-  // Contact Upload
-  async uploadContacts(file: File): Promise<ApiResponse<{processed: number, skipped: number}>> {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    return this.request<{processed: number, skipped: number}>('/api/contacts/upload', {
-      method: 'POST',
-      body: formData,
-      headers: {}, // Let browser set Content-Type for FormData
-    });
-  }
-
-  async uploadContactsJSON(contacts: Partial<Contact>[]): Promise<ApiResponse<{processed: number, skipped: number}>> {
-    return this.request<{processed: number, skipped: number}>('/api/contacts/upload', {
-      method: 'POST',
-      body: JSON.stringify({ contacts }),
-    });
+      body: JSON.stringify(goalData),
+    })
   }
 }
 
-export const apiService = new ApiService();
+export const apiService = new ApiService()
