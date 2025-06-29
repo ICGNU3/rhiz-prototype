@@ -93,7 +93,6 @@ def configure_logging(app):
     """Configure application logging"""
     if not app.debug and not app.testing:
         # Production logging
-        import logging
         from logging.handlers import RotatingFileHandler
         
         if not os.path.exists('logs'):
@@ -109,5 +108,5 @@ def configure_logging(app):
         app.logger.setLevel(logging.INFO)
         app.logger.info('Rhiz application startup')
     else:
-        # Development logging
-        logging.basicConfig(level=logging.DEBUG)
+        # Development logging - use app logger instead
+        app.logger.setLevel(logging.DEBUG)
