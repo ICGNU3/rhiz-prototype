@@ -35,11 +35,11 @@ class AuthService:
         token = jwt.encode(payload, self.jwt_secret, algorithm='HS256')
         
         # Store token in database for tracking and revocation
-        auth_token = AuthToken(
-            email=email,
-            token=token,
-            expires=payload['exp']
-        )
+        auth_token = AuthToken()
+        auth_token.email = email
+        auth_token.token = token
+        auth_token.expires = payload['exp']
+        
         db.session.add(auth_token)
         db.session.commit()
         
@@ -171,11 +171,11 @@ class AuthService:
         user = User.query.filter_by(email=email).first()
         
         if not user:
-            user = User(
-                email=email,
-                subscription_tier='explorer',  # Default tier for new users
-                is_guest=False
-            )
+            user = User()
+            user.email = email
+            user.subscription_tier = 'explorer'  # Default tier for new users
+            user.is_guest = False
+            
             db.session.add(user)
             db.session.commit()
         

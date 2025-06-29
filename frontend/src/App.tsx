@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { User } from './types'
 import { apiService } from './services/api'
 import LandingPage from './pages/LandingPage'
+import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Contacts from './pages/Contacts'
 import Goals from './pages/Goals'
@@ -62,21 +63,27 @@ function App() {
           } 
         />
         <Route 
+          path="/login" 
+          element={
+            user ? <Navigate to="/dashboard" replace /> : <Login />
+          } 
+        />
+        <Route 
           path="/dashboard" 
           element={
-            user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/" replace />
+            user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" replace />
           } 
         />
         <Route 
           path="/contacts" 
           element={
-            user ? <Contacts user={user} onLogout={handleLogout} /> : <Navigate to="/" replace />
+            user ? <Contacts user={user} onLogout={handleLogout} /> : <Navigate to="/login" replace />
           } 
         />
         <Route 
           path="/goals" 
           element={
-            user ? <Goals user={user} onLogout={handleLogout} /> : <Navigate to="/" replace />
+            user ? <Goals user={user} onLogout={handleLogout} /> : <Navigate to="/login" replace />
           } 
         />
         <Route path="/404" element={<NotFound />} />
