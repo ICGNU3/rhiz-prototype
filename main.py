@@ -5069,33 +5069,22 @@ def serve_contacts_page():
     if 'user_id' not in session:
         return redirect(url_for('serve_login_page'))
     
-    return render_template_string('''
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contacts - Rhiz</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(-45deg, #1e3a8a, #3730a3, #581c87, #7c2d12);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-            min-height: 100vh;
-            color: white;
-        }
-        
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+    return "Contacts page - implementation in progress"
+
+
+# API endpoints for React frontend
+@app.route('/api/auth/me')
+def get_current_user():
+    """Get current authenticated user"""
+    # Mock user for now - replace with real authentication
+    return jsonify({
+        'id': 'demo_user',
+        'email': 'demo@rhiz.app',
+        'subscription_tier': 'free',
+        'goals_count': 3,
+        'contacts_count': 8,
+        'ai_suggestions_used': 5
+    })
         }
         
         .contacts-container {
