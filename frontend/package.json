@@ -13,6 +13,7 @@
     "type-check": "tsc --noEmit",
     "test": "vitest",
     "test:ci": "vitest run --coverage --reporter=verbose",
+    "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "preview": "vite preview"
   },
