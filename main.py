@@ -483,9 +483,638 @@ def serve_dashboard():
 </html>
     ''')
 
-@app.route('/contacts') 
 @app.route('/goals')
-@app.route('/404')
+def serve_goals_page():
+    """Serve goals page with authentication check"""
+    # Check if user is authenticated
+    if 'user_id' not in session:
+        return redirect('/login')
+    
+    return render_template_string('''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goals - Rhiz</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        .new-goal-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .new-goal-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 85px);
+        }
+        
+        /* Left Pane */
+        .left-pane {
+            width: 350px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(5px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        .goals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .goal-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .goal-card:hover, .goal-card.active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        .goal-card.active {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .goal-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+        .goal-status {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 0.75rem;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80, #22c55e);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+        }
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Right Pane */
+        .right-pane {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* Goal Detail */
+        .goal-detail {
+            display: none;
+        }
+        .goal-detail.active {
+            display: block;
+        }
+        .goal-overview {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+        }
+        .goal-overview h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+        .goal-meta {
+            display: flex;
+            gap: 2rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .meta-label {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .meta-value {
+            font-weight: 500;
+        }
+        
+        /* Matched Contacts */
+        .section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+        }
+        .section h3 {
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+        .contacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .contact-match {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .contact-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.75rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .contact-name {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        .connect-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .connect-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Action Items */
+        .action-items {
+            list-style: none;
+        }
+        .action-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .action-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4ade80;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            color: #1f2937;
+        }
+        .modal h3 {
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .form-textarea {
+            resize: vertical;
+            height: 100px;
+        }
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            color: white;
+        }
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            .left-pane {
+                width: 100%;
+                height: 300px;
+            }
+            .goal-meta {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .contacts-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>Your Goals</h1>
+        <button class="new-goal-btn" onclick="openNewGoalModal()">+ New Goal</button>
+    </div>
+    
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Left Pane: Goals List -->
+        <div class="left-pane">
+            <div class="goals-list" id="goalsList">
+                <div class="loading">Loading your goals...</div>
+            </div>
+        </div>
+        
+        <!-- Right Pane: Goal Detail -->
+        <div class="right-pane">
+            <div class="empty-state" id="emptyState">
+                <h3>Select a goal to view details</h3>
+                <p>Choose a goal from the left to see matched contacts and action items</p>
+            </div>
+            
+            <div class="goal-detail" id="goalDetail">
+                <!-- Goal detail content will be inserted here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Floating Action Button -->
+    <button class="fab" onclick="openNewGoalModal()">+</button>
+    
+    <!-- New Goal Modal -->
+    <div class="modal" id="newGoalModal">
+        <div class="modal-content">
+            <h3>Create New Goal</h3>
+            <form id="newGoalForm">
+                <div class="form-group">
+                    <label class="form-label">Goal Title</label>
+                    <input type="text" class="form-input" id="goalTitle" required placeholder="e.g., Raise Series A">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" id="goalDescription" placeholder="Describe what you want to achieve..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Goal Type</label>
+                    <select class="form-input" id="goalType">
+                        <option value="fundraising">Fundraising</option>
+                        <option value="hiring">Hiring</option>
+                        <option value="partnerships">Partnerships</option>
+                        <option value="sales">Sales</option>
+                        <option value="networking">Networking</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target Date</label>
+                    <input type="date" class="form-input" id="goalDeadline">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeNewGoalModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Goal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let goals = [];
+        let selectedGoalId = null;
+        
+        // Load goals on page load
+        async function loadGoals() {
+            try {
+                const response = await fetch('/api/goals');
+                if (!response.ok) {
+                    throw new Error('Failed to load goals');
+                }
+                
+                goals = await response.json();
+                renderGoalsList();
+                
+            } catch (error) {
+                console.error('Error loading goals:', error);
+                document.getElementById('goalsList').innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: rgba(255, 255, 255, 0.7);">
+                        <h3>Unable to load goals</h3>
+                        <p>Please try refreshing the page</p>
+                        <button class="new-goal-btn" onclick="loadGoals()" style="margin-top: 1rem;">Try Again</button>
+                    </div>
+                `;
+            }
+        }
+        
+        function renderGoalsList() {
+            const container = document.getElementById('goalsList');
+            
+            if (goals.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: rgba(255, 255, 255, 0.7);">
+                        <h3>No goals yet</h3>
+                        <p>Create your first goal to start building meaningful relationships</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = goals.map(goal => `
+                <div class="goal-card ${selectedGoalId === goal.id ? 'active' : ''}" onclick="selectGoal('${goal.id}')">
+                    <div class="goal-title">${goal.title || 'Untitled Goal'}</div>
+                    <div class="goal-status">${goal.goal_type || 'general'}</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${goal.progress_percentage || 0}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function selectGoal(goalId) {
+            selectedGoalId = goalId;
+            const goal = goals.find(g => g.id === goalId);
+            
+            // Update active state
+            renderGoalsList();
+            
+            // Hide empty state and show goal detail
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('goalDetail').classList.add('active');
+            
+            // Render goal detail
+            renderGoalDetail(goal);
+        }
+        
+        function renderGoalDetail(goal) {
+            const container = document.getElementById('goalDetail');
+            
+            // Mock matched contacts for demo
+            const mockContacts = [
+                { name: 'Alice Chen', company: 'TechVC Partners', avatar: 'AC' },
+                { name: 'Bob Smith', company: 'Innovation Fund', avatar: 'BS' },
+                { name: 'Carol Davis', company: 'Growth Capital', avatar: 'CD' }
+            ];
+            
+            const mockActionItems = [
+                'Follow up with Alice about Series A timing',
+                'Share updated deck with Bob',
+                'Schedule coffee meeting with Carol',
+                'Prepare investor update for next week'
+            ];
+            
+            container.innerHTML = `
+                <div class="goal-overview">
+                    <h2>${goal.title || 'Untitled Goal'}</h2>
+                    <p style="margin-bottom: 1.5rem; color: rgba(255, 255, 255, 0.8);">${goal.description || 'No description provided'}</p>
+                    
+                    <div class="goal-meta">
+                        <div class="meta-item">
+                            <div class="meta-label">Status</div>
+                            <div class="meta-value">${goal.status || 'In Progress'}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Type</div>
+                            <div class="meta-value">${goal.goal_type || 'General'}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Progress</div>
+                            <div class="meta-value">${goal.progress_percentage || 0}%</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">Created</div>
+                            <div class="meta-value">${goal.created_at ? new Date(goal.created_at).toLocaleDateString() : 'Recently'}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Matched Contacts</h3>
+                    <div class="contacts-grid">
+                        ${mockContacts.map(contact => `
+                            <div class="contact-match">
+                                <div class="contact-avatar">${contact.avatar}</div>
+                                <div class="contact-name">${contact.name}</div>
+                                <div style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.7); margin-bottom: 0.75rem;">${contact.company}</div>
+                                <button class="connect-btn" onclick="connectToContact('${contact.name}')">Connect</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>AI-Generated Action Items</h3>
+                    <ul class="action-items">
+                        ${mockActionItems.map(item => `
+                            <li class="action-item">
+                                <div class="action-icon"></div>
+                                <span>${item}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+        
+        function connectToContact(name) {
+            alert(`Connecting to ${name}... This will integrate with AI suggestions in the future.`);
+        }
+        
+        // Modal functions
+        function openNewGoalModal() {
+            document.getElementById('newGoalModal').classList.add('active');
+        }
+        
+        function closeNewGoalModal() {
+            document.getElementById('newGoalModal').classList.remove('active');
+            document.getElementById('newGoalForm').reset();
+        }
+        
+        // Handle new goal creation
+        document.getElementById('newGoalForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                title: document.getElementById('goalTitle').value,
+                description: document.getElementById('goalDescription').value,
+                goal_type: document.getElementById('goalType').value,
+                timeline: document.getElementById('goalDeadline').value,
+                status: 'active'
+            };
+            
+            try {
+                const response = await fetch('/api/goals', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    closeNewGoalModal();
+                    loadGoals(); // Reload goals list
+                } else {
+                    alert('Failed to create goal. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error creating goal:', error);
+                alert('Network error. Please try again.');
+            }
+        });
+        
+        // Close modal when clicking outside
+        document.getElementById('newGoalModal').addEventListener('click', (e) => {
+            if (e.target.id === 'newGoalModal') {
+                closeNewGoalModal();
+            }
+        });
+        
+        // Initialize page
+        loadGoals();
+    </script>
+</body>
+</html>
+    ''')
+
+@app.route('/contacts')
 def serve_react():
     """Serve React frontend application"""
     try:
