@@ -2592,6 +2592,897 @@ def serve_settings_page():
 </html>
     ''')
 
+@app.route('/network')
+def serve_network_page():
+    """Serve Network/Relationship Map page with interactive graph"""
+    # Check authentication
+    if 'user_id' not in session:
+        return redirect(url_for('serve_login_page'))
+    
+    return render_template_string('''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network - Rhiz</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(-45deg, #1e3a8a, #3730a3, #581c87, #7c2d12);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            color: white;
+            overflow: hidden;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .network-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .network-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .network-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .filters-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .filters-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .network-body {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            position: relative;
+        }
+        
+        .filters-sidebar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+        
+        .filters-sidebar.hidden {
+            transform: translateX(-100%);
+        }
+        
+        .filter-section {
+            margin-bottom: 2rem;
+        }
+        
+        .filter-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .tag-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .tag-checkbox {
+            display: none;
+        }
+        
+        .tag-label {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.375rem 0.75rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        
+        .tag-checkbox:checked + .tag-label {
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            border-color: #4f46e5;
+        }
+        
+        .tag-label:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .strength-slider {
+            margin: 1rem 0;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            cursor: pointer;
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            cursor: pointer;
+            border: none;
+        }
+        
+        .slider-value {
+            text-align: center;
+            margin-top: 0.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.875rem;
+        }
+        
+        .date-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.5rem;
+            color: white;
+            outline: none;
+        }
+        
+        .date-input:focus {
+            border-color: #4f46e5;
+        }
+        
+        .graph-canvas {
+            position: relative;
+            background: rgba(255, 255, 255, 0.02);
+            overflow: hidden;
+        }
+        
+        .graph-svg {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+        
+        .graph-svg:active {
+            cursor: grabbing;
+        }
+        
+        .node {
+            fill: #4f46e5;
+            stroke: white;
+            stroke-width: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .node:hover {
+            fill: #9333ea;
+            stroke-width: 3px;
+        }
+        
+        .node.selected {
+            fill: #10b981;
+            stroke: #34d399;
+            stroke-width: 4px;
+        }
+        
+        .link {
+            stroke: rgba(255, 255, 255, 0.3);
+            stroke-width: 1.5px;
+        }
+        
+        .node-label {
+            font-size: 12px;
+            fill: white;
+            text-anchor: middle;
+            pointer-events: none;
+            font-weight: 500;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.875rem;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .tooltip.show {
+            opacity: 1;
+        }
+        
+        .detail-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .detail-panel.open {
+            transform: translateX(0);
+        }
+        
+        .detail-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .contact-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            margin: 0 auto 1rem;
+        }
+        
+        .contact-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .contact-company {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1rem;
+        }
+        
+        .detail-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .detail-section h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .metadata-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .metadata-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.875rem;
+        }
+        
+        .metadata-value {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .action-btn.primary {
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+        }
+        
+        .action-btn.danger {
+            background: rgba(239, 68, 68, 0.8);
+        }
+        
+        .graph-controls {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 50;
+        }
+        
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .close-panel {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .close-panel:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .network-body {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters-sidebar {
+                position: absolute;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                z-index: 200;
+                width: 300px;
+            }
+            
+            .detail-panel {
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 200;
+                width: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="network-container">
+        <!-- Header -->
+        <div class="network-header">
+            <h1 class="network-title">Relationship Map</h1>
+            <button class="filters-toggle" onclick="toggleFilters()">
+                <span>Filters</span>
+                <span id="filtersIcon">▼</span>
+            </button>
+        </div>
+        
+        <!-- Body -->
+        <div class="network-body">
+            <!-- Filters Sidebar -->
+            <div class="filters-sidebar" id="filtersSidebar">
+                <!-- Tags Filter -->
+                <div class="filter-section">
+                    <h3 class="filter-title">Tags</h3>
+                    <div class="tag-filter">
+                        <input type="checkbox" id="tag-mentor" class="tag-checkbox" value="mentor" onchange="applyFilters()">
+                        <label for="tag-mentor" class="tag-label">Mentor</label>
+                        
+                        <input type="checkbox" id="tag-investor" class="tag-checkbox" value="investor" onchange="applyFilters()">
+                        <label for="tag-investor" class="tag-label">Investor</label>
+                        
+                        <input type="checkbox" id="tag-friend" class="tag-checkbox" value="friend" onchange="applyFilters()">
+                        <label for="tag-friend" class="tag-label">Friend</label>
+                        
+                        <input type="checkbox" id="tag-colleague" class="tag-checkbox" value="colleague" onchange="applyFilters()">
+                        <label for="tag-colleague" class="tag-label">Colleague</label>
+                        
+                        <input type="checkbox" id="tag-client" class="tag-checkbox" value="client" onchange="applyFilters()">
+                        <label for="tag-client" class="tag-label">Client</label>
+                        
+                        <input type="checkbox" id="tag-partner" class="tag-checkbox" value="partner" onchange="applyFilters()">
+                        <label for="tag-partner" class="tag-label">Partner</label>
+                    </div>
+                </div>
+                
+                <!-- Strength Filter -->
+                <div class="filter-section">
+                    <h3 class="filter-title">Relationship Strength</h3>
+                    <div class="strength-slider">
+                        <input type="range" id="strengthSlider" class="slider" min="0" max="100" value="0" oninput="updateStrengthValue(); applyFilters()">
+                        <div class="slider-value">Min: <span id="strengthValue">0</span></div>
+                    </div>
+                </div>
+                
+                <!-- Last Interaction Filter -->
+                <div class="filter-section">
+                    <h3 class="filter-title">Last Interaction</h3>
+                    <input type="date" id="lastInteraction" class="date-input" onchange="applyFilters()" placeholder="Since date">
+                </div>
+                
+                <!-- Reset Filters -->
+                <div class="filter-section">
+                    <button class="action-btn" onclick="resetFilters()">Reset All Filters</button>
+                </div>
+            </div>
+            
+            <!-- Graph Canvas -->
+            <div class="graph-canvas">
+                <svg class="graph-svg" id="networkGraph"></svg>
+                
+                <!-- Graph Controls -->
+                <div class="graph-controls">
+                    <button class="control-btn" onclick="zoomIn()" title="Zoom In">+</button>
+                    <button class="control-btn" onclick="zoomOut()" title="Zoom Out">−</button>
+                    <button class="control-btn" onclick="resetView()" title="Reset View">⌂</button>
+                </div>
+                
+                <!-- Tooltip -->
+                <div class="tooltip" id="tooltip">
+                    <div id="tooltipContent"></div>
+                </div>
+            </div>
+            
+            <!-- Detail Panel -->
+            <div class="detail-panel" id="detailPanel">
+                <button class="close-panel" onclick="closeDetailPanel()">×</button>
+                
+                <div class="detail-header">
+                    <div class="contact-avatar" id="detailAvatar">S</div>
+                    <div class="contact-name" id="detailName">Select a contact</div>
+                    <div class="contact-company" id="detailCompany">Click on a node to view details</div>
+                </div>
+                
+                <div class="detail-section" id="metadataSection">
+                    <h4>Relationship Details</h4>
+                    <div id="metadataContainer">
+                        <!-- Metadata will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="detail-section" id="actionsSection">
+                    <h4>Actions</h4>
+                    <div class="action-buttons">
+                        <button class="action-btn primary" onclick="messageContact()">
+                            💬 Send Message
+                        </button>
+                        <button class="action-btn" onclick="addNote()">
+                            📝 Add Note
+                        </button>
+                        <button class="action-btn" onclick="tagContact()">
+                            🏷️ Manage Tags
+                        </button>
+                        <button class="action-btn danger" onclick="removeFromMap()">
+                            🗑️ Remove from Map
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let networkData = { nodes: [], links: [] };
+        let filteredData = { nodes: [], links: [] };
+        let svg, g, simulation;
+        let selectedNode = null;
+        
+        // Initialize the network graph
+        async function initializeNetwork() {
+            try {
+                const response = await fetch('/api/network/graph');
+                const data = await response.json();
+                
+                if (data.success) {
+                    networkData = data;
+                    filteredData = { ...networkData };
+                    createGraph();
+                    applyFilters();
+                }
+            } catch (error) {
+                console.error('Failed to load network data:', error);
+            }
+        }
+        
+        function createGraph() {
+            const width = document.querySelector('.graph-canvas').clientWidth;
+            const height = document.querySelector('.graph-canvas').clientHeight;
+            
+            svg = d3.select('#networkGraph')
+                .attr('width', width)
+                .attr('height', height);
+            
+            // Clear existing content
+            svg.selectAll('*').remove();
+            
+            // Create zoom behavior
+            const zoom = d3.zoom()
+                .scaleExtent([0.1, 10])
+                .on('zoom', (event) => {
+                    g.attr('transform', event.transform);
+                });
+            
+            svg.call(zoom);
+            
+            // Create main group
+            g = svg.append('g');
+            
+            // Create simulation
+            simulation = d3.forceSimulation()
+                .force('link', d3.forceLink().id(d => d.id).distance(100))
+                .force('charge', d3.forceManyBody().strength(-300))
+                .force('center', d3.forceCenter(width / 2, height / 2))
+                .force('collision', d3.forceCollide().radius(30));
+        }
+        
+        function updateGraph() {
+            // Update links
+            const link = g.selectAll('.link')
+                .data(filteredData.links, d => d.source.id + '-' + d.target.id);
+            
+            link.exit().remove();
+            
+            link.enter().append('line')
+                .attr('class', 'link')
+                .merge(link);
+            
+            // Update nodes
+            const node = g.selectAll('.node')
+                .data(filteredData.nodes, d => d.id);
+            
+            node.exit().remove();
+            
+            const nodeEnter = node.enter().append('g');
+            
+            nodeEnter.append('circle')
+                .attr('class', 'node')
+                .attr('r', d => 10 + (d.strength || 50) * 0.3)
+                .on('mouseover', handleNodeHover)
+                .on('mouseout', hideTooltip)
+                .on('click', handleNodeClick)
+                .call(d3.drag()
+                    .on('start', dragStarted)
+                    .on('drag', dragged)
+                    .on('end', dragEnded));
+            
+            nodeEnter.append('text')
+                .attr('class', 'node-label')
+                .attr('dy', '.35em')
+                .text(d => d.name.split(' ')[0])
+                .style('font-size', d => Math.max(8, 12 + (d.strength || 50) * 0.05) + 'px');
+            
+            // Update simulation
+            simulation.nodes(filteredData.nodes);
+            simulation.force('link').links(filteredData.links);
+            simulation.alpha(1).restart();
+            
+            simulation.on('tick', () => {
+                g.selectAll('.link')
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+                
+                g.selectAll('.node')
+                    .attr('cx', d => d.x)
+                    .attr('cy', d => d.y);
+                
+                g.selectAll('.node-label')
+                    .attr('x', d => d.x)
+                    .attr('y', d => d.y);
+            });
+        }
+        
+        function handleNodeHover(event, d) {
+            const tooltip = document.getElementById('tooltip');
+            const content = document.getElementById('tooltipContent');
+            
+            content.innerHTML = `
+                <div><strong>${d.name}</strong></div>
+                <div>Company: ${d.company || 'Unknown'}</div>
+                <div>Strength: ${d.strength || 50}/100</div>
+                <div>Last Contact: ${d.lastContact || 'Never'}</div>
+            `;
+            
+            tooltip.style.left = event.pageX + 10 + 'px';
+            tooltip.style.top = event.pageY + 10 + 'px';
+            tooltip.classList.add('show');
+        }
+        
+        function hideTooltip() {
+            document.getElementById('tooltip').classList.remove('show');
+        }
+        
+        function handleNodeClick(event, d) {
+            // Update selected node
+            g.selectAll('.node').classed('selected', false);
+            d3.select(event.target).classed('selected', true);
+            selectedNode = d;
+            
+            // Open detail panel
+            openDetailPanel(d);
+        }
+        
+        function openDetailPanel(contact) {
+            const panel = document.getElementById('detailPanel');
+            const avatar = document.getElementById('detailAvatar');
+            const name = document.getElementById('detailName');
+            const company = document.getElementById('detailCompany');
+            const metadataContainer = document.getElementById('metadataContainer');
+            
+            // Update contact info
+            avatar.textContent = contact.name.charAt(0);
+            name.textContent = contact.name;
+            company.textContent = contact.company || 'No company';
+            
+            // Update metadata
+            metadataContainer.innerHTML = `
+                <div class="metadata-item">
+                    <span class="metadata-label">Relationship Strength</span>
+                    <span class="metadata-value">${contact.strength || 50}/100</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">Last Interaction</span>
+                    <span class="metadata-value">${contact.lastContact || 'Never'}</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">Connection Type</span>
+                    <span class="metadata-value">${contact.tags?.[0] || 'Colleague'}</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">Mutual Connections</span>
+                    <span class="metadata-value">${contact.mutualConnections || 0}</span>
+                </div>
+            `;
+            
+            panel.classList.add('open');
+        }
+        
+        function closeDetailPanel() {
+            document.getElementById('detailPanel').classList.remove('open');
+            g.selectAll('.node').classed('selected', false);
+            selectedNode = null;
+        }
+        
+        // Drag handlers
+        function dragStarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+        
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+        
+        function dragEnded(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+        
+        // Filter functions
+        function applyFilters() {
+            const selectedTags = Array.from(document.querySelectorAll('.tag-checkbox:checked')).map(cb => cb.value);
+            const minStrength = parseInt(document.getElementById('strengthSlider').value);
+            const lastInteractionDate = document.getElementById('lastInteraction').value;
+            
+            // Filter nodes
+            filteredData.nodes = networkData.nodes.filter(node => {
+                // Tag filter
+                if (selectedTags.length > 0 && !selectedTags.some(tag => node.tags?.includes(tag))) {
+                    return false;
+                }
+                
+                // Strength filter
+                if ((node.strength || 50) < minStrength) {
+                    return false;
+                }
+                
+                // Date filter
+                if (lastInteractionDate && node.lastContact) {
+                    const interactionDate = new Date(node.lastContact);
+                    const filterDate = new Date(lastInteractionDate);
+                    if (interactionDate < filterDate) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            // Filter links to only include those between filtered nodes
+            const nodeIds = new Set(filteredData.nodes.map(n => n.id));
+            filteredData.links = networkData.links.filter(link => 
+                nodeIds.has(link.source.id || link.source) && 
+                nodeIds.has(link.target.id || link.target)
+            );
+            
+            updateGraph();
+        }
+        
+        function resetFilters() {
+            // Reset all filter inputs
+            document.querySelectorAll('.tag-checkbox').forEach(cb => cb.checked = false);
+            document.getElementById('strengthSlider').value = 0;
+            document.getElementById('lastInteraction').value = '';
+            updateStrengthValue();
+            
+            // Reset filtered data
+            filteredData = { ...networkData };
+            updateGraph();
+        }
+        
+        function updateStrengthValue() {
+            const value = document.getElementById('strengthSlider').value;
+            document.getElementById('strengthValue').textContent = value;
+        }
+        
+        function toggleFilters() {
+            const sidebar = document.getElementById('filtersSidebar');
+            const icon = document.getElementById('filtersIcon');
+            
+            sidebar.classList.toggle('hidden');
+            icon.textContent = sidebar.classList.contains('hidden') ? '▶' : '▼';
+        }
+        
+        // Zoom controls
+        function zoomIn() {
+            svg.transition().call(d3.zoom().scaleBy, 1.5);
+        }
+        
+        function zoomOut() {
+            svg.transition().call(d3.zoom().scaleBy, 0.75);
+        }
+        
+        function resetView() {
+            svg.transition().call(d3.zoom().transform, d3.zoomIdentity);
+        }
+        
+        // Action handlers
+        function messageContact() {
+            if (selectedNode) {
+                alert(`Opening message composer for ${selectedNode.name}`);
+            }
+        }
+        
+        function addNote() {
+            if (selectedNode) {
+                const note = prompt(`Add a note about ${selectedNode.name}:`);
+                if (note) {
+                    alert(`Note added: "${note}"`);
+                }
+            }
+        }
+        
+        function tagContact() {
+            if (selectedNode) {
+                alert(`Tag management for ${selectedNode.name} coming soon!`);
+            }
+        }
+        
+        function removeFromMap() {
+            if (selectedNode && confirm(`Remove ${selectedNode.name} from the network map?`)) {
+                // Remove from data
+                networkData.nodes = networkData.nodes.filter(n => n.id !== selectedNode.id);
+                networkData.links = networkData.links.filter(l => 
+                    l.source.id !== selectedNode.id && l.target.id !== selectedNode.id
+                );
+                
+                closeDetailPanel();
+                applyFilters();
+            }
+        }
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            const width = document.querySelector('.graph-canvas').clientWidth;
+            const height = document.querySelector('.graph-canvas').clientHeight;
+            
+            svg.attr('width', width).attr('height', height);
+            simulation.force('center', d3.forceCenter(width / 2, height / 2));
+            simulation.alpha(1).restart();
+        });
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeNetwork();
+            updateStrengthValue();
+        });
+    </script>
+</body>
+</html>
+    ''')
+
 @app.route('/contacts')
 def serve_react():
     """Serve React frontend application"""
@@ -3090,6 +3981,203 @@ def delete_user_account():
     except Exception as e:
         logging.error(f"Account deletion error: {e}")
         return jsonify({'error': 'Failed to delete account'}), 500
+
+# Network Graph API endpoint
+@app.route('/api/network/graph')
+def get_network_graph():
+    """Get network graph data for D3.js visualization"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        # Mock network data - in production this would come from database analysis
+        nodes = [
+            {
+                'id': 'user',
+                'name': 'You',
+                'company': 'Your Company',
+                'strength': 100,
+                'lastContact': '2024-01-30',
+                'tags': ['self'],
+                'mutualConnections': 0
+            },
+            {
+                'id': 'sarah_chen',
+                'name': 'Sarah Chen',
+                'company': 'TechCorp',
+                'strength': 85,
+                'lastContact': '2024-01-28',
+                'tags': ['colleague', 'mentor'],
+                'mutualConnections': 3
+            },
+            {
+                'id': 'marcus_rodriguez',
+                'name': 'Marcus Rodriguez',
+                'company': 'VC Partners',
+                'strength': 75,
+                'lastContact': '2024-01-25',
+                'tags': ['investor'],
+                'mutualConnections': 2
+            },
+            {
+                'id': 'jennifer_kim',
+                'name': 'Jennifer Kim',
+                'company': 'Design Studio',
+                'strength': 70,
+                'lastContact': '2024-01-20',
+                'tags': ['friend', 'partner'],
+                'mutualConnections': 4
+            },
+            {
+                'id': 'alex_thompson',
+                'name': 'Alex Thompson',
+                'company': 'StartupX',
+                'strength': 60,
+                'lastContact': '2024-01-15',
+                'tags': ['colleague'],
+                'mutualConnections': 1
+            },
+            {
+                'id': 'maria_garcia',
+                'name': 'Maria Garcia',
+                'company': 'InnovateLab',
+                'strength': 65,
+                'lastContact': '2024-01-22',
+                'tags': ['mentor', 'advisor'],
+                'mutualConnections': 2
+            },
+            {
+                'id': 'david_lee',
+                'name': 'David Lee',
+                'company': 'TechFlow',
+                'strength': 55,
+                'lastContact': '2024-01-10',
+                'tags': ['client'],
+                'mutualConnections': 1
+            },
+            {
+                'id': 'emily_zhang',
+                'name': 'Emily Zhang',
+                'company': 'CloudVentures',
+                'strength': 80,
+                'lastContact': '2024-01-29',
+                'tags': ['investor', 'friend'],
+                'mutualConnections': 3
+            },
+            {
+                'id': 'robert_johnson',
+                'name': 'Robert Johnson',
+                'company': 'BuildCorp',
+                'strength': 45,
+                'lastContact': '2024-01-05',
+                'tags': ['colleague'],
+                'mutualConnections': 0
+            },
+            {
+                'id': 'lisa_wang',
+                'name': 'Lisa Wang',
+                'company': 'CreativeSpace',
+                'strength': 72,
+                'lastContact': '2024-01-26',
+                'tags': ['partner', 'friend'],
+                'mutualConnections': 2
+            }
+        ]
+        
+        # Network connections (edges)
+        links = [
+            {'source': 'user', 'target': 'sarah_chen', 'strength': 85},
+            {'source': 'user', 'target': 'marcus_rodriguez', 'strength': 75},
+            {'source': 'user', 'target': 'jennifer_kim', 'strength': 70},
+            {'source': 'user', 'target': 'alex_thompson', 'strength': 60},
+            {'source': 'user', 'target': 'maria_garcia', 'strength': 65},
+            {'source': 'user', 'target': 'david_lee', 'strength': 55},
+            {'source': 'user', 'target': 'emily_zhang', 'strength': 80},
+            {'source': 'user', 'target': 'robert_johnson', 'strength': 45},
+            {'source': 'user', 'target': 'lisa_wang', 'strength': 72},
+            
+            # Mutual connections
+            {'source': 'sarah_chen', 'target': 'marcus_rodriguez', 'strength': 60},
+            {'source': 'sarah_chen', 'target': 'jennifer_kim', 'strength': 65},
+            {'source': 'marcus_rodriguez', 'target': 'emily_zhang', 'strength': 70},
+            {'source': 'jennifer_kim', 'target': 'lisa_wang', 'strength': 75},
+            {'source': 'maria_garcia', 'target': 'emily_zhang', 'strength': 55},
+            {'source': 'alex_thompson', 'target': 'david_lee', 'strength': 50},
+            {'source': 'emily_zhang', 'target': 'lisa_wang', 'strength': 68},
+            {'source': 'sarah_chen', 'target': 'maria_garcia', 'strength': 72}
+        ]
+        
+        return jsonify({
+            'success': True,
+            'nodes': nodes,
+            'links': links
+        })
+        
+    except Exception as e:
+        logging.error(f"Network graph error: {e}")
+        return jsonify({'error': 'Failed to load network data'}), 500
+
+@app.route('/api/contacts/<contact_id>')
+def get_contact_detail(contact_id):
+    """Get detailed information about a specific contact"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        # Mock contact details - in production this would query the database
+        contact_details = {
+            'sarah_chen': {
+                'id': 'sarah_chen',
+                'name': 'Sarah Chen',
+                'email': 'sarah@techcorp.com',
+                'phone': '+1 (555) 123-4567',
+                'company': 'TechCorp',
+                'title': 'VP Engineering',
+                'location': 'San Francisco, CA',
+                'strength': 85,
+                'lastContact': '2024-01-28',
+                'tags': ['colleague', 'mentor'],
+                'mutualConnections': 3,
+                'notes': 'Brilliant engineer and mentor. Always available for technical discussions.',
+                'interactions': [
+                    {'date': '2024-01-28', 'type': 'email', 'note': 'Discussed AI architecture patterns'},
+                    {'date': '2024-01-20', 'type': 'coffee', 'note': 'Coffee chat about career growth'},
+                    {'date': '2024-01-15', 'type': 'linkedin', 'note': 'Connected on technical blog post'}
+                ]
+            },
+            'marcus_rodriguez': {
+                'id': 'marcus_rodriguez',
+                'name': 'Marcus Rodriguez',
+                'email': 'marcus@vcpartners.com',
+                'phone': '+1 (555) 234-5678',
+                'company': 'VC Partners',
+                'title': 'Partner',
+                'location': 'Palo Alto, CA',
+                'strength': 75,
+                'lastContact': '2024-01-25',
+                'tags': ['investor'],
+                'mutualConnections': 2,
+                'notes': 'Active investor in AI startups. Great network in enterprise software.',
+                'interactions': [
+                    {'date': '2024-01-25', 'type': 'meeting', 'note': 'Funding discussion'},
+                    {'date': '2024-01-10', 'type': 'email', 'note': 'Shared market insights'},
+                    {'date': '2024-01-05', 'type': 'event', 'note': 'Met at TechCrunch event'}
+                ]
+            }
+        }
+        
+        contact = contact_details.get(contact_id)
+        if not contact:
+            return jsonify({'error': 'Contact not found'}), 404
+        
+        return jsonify({
+            'success': True,
+            'contact': contact
+        })
+        
+    except Exception as e:
+        logging.error(f"Contact detail error: {e}")
+        return jsonify({'error': 'Failed to load contact details'}), 500
 
 @app.route('/api/auth/request-link', methods=['POST'])
 def request_magic_link():
