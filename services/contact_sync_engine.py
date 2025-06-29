@@ -8,6 +8,8 @@ import json
 import csv
 import io
 import re
+import pandas as pd
+import uuid
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 import hashlib
@@ -29,9 +31,31 @@ class ContactSyncEngine:
             "sources": len(self.supported_sources)
         }
         
-    def import_csv_contacts(self, user_id: str, csv_content: str, source: str = 'csv') -> Dict[str, Any]:
-        """Import contacts from CSV content"""
+    def import_csv_file(self, user_id: str, file) -> Dict[str, Any]:
+        """Import contacts from uploaded CSV file"""
         try:
+            # Read CSV file with pandas
+            df = pd.read_csv(file)
+            
+            # Clean and prepare data
+            contacts_data = []
+            for _, row in df.iterrows():
+                contact_data = self._map_csv_row_to_contact(row.to_dict())
+                if contact_data:
+                    contacts_data.append(contact_data)
+            
+            # Process the contacts
+            return self.process_parsed_contacts(user_id, contacts_data)
+            
+        except Exception as e:
+            return {'error': f'Failed to process CSV file: {str(e)}'}
+    
+    def process_parsed_contacts(self, user_id: str, contacts_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Process parsed contacts data and insert into database"""
+        try:
+            from backend.models import Contact
+            from backend.extensions import db
+            
             results = {
                 'imported': 0,
                 'duplicates': 0,
