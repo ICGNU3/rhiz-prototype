@@ -154,4 +154,19 @@ export default {
     },
   },
   plugins: [],
+  corePlugins: {
+    // Ensure all core utilities are available
+    preflight: true,
+  },
+  safelist: [
+    // Ensure these classes are always included
+    'bg-gray-900',
+    'bg-gray-800',
+    'bg-gray-700',
+    'text-white',
+    'text-gray-100',
+    'text-gray-200',
+    'text-gray-300',
+    'text-gray-400',
+  ],
 }
