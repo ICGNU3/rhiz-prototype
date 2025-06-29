@@ -5,6 +5,7 @@ import Landing from './pages/Landing'
 import Dashboard from './pages/Dashboard'
 import Contacts from './pages/Contacts'
 import Goals from './pages/Goals'
+import Intelligence from './pages/Intelligence'
 import './App.css'
 
 // Types
@@ -51,16 +52,20 @@ function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route 
-            path="/dashboard" 
-            element={user ? <Dashboard user={user} /> : <Navigate to="/" />} 
+            path="/app/dashboard" 
+            element={user ? <Dashboard /> : <Navigate to="/" />} 
           />
           <Route 
-            path="/contacts" 
-            element={user ? <Contacts user={user} /> : <Navigate to="/" />} 
+            path="/app/contacts" 
+            element={user ? <Contacts /> : <Navigate to="/" />} 
           />
           <Route 
-            path="/goals" 
-            element={user ? <Goals user={user} /> : <Navigate to="/" />} 
+            path="/app/goals" 
+            element={user ? <Goals /> : <Navigate to="/" />} 
+          />
+          <Route 
+            path="/app/intelligence" 
+            element={user ? <Intelligence /> : <Navigate to="/" />} 
           />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
