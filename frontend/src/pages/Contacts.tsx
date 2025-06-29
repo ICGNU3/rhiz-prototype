@@ -59,101 +59,201 @@ export default function Contacts({ user, onLogout }: ContactsProps) {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900">
       <Navigation user={user} onLogout={onLogout} />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8" role="main">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Contacts</h1>
-            <p className="text-gray-300">Manage your relationship network</p>
+        <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
+              Contacts
+            </h1>
+            <p className="text-gray-300 text-sm sm:text-base">
+              Manage your relationship network
+            </p>
           </div>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="glass-button"
+            className="glass-button interactive-element flex items-center justify-center space-x-2 whitespace-nowrap"
+            aria-label={showAddForm ? 'Cancel adding contact' : 'Add new contact'}
+            aria-expanded={showAddForm}
           >
-            <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            <svg 
+              className="w-5 h-5 flex-shrink-0" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24" 
+              aria-hidden="true"
+            >
+              {showAddForm ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              )}
             </svg>
-            Add Contact
+            <span className="hidden xs:inline">{showAddForm ? 'Cancel' : 'Add Contact'}</span>
           </button>
-        </div>
+        </header>
 
         {/* Search */}
-        <div className="mb-6">
+        <section className="mb-6" aria-label="Search contacts">
           <div className="relative">
+            <label htmlFor="contact-search" className="sr-only">
+              Search contacts by name, email, or company
+            </label>
             <input
+              id="contact-search"
               type="text"
               placeholder="Search contacts..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-3 pl-10 bg-gray-800/50 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-400 text-white placeholder-gray-400"
+              className="form-input pl-10"
+              aria-describedby="search-help"
+              autoComplete="off"
             />
-            <svg className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg 
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24" 
+              aria-hidden="true"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
+            <div id="search-help" className="sr-only">
+              Search by contact name, email address, or company name
+            </div>
           </div>
-        </div>
+          {searchTerm && (
+            <div className="mt-2 text-sm text-gray-400" role="status" aria-live="polite">
+              {filteredContacts.length === 0 
+                ? `No contacts found for "${searchTerm}"`
+                : `${filteredContacts.length} contact${filteredContacts.length === 1 ? '' : 's'} found`
+              }
+            </div>
+          )}
+        </section>
 
         {/* Add Contact Form */}
         {showAddForm && (
-          <div className="glass-card p-6 mb-6">
-            <h2 className="text-xl font-semibold text-white mb-4">Add New Contact</h2>
-            <form onSubmit={handleAddContact} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                type="text"
-                placeholder="Name *"
-                value={newContact.name}
-                onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                className="px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-400 text-white placeholder-gray-400"
-                required
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={newContact.email}
-                onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
-                className="px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-400 text-white placeholder-gray-400"
-              />
-              <input
-                type="text"
-                placeholder="Company"
-                value={newContact.company}
-                onChange={(e) => setNewContact({ ...newContact, company: e.target.value })}
-                className="px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-400 text-white placeholder-gray-400"
-              />
-              <input
-                type="text"
-                placeholder="Title"
-                value={newContact.title}
-                onChange={(e) => setNewContact({ ...newContact, title: e.target.value })}
-                className="px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-400 text-white placeholder-gray-400"
-              />
-              <textarea
-                placeholder="Notes"
-                value={newContact.notes}
-                onChange={(e) => setNewContact({ ...newContact, notes: e.target.value })}
-                className="md:col-span-2 px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-lg focus:outline-none focus:border-blue-400 text-white placeholder-gray-400 resize-none"
-                rows={3}
-              />
-              <div className="md:col-span-2 flex space-x-4">
+          <section className="glass-card p-4 sm:p-6 mb-6" aria-label="Add new contact form">
+            <h2 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Add New Contact</h2>
+            <form onSubmit={handleAddContact} className="space-y-4" noValidate>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="contact-name" className="block text-sm font-medium text-gray-300 mb-2">
+                    Name <span className="text-red-400" aria-label="required">*</span>
+                  </label>
+                  <input
+                    id="contact-name"
+                    type="text"
+                    value={newContact.name}
+                    onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
+                    className="form-input"
+                    required
+                    aria-required="true"
+                    aria-describedby="name-error"
+                    autoComplete="name"
+                  />
+                  <div id="name-error" className="sr-only" role="alert">
+                    {!newContact.name.trim() && 'Name is required'}
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="contact-email" className="block text-sm font-medium text-gray-300 mb-2">
+                    Email
+                  </label>
+                  <input
+                    id="contact-email"
+                    type="email"
+                    value={newContact.email}
+                    onChange={(e) => setNewContact({ ...newContact, email: e.target.value })}
+                    className="form-input"
+                    autoComplete="email"
+                    aria-describedby="email-help"
+                  />
+                  <div id="email-help" className="sr-only">
+                    Optional: Contact's email address for communication
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="contact-company" className="block text-sm font-medium text-gray-300 mb-2">
+                    Company
+                  </label>
+                  <input
+                    id="contact-company"
+                    type="text"
+                    value={newContact.company}
+                    onChange={(e) => setNewContact({ ...newContact, company: e.target.value })}
+                    className="form-input"
+                    autoComplete="organization"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="contact-title" className="block text-sm font-medium text-gray-300 mb-2">
+                    Job Title
+                  </label>
+                  <input
+                    id="contact-title"
+                    type="text"
+                    value={newContact.title}
+                    onChange={(e) => setNewContact({ ...newContact, title: e.target.value })}
+                    className="form-input"
+                    autoComplete="organization-title"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="contact-notes" className="block text-sm font-medium text-gray-300 mb-2">
+                  Notes
+                </label>
+                <textarea
+                  id="contact-notes"
+                  value={newContact.notes}
+                  onChange={(e) => setNewContact({ ...newContact, notes: e.target.value })}
+                  className="form-input resize-none"
+                  rows={3}
+                  aria-describedby="notes-help"
+                />
+                <div id="notes-help" className="text-xs text-gray-500 mt-1">
+                  Optional: Add any additional information about this contact
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
                 <button
                   type="submit"
-                  className="glass-button bg-blue-500/20 hover:bg-blue-500/30"
+                  className="glass-button interactive-element bg-blue-500/20 hover:bg-blue-500/30 border-blue-500/30 order-2 sm:order-1"
+                  disabled={!newContact.name.trim()}
+                  aria-describedby="submit-help"
                 >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
                   Add Contact
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowAddForm(false)}
-                  className="glass-button"
+                  onClick={() => {
+                    setShowAddForm(false)
+                    setNewContact({ name: '', email: '', company: '', title: '', notes: '' })
+                  }}
+                  className="glass-button interactive-element order-1 sm:order-2"
+                  aria-label="Cancel adding contact and close form"
                 >
                   Cancel
                 </button>
+                <div id="submit-help" className="sr-only">
+                  {!newContact.name.trim() ? 'Please enter a name to add the contact' : 'Click to add this contact to your network'}
+                </div>
               </div>
             </form>
-          </div>
+          </section>
         )}
 
         {/* Contacts Grid */}

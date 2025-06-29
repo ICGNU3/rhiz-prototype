@@ -3,30 +3,170 @@
 @tailwind utilities;
 
 @layer base {
+  /* Mobile-first responsive base styles */
+  * {
+    @apply scroll-smooth;
+  }
+
+  html {
+    @apply text-base;
+    /* Prevent text size adjustment on iOS */
+    -webkit-text-size-adjust: 100%;
+    /* Improve text rendering */
+    text-rendering: optimizeLegibility;
+  }
+
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
       'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
       sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    @apply bg-gray-900 text-white overflow-x-hidden;
+    /* Improve mobile scrolling */
+    -webkit-overflow-scrolling: touch;
+    /* Ensure minimum touch target size */
+    touch-action: manipulation;
+  }
+
+  /* Improve focus visibility for accessibility */
+  *:focus {
+    @apply outline-none;
+  }
+
+  *:focus-visible {
+    @apply ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-900;
+  }
+
+  /* Ensure text remains readable with high contrast */
+  @media (prefers-contrast: high) {
+    .text-gray-300 {
+      @apply text-gray-100;
+    }
+    .text-gray-400 {
+      @apply text-gray-200;
+    }
+    .text-gray-500 {
+      @apply text-gray-300;
+    }
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Screen reader only content */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Improve font sizing on mobile */
+  @media (max-width: 640px) {
+    html {
+      @apply text-sm;
+    }
   }
 }
 
 @layer components {
+  /* Enhanced glassmorphism card with mobile-first design */
   .glass-card {
-    @apply bg-glass-light backdrop-blur-glass border border-glass-border rounded-xl;
+    @apply bg-glass-light backdrop-blur-glass border border-glass-border rounded-lg sm:rounded-xl;
+    @apply shadow-lg shadow-black/20;
+    /* Ensure minimum touch target size on mobile */
+    min-height: 44px;
+    /* Improve touch interactions */
+    -webkit-tap-highlight-color: transparent;
   }
   
+  /* Touch-friendly buttons with proper sizing */
   .glass-button {
-    @apply bg-glass-light hover:bg-glass-border backdrop-blur-glass border border-glass-border rounded-lg px-6 py-3 transition-all duration-300;
+    @apply bg-glass-light hover:bg-glass-border backdrop-blur-glass border border-glass-border;
+    @apply rounded-lg px-4 py-3 sm:px-6 transition-all duration-200;
+    @apply text-sm sm:text-base font-medium;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900;
+    /* Ensure minimum touch target size */
+    min-height: 44px;
+    min-width: 44px;
+    /* Improve touch interactions */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
   
+  /* Accessible gradient text with proper contrast */
   .gradient-text {
     @apply bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent;
+    /* Fallback for browsers that don't support bg-clip-text */
+    color: #60a5fa;
   }
   
+  /* Responsive floating orbs */
   .floating-orb {
-    @apply absolute rounded-full blur-xl opacity-30 animate-float;
+    @apply absolute rounded-full blur-xl opacity-20 sm:opacity-30 animate-float;
+    /* Reduce on mobile for performance */
+    @media (max-width: 640px) {
+      @apply blur-lg opacity-15;
+    }
+  }
+
+  /* Touch-friendly interactive elements */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    @apply flex items-center justify-center;
+  }
+
+  /* Improved button states for accessibility */
+  .interactive-element {
+    @apply transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900;
+    @apply active:scale-[0.98];
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Enhanced form inputs for mobile */
+  .form-input {
+    @apply w-full px-3 py-3 sm:px-4 text-sm sm:text-base;
+    @apply bg-gray-800 border border-gray-600 rounded-lg;
+    @apply text-white placeholder-gray-400;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+    @apply transition-all duration-200;
+    /* Ensure proper sizing on iOS */
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  /* Loading states */
+  .loading-skeleton {
+    @apply bg-gray-700 rounded animate-pulse;
+  }
+
+  /* High contrast support */
+  @media (prefers-contrast: high) {
+    .glass-card {
+      @apply border-2 border-gray-300;
+    }
+    
+    .glass-button {
+      @apply border-2 border-blue-400;
+    }
   }
 }
 
