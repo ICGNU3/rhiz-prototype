@@ -149,7 +149,7 @@ class AuthService:
             if self.resend_api_key:
                 try:
                     params = {
-                        "from": "Rhiz <noreply@rhiz.app>",
+                        "from": "Rhiz <noreply@resend.dev>",
                         "to": [email],
                         "subject": "🔐 Your Rhiz Login Link",
                         "html": html_content,

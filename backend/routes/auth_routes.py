@@ -119,6 +119,32 @@ def logout():
     })
 
 
+@auth_bp.route('/demo-login', methods=['POST'])
+def demo_login():
+    """Demo login for testing without email verification"""
+    try:
+        # Create demo user session
+        demo_email = 'demo@rhiz.app'
+        
+        # Get or create demo user
+        user = auth_service.get_or_create_user(demo_email)
+        
+        # Create session
+        session['user_id'] = user.id
+        session['authenticated'] = True
+        session['email'] = user.email
+        
+        return jsonify({
+            'success': True,
+            'message': 'Demo authentication successful',
+            'user': user.to_dict(),
+            'redirect': '/app/dashboard'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': 'Demo login failed'}), 500
+
+
 @auth_bp.route('/status', methods=['GET'])
 def auth_status():
     """Check authentication status"""

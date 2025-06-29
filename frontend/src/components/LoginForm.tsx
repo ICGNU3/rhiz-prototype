@@ -57,6 +57,40 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     }
   };
 
+  const handleDemoLogin = async () => {
+    setIsLoading(true);
+    setMessage('');
+
+    try {
+      const response = await fetch('/api/auth/demo-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setMessage('Demo login successful! Redirecting...');
+        setIsSuccess(true);
+        
+        // Redirect to dashboard
+        setTimeout(() => {
+          window.location.href = '/app/dashboard';
+        }, 1000);
+      } else {
+        setMessage(data.error || 'Demo login failed. Please try again.');
+        setIsSuccess(false);
+      }
+    } catch (error) {
+      setMessage('Network error. Please check your connection and try again.');
+      setIsSuccess(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4">
       <div className="w-full max-w-md">
@@ -111,10 +145,28 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
                   Sending Magic Link...
                 </span>
               ) : (
-                '🔐 Send Magic Link'
+                'Send Magic Link'
               )}
             </button>
           </form>
+
+          {/* Demo Login Option */}
+          <div className="mt-6 relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/20"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-transparent text-white/60">or</span>
+            </div>
+          </div>
+
+          <button
+            onClick={handleDemoLogin}
+            disabled={isLoading}
+            className="w-full mt-6 bg-white/10 border border-white/20 text-white py-3 px-4 rounded-lg font-medium hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
+          >
+            Try Demo
+          </button>
 
           {/* Message */}
           {message && (
