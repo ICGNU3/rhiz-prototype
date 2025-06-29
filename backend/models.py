@@ -227,14 +227,16 @@ class AISuggestion(db.Model):
     """AI-generated suggestions for user actions"""
     __tablename__ = 'ai_suggestions'
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
-    goal_id = Column(UUID(as_uuid=True), ForeignKey('goals.id'))
+    id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey('users.id'), nullable=False)
+    goal_id = Column(String, ForeignKey('goals.id'))
+    contact_id = Column(String, ForeignKey('contacts.id'))
     
     suggestion_type = Column(String(50), nullable=False)  # contact_match, outreach, follow_up
-    title = Column(String(255), nullable=False)
-    content = Column(Text)
-    confidence_score = Column(Float, default=0.0)
+    confidence = Column(Float, default=0.0)
+    reasoning = Column(Text)
+    suggested_action = Column(Text)
+    outreach_message = Column(Text)
     
     # Status tracking
     status = Column(String(20), default='pending')  # pending, viewed, acted, dismissed
@@ -245,16 +247,19 @@ class AISuggestion(db.Model):
     # Relationships
     user = relationship('User', back_populates='ai_suggestions')
     goal = relationship('Goal', back_populates='ai_suggestions')
+    contact = relationship('Contact', back_populates='ai_suggestions')
     
     def to_dict(self):
         return {
             'id': str(self.id),
             'user_id': str(self.user_id),
             'goal_id': str(self.goal_id) if self.goal_id else None,
+            'contact_id': str(self.contact_id) if self.contact_id else None,
             'suggestion_type': self.suggestion_type,
-            'title': self.title,
-            'content': self.content,
-            'confidence_score': self.confidence_score,
+            'confidence': self.confidence,
+            'reasoning': self.reasoning,
+            'suggested_action': self.suggested_action,
+            'outreach_message': self.outreach_message,
             'status': self.status,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None

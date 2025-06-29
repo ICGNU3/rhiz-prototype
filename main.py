@@ -345,15 +345,7 @@ def get_current_user():
         'ai_suggestions_used': 5
     })
 
-@app.route('/api/dashboard/analytics')
-def dashboard_analytics():
-    """Dashboard analytics data for React frontend"""
-    return jsonify({
-        'goals': 3,
-        'contacts': 8,
-        'ai_suggestions': 5,
-        'trust_score': 85
-    })
+
 
 @app.route('/api/goals')
 def get_goals():
