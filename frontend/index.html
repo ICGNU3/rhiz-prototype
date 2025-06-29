@@ -2,10 +2,112 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Mobile-first viewport and PWA support -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Rhiz" />
+    <meta name="application-name" content="Rhiz" />
+    <meta name="msapplication-TileColor" content="#1e40af" />
+    <meta name="theme-color" content="#1e40af" />
+    <meta name="color-scheme" content="dark" />
+    
+    <!-- Enhanced SEO and social media -->
     <title>Rhiz - Relationship Intelligence Platform</title>
-    <meta name="description" content="Transform your professional relationships with AI-driven insights and strategic connection building" />
+    <meta name="description" content="Transform your professional relationships with AI-driven insights and strategic connection building. Manage contacts, set goals, and build meaningful connections." />
+    <meta name="keywords" content="relationship intelligence, networking, contacts, CRM, AI, professional relationships" />
+    <meta name="author" content="Rhiz" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://rhiz.app/" />
+    <meta property="og:title" content="Rhiz - Relationship Intelligence Platform" />
+    <meta property="og:description" content="Transform your professional relationships with AI-driven insights and strategic connection building" />
+    <meta property="og:image" content="https://rhiz.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Rhiz" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://rhiz.app/" />
+    <meta property="twitter:title" content="Rhiz - Relationship Intelligence Platform" />
+    <meta property="twitter:description" content="Transform your professional relationships with AI-driven insights and strategic connection building" />
+    <meta property="twitter:image" content="https://rhiz.app/og-image.png" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Icons and favicons -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
+    <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#1e40af" />
+    
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Accessibility and performance -->
+    <meta name="robots" content="index, follow" />
+    <meta name="googlebot" content="index, follow" />
+    <link rel="canonical" href="https://rhiz.app/" />
+    
+    <!-- Security headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    
+    <!-- Performance optimizations -->
+    <link rel="dns-prefetch" href="//api.rhiz.app" />
+    <meta http-equiv="x-dns-prefetch-control" content="on" />
+    
+    <!-- Critical CSS for mobile performance -->
+    <style>
+      body { 
+        margin: 0; 
+        padding: 0; 
+        background-color: #111827; 
+        color: #ffffff; 
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overflow-x: hidden;
+      }
+      
+      /* Prevent flash of unstyled content */
+      #root { 
+        min-height: 100vh; 
+        background: linear-gradient(135deg, #1e293b 0%, #1e40af 50%, #1e293b 100%);
+      }
+      
+      /* Loading state */
+      .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: #111827;
+      }
+      
+      /* High contrast support */
+      @media (prefers-contrast: high) {
+        body { background-color: #000000; }
+        #root { background: #000000; }
+      }
+      
+      /* Reduced motion support */
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
   </head>
   <body class="bg-gray-900 text-white min-h-screen">
     <div id="root"></div>

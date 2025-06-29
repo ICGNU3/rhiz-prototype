@@ -257,61 +257,135 @@ export default function Contacts({ user, onLogout }: ContactsProps) {
         )}
 
         {/* Contacts Grid */}
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
-            <p className="text-gray-300 mt-4">Loading contacts...</p>
-          </div>
-        ) : filteredContacts.length === 0 ? (
-          <div className="text-center py-12">
-            <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <h3 className="text-xl font-semibold text-white mb-2">No contacts found</h3>
-            <p className="text-gray-400">
-              {searchTerm ? 'Try adjusting your search terms' : 'Start building your relationship network'}
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredContacts.map((contact) => (
-              <div key={contact.id} className="glass-card p-6 hover:bg-white/5 transition-colors">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-white">{contact.name}</h3>
-                    {contact.title && contact.company && (
-                      <p className="text-gray-400 text-sm">
-                        {contact.title} at {contact.company}
-                      </p>
+        <section aria-label="Contacts list" aria-live="polite">
+          {loading ? (
+            <div className="text-center py-12" role="status" aria-label="Loading contacts">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto" aria-hidden="true"></div>
+              <p className="text-gray-300 mt-4">Loading contacts...</p>
+            </div>
+          ) : filteredContacts.length === 0 ? (
+            <div className="text-center py-12">
+              <svg 
+                className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24" 
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">No contacts found</h3>
+              <p className="text-gray-400 text-sm sm:text-base">
+                {searchTerm ? 'Try adjusting your search terms' : 'Start building your relationship network'}
+              </p>
+              {!searchTerm && (
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  className="glass-button interactive-element mt-4 bg-blue-500/20 hover:bg-blue-500/30"
+                  aria-label="Add your first contact"
+                >
+                  Add Your First Contact
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {filteredContacts.map((contact) => (
+                <article 
+                  key={contact.id} 
+                  className="glass-card p-4 sm:p-6 hover:bg-white/5 transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-900"
+                  role="article"
+                  aria-labelledby={`contact-name-${contact.id}`}
+                  tabIndex={0}
+                >
+                  <header className="flex items-start justify-between mb-3 sm:mb-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 
+                        id={`contact-name-${contact.id}`}
+                        className="text-base sm:text-lg font-semibold text-white truncate"
+                      >
+                        {contact.name}
+                      </h3>
+                      {(contact.title || contact.company) && (
+                        <p className="text-gray-400 text-xs sm:text-sm mt-1 truncate" title={`${contact.title || ''} ${contact.title && contact.company ? 'at' : ''} ${contact.company || ''}`}>
+                          {contact.title && contact.company 
+                            ? `${contact.title} at ${contact.company}`
+                            : contact.title || contact.company
+                          }
+                        </p>
+                      )}
+                    </div>
+                    <div 
+                      className={`w-3 h-3 rounded-full ${getWarmthColor(contact.warmth_level)} flex-shrink-0 ml-2`}
+                      role="img"
+                      aria-label={`Relationship warmth: ${contact.warmth_level}`}
+                      title={`Warmth level: ${contact.warmth_level}`}
+                    />
+                  </header>
+                  
+                  {contact.email && (
+                    <div className="flex items-center space-x-2 text-gray-300 text-xs sm:text-sm mb-3">
+                      <svg 
+                        className="w-4 h-4 flex-shrink-0" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24" 
+                        aria-hidden="true"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                      </svg>
+                      <a 
+                        href={`mailto:${contact.email}`}
+                        className="truncate hover:text-blue-400 transition-colors focus:outline-none focus:text-blue-400"
+                        aria-label={`Send email to ${contact.name} at ${contact.email}`}
+                      >
+                        {contact.email}
+                      </a>
+                    </div>
+                  )}
+                  
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-400 gap-1 sm:gap-2 mt-3 sm:mt-4 pt-3 border-t border-gray-700/50">
+                    <span aria-label={`${contact.interaction_count} interactions with this contact`}>
+                      {contact.interaction_count} interaction{contact.interaction_count !== 1 ? 's' : ''}
+                    </span>
+                    {contact.last_interaction_date && (
+                      <span className="truncate" title={`Last interaction: ${new Date(contact.last_interaction_date).toLocaleDateString()}`}>
+                        Last: {new Date(contact.last_interaction_date).toLocaleDateString()}
+                      </span>
                     )}
                   </div>
-                  <div className={`w-3 h-3 rounded-full ${getWarmthColor(contact.warmth_level)}`} 
-                       title={`Warmth: ${contact.warmth_level}`} />
-                </div>
-                
-                {contact.email && (
-                  <div className="flex items-center space-x-2 text-gray-300 text-sm mb-2">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                    </svg>
-                    <span className="truncate">{contact.email}</span>
-                  </div>
-                )}
-                
-                <div className="flex items-center justify-between text-sm text-gray-400 mt-4">
-                  <span>Interactions: {contact.interaction_count}</span>
-                  {contact.last_interaction_date && (
-                    <span>Last: {new Date(contact.last_interaction_date).toLocaleDateString()}</span>
+                  
+                  {contact.notes && (
+                    <div className="mt-3">
+                      <p 
+                        className="text-gray-300 text-xs sm:text-sm line-clamp-2"
+                        title={contact.notes}
+                        aria-label={`Notes about ${contact.name}: ${contact.notes}`}
+                      >
+                        {contact.notes}
+                      </p>
+                    </div>
                   )}
-                </div>
-                
-                {contact.notes && (
-                  <p className="text-gray-300 text-sm mt-3 line-clamp-2">{contact.notes}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+
+                  <div className="flex gap-2 mt-4 pt-3 border-t border-gray-700/30">
+                    <button
+                      className="flex-1 glass-button interactive-element text-xs sm:text-sm py-2 px-3 bg-blue-500/10 hover:bg-blue-500/20"
+                      aria-label={`View details for ${contact.name}`}
+                    >
+                      View
+                    </button>
+                    <button
+                      className="flex-1 glass-button interactive-element text-xs sm:text-sm py-2 px-3 bg-green-500/10 hover:bg-green-500/20"
+                      aria-label={`Contact ${contact.name}`}
+                    >
+                      Contact
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
       </main>
     </div>
   )
