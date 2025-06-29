@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+import colors from 'tailwindcss/colors'
+
 export default {
   content: [
     "./index.html",
@@ -24,6 +26,12 @@ export default {
     },
     extend: {
       colors: {
+        // Include default Tailwind colors
+        gray: colors.gray,
+        blue: colors.blue,
+        red: colors.red,
+        green: colors.green,
+        yellow: colors.yellow,
         'glass-dark': 'rgba(18, 18, 18, 0.8)',
         'glass-light': 'rgba(255, 255, 255, 0.1)',
         'glass-border': 'rgba(255, 255, 255, 0.2)',

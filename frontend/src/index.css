@@ -38,19 +38,20 @@
   }
 
   *:focus-visible {
-    @apply ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-900;
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
   }
 
-  /* Ensure text remains readable with high contrast */
+  /* High contrast media query with explicit colors */
   @media (prefers-contrast: high) {
     .text-gray-300 {
-      @apply text-gray-100;
+      color: #f3f4f6;
     }
     .text-gray-400 {
-      @apply text-gray-200;
+      color: #e5e7eb;
     }
     .text-gray-500 {
-      @apply text-gray-300;
+      color: #d1d5db;
     }
   }
 
