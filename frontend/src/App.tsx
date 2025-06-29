@@ -77,6 +77,7 @@ function App() {
                 user ? <Navigate to="/dashboard" replace /> : <Login />
               } 
             />
+            {/* Main app routes with /app prefix for Flask serving */}
             <Route 
               path="/dashboard" 
               element={
