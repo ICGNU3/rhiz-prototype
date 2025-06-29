@@ -5096,35 +5096,513 @@ def get_goals():
             'title': 'Raise Series A Funding',
             'description': 'Secure $2M Series A funding from aligned investors',
             'goal_type': 'fundraising',
-            'priority_level': 'high',
-            'timeline': '6 months',
-            'progress_percentage': 25,
-            'created_at': '2024-01-15',
-            'target_date': '2024-07-15'
-        },
-        {
-            'id': '2', 
-            'title': 'Hire Senior Engineer',
-            'description': 'Find and hire a senior full-stack engineer for the team',
-            'goal_type': 'hiring',
-            'priority_level': 'high',
-            'timeline': '3 months',
-            'progress_percentage': 60,
-            'created_at': '2024-02-01',
-            'target_date': '2024-05-01'
-        },
-        {
-            'id': '3',
-            'title': 'Strategic Partnership',
-            'description': 'Establish partnership with major SaaS platform',
-            'goal_type': 'partnerships',
-            'priority_level': 'medium', 
-            'timeline': '4 months',
-            'progress_percentage': 15,
-            'created_at': '2024-01-20',
-            'target_date': '2024-06-20'
         }
-    ])
+        
+        .contacts-title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .search-filter-bar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: white;
+            font-size: 0.875rem;
+        }
+        
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .filter-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: white;
+            font-size: 0.875rem;
+            min-width: 120px;
+        }
+        
+        .filter-select option {
+            background: #1e293b;
+            color: white;
+        }
+        
+        .contacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .contact-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .contact-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .contact-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .contact-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: white;
+            margin-right: 1rem;
+            font-weight: 600;
+        }
+        
+        .contact-info {
+            flex: 1;
+        }
+        
+        .contact-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .contact-company {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .contact-details {
+            margin-bottom: 1rem;
+        }
+        
+        .contact-detail {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .contact-detail-icon {
+            margin-right: 0.5rem;
+            width: 16px;
+        }
+        
+        .contact-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .contact-tag {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .contact-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .contact-action {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.75rem;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .contact-action:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            margin-left: 1rem;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .empty-state p {
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .contacts-container {
+                padding: 1rem;
+            }
+            
+            .contacts-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .search-filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .contacts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="contacts-container">
+        <!-- Header -->
+        <div class="contacts-header">
+            <h1 class="contacts-title">Your Contacts</h1>
+            <div class="header-actions">
+                <a href="/contacts/import" class="btn btn-secondary">
+                    <span>📁</span>
+                    <span>Import</span>
+                </a>
+                <button class="btn btn-primary" onclick="addContact()">
+                    <span>+</span>
+                    <span>Add Contact</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Search and Filter Bar -->
+        <div class="search-filter-bar">
+            <input type="text" class="search-input" placeholder="Search contacts by name, company, or email..." 
+                   id="searchInput" onkeyup="filterContacts()">
+            
+            <select class="filter-select" id="companyFilter" onchange="filterContacts()">
+                <option value="">All Companies</option>
+            </select>
+            
+            <select class="filter-select" id="warmthFilter" onchange="filterContacts()">
+                <option value="">All Warmth</option>
+                <option value="hot">Hot</option>
+                <option value="warm">Warm</option>
+                <option value="cool">Cool</option>
+                <option value="cold">Cold</option>
+                <option value="growing">Growing</option>
+                <option value="rooted">Rooted</option>
+            </select>
+        </div>
+        
+        <!-- Contacts Grid -->
+        <div class="contacts-grid" id="contactsGrid">
+            <div class="loading">Loading your contacts...</div>
+        </div>
+    </div>
+    
+    <script>
+        let contacts = [];
+        let filteredContacts = [];
+        
+        // Load contacts on page load
+        async function loadContacts() {
+            try {
+                const response = await fetch('/api/contacts');
+                if (!response.ok) {
+                    throw new Error('Failed to load contacts');
+                }
+                contacts = await response.json();
+                filteredContacts = [...contacts];
+                populateFilters();
+                renderContacts();
+            } catch (error) {
+                console.error('Error loading contacts:', error);
+                document.getElementById('contactsGrid').innerHTML = `
+                    <div class="empty-state">
+                        <h3>Unable to load contacts</h3>
+                        <p>There was an error loading your contacts. Please try again.</p>
+                        <button class="btn btn-primary" onclick="loadContacts()">Try Again</button>
+                    </div>
+                `;
+            }
+        }
+        
+        function populateFilters() {
+            // Populate company filter
+            const companies = [...new Set(contacts.map(c => c.company).filter(Boolean))].sort();
+            const companyFilter = document.getElementById('companyFilter');
+            companyFilter.innerHTML = '<option value="">All Companies</option>' +
+                companies.map(company => `<option value="${company}">${company}</option>`).join('');
+        }
+        
+        function renderContacts() {
+            const container = document.getElementById('contactsGrid');
+            
+            if (filteredContacts.length === 0) {
+                if (contacts.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <h3>No contacts yet</h3>
+                            <p>Start building your relationship network by adding your first contact.</p>
+                            <button class="btn btn-primary" onclick="addContact()">Add Your First Contact</button>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <h3>No contacts match your search</h3>
+                            <p>Try adjusting your search terms or filters.</p>
+                            <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
+                        </div>
+                    `;
+                }
+                return;
+            }
+            
+            container.innerHTML = filteredContacts.map(contact => `
+                <div class="contact-card" onclick="viewContact('${contact.id}')">
+                    <div class="contact-header">
+                        <div class="contact-avatar">
+                            ${contact.name ? contact.name.charAt(0).toUpperCase() : '?'}
+                        </div>
+                        <div class="contact-info">
+                            <div class="contact-name">${contact.name || 'Unnamed Contact'}</div>
+                            <div class="contact-company">${contact.company || 'No company'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-details">
+                        ${contact.email ? `
+                            <div class="contact-detail">
+                                <span class="contact-detail-icon">📧</span>
+                                <span>${contact.email}</span>
+                            </div>
+                        ` : ''}
+                        ${contact.phone ? `
+                            <div class="contact-detail">
+                                <span class="contact-detail-icon">📞</span>
+                                <span>${contact.phone}</span>
+                            </div>
+                        ` : ''}
+                        ${contact.title ? `
+                            <div class="contact-detail">
+                                <span class="contact-detail-icon">💼</span>
+                                <span>${contact.title}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="contact-tags">
+                        ${contact.warmth ? `<span class="contact-tag">${contact.warmth}</span>` : ''}
+                        ${contact.tags ? contact.tags.split(',').map(tag => 
+                            `<span class="contact-tag">${tag.trim()}</span>`
+                        ).join('') : ''}
+                    </div>
+                    
+                    <div class="contact-actions">
+                        <div class="contact-action" onclick="event.stopPropagation(); messageContact('${contact.id}')">
+                            💬 Message
+                        </div>
+                        <div class="contact-action" onclick="event.stopPropagation(); editContact('${contact.id}')">
+                            ✏️ Edit
+                        </div>
+                        <div class="contact-action" onclick="event.stopPropagation(); viewContactDetails('${contact.id}')">
+                            👁️ View
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function filterContacts() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const companyFilter = document.getElementById('companyFilter').value;
+            const warmthFilter = document.getElementById('warmthFilter').value;
+            
+            filteredContacts = contacts.filter(contact => {
+                const matchesSearch = !searchTerm || 
+                    (contact.name && contact.name.toLowerCase().includes(searchTerm)) ||
+                    (contact.email && contact.email.toLowerCase().includes(searchTerm)) ||
+                    (contact.company && contact.company.toLowerCase().includes(searchTerm));
+                
+                const matchesCompany = !companyFilter || contact.company === companyFilter;
+                const matchesWarmth = !warmthFilter || contact.warmth === warmthFilter;
+                
+                return matchesSearch && matchesCompany && matchesWarmth;
+            });
+            
+            renderContacts();
+        }
+        
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('companyFilter').value = '';
+            document.getElementById('warmthFilter').value = '';
+            filteredContacts = [...contacts];
+            renderContacts();
+        }
+        
+        function addContact() {
+            alert('Add contact functionality - would open a modal or navigate to add contact page');
+        }
+        
+        function viewContact(contactId) {
+            alert(`View contact details for ID: ${contactId}`);
+        }
+        
+        function messageContact(contactId) {
+            alert(`Send message to contact ID: ${contactId}`);
+        }
+        
+        function editContact(contactId) {
+            alert(`Edit contact ID: ${contactId}`);
+        }
+        
+        function viewContactDetails(contactId) {
+            alert(`View detailed profile for contact ID: ${contactId}`);
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadContacts();
+        });
+    </script>
+</body>
+</html>
+    ''')
+    <div class="container">
+        <div class="card">
+            <div class="logo">Rhiz</div>
+            <h1 class="title">Relationship Intelligence</h1>
+            <p class="subtitle">Transform how you build professional relationships with AI-powered insights</p>
+            
+            <form class="form" id="authForm">
+                <input type="email" id="email" class="input" placeholder="Enter your email address" required>
+                <button type="submit" class="btn" id="submitBtn">
+                    Get Magic Link
+                </button>
+            </form>
+            
+            <div id="message" class="message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('authForm');
+        const emailInput = document.getElementById('email');
+        const submitBtn = document.getElementById('submitBtn');
+        const messageDiv = document.getElementById('message');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = emailInput.value;
+            submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner"></span> Sending...';
             
             try {
