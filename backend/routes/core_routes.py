@@ -32,8 +32,4 @@ def health_check():
 # Login route moved to main.py for better styling and functionality
 
 
-@core_bp.route('/app')
-@core_bp.route('/app/<path:path>')
-def serve_react_app(path=None):
-    """Serve React frontend application"""
-    return render_template('app.html')
+# React app routes are handled in main.py
