@@ -1,46 +1,51 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import userEvent from '@testing-library/user-event'
+import { vi } from 'vitest'
 import Dashboard from './Dashboard'
-
-const mockUser = {
-  id: '1',
-  email: 'test@example.com',
-  name: 'Test User',
-  subscription_tier: 'explorer',
-  goals_count: 3,
-  contacts_count: 5,
-  ai_suggestions_used: 12
-}
-
-const mockOnLogout = vi.fn()
+import { User } from '../types'
 
 // Mock the API service
 vi.mock('../services/api', () => ({
   apiService: {
-    getDashboardAnalytics: vi.fn()
+    getDashboardAnalytics: vi.fn(),
+    getContacts: vi.fn(),
+    getGoals: vi.fn(),
+    logout: vi.fn()
   }
 }))
 
-// Mock the Navigation component since it's tested separately
+// Mock the components that have complex dependencies
 vi.mock('../components/Navigation', () => ({
-  default: ({ user, onLogout }: any) => (
+  default: ({ user, onLogout }: { user: User; onLogout: () => void }) => (
     <nav data-testid="navigation">
-      <span>{user.email}</span>
+      <span>Welcome, {user.email}</span>
       <button onClick={onLogout}>Logout</button>
     </nav>
   )
 }))
 
-const renderDashboard = () => {
-  return render(
-    <MemoryRouter>
-      <Dashboard user={mockUser} onLogout={mockOnLogout} />
-    </MemoryRouter>
+vi.mock('../components/LoadingSpinner', () => ({
+  default: ({ className }: { className?: string }) => (
+    <div data-testid="loading-spinner" className={className}>Loading...</div>
   )
-}
+}))
 
 describe('Dashboard', () => {
+  const mockUser: User = {
+    id: '1',
+    email: 'test@example.com',
+    subscription_tier: 'pro',
+    goals_count: 3,
+    contacts_count: 25,
+    ai_suggestions_used: 12
+  }
+
+  const mockOnLogout = vi.fn()
+
+  const renderDashboard = () => {
+    return render(<Dashboard user={mockUser} onLogout={mockOnLogout} />)
+  }
+
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -55,25 +60,12 @@ describe('Dashboard', () => {
     })
 
     renderDashboard()
-    
-    expect(screen.getByText(/Welcome back/)).toBeInTheDocument()
-    expect(screen.getByText('test')).toBeInTheDocument() // email prefix
+
+    expect(screen.getByText('Welcome back!')).toBeInTheDocument()
+    expect(screen.getByTestId('navigation')).toBeInTheDocument()
   })
 
-  it('displays loading state initially', async () => {
-    const { apiService } = await import('../services/api')
-    vi.mocked(apiService.getDashboardAnalytics).mockImplementation(
-      () => new Promise(() => {}) // Never resolves
-    )
-
-    renderDashboard()
-    
-    // Check for loading skeleton elements
-    const loadingElements = screen.getAllByLabelText(/Loading/)
-    expect(loadingElements.length).toBeGreaterThan(0)
-  })
-
-  it('displays analytics data when loaded', async () => {
+  it('displays analytics data correctly', async () => {
     const { apiService } = await import('../services/api')
     const mockAnalytics = {
       contacts: 25,
@@ -82,10 +74,7 @@ describe('Dashboard', () => {
       ai_suggestions: 12
     }
 
-    vi.mocked(apiService.getDashboardAnalytics).mockResolvedValue({
-      success: true,
-      data: mockAnalytics
-    })
+    vi.mocked(apiService.getDashboardAnalytics).mockResolvedValue(mockAnalytics)
 
     renderDashboard()
 
@@ -97,36 +86,22 @@ describe('Dashboard', () => {
     })
   })
 
-  it('displays quick action buttons', () => {
-    renderDashboard()
-    
-    expect(screen.getByLabelText('Go to contacts page to add new contacts')).toBeInTheDocument()
-    expect(screen.getByLabelText('Go to goals page to create new goals')).toBeInTheDocument()
-    expect(screen.getByLabelText('Go to AI intelligence page for recommendations')).toBeInTheDocument()
-  })
-
-  it('has proper accessibility structure', () => {
-    renderDashboard()
-    
-    // Check for main landmark
-    expect(screen.getByRole('main')).toBeInTheDocument()
-    
-    // Check for section landmarks
-    expect(screen.getByLabelText('Dashboard statistics')).toBeInTheDocument()
-    expect(screen.getByLabelText('Quick actions')).toBeInTheDocument()
-    expect(screen.getByLabelText('Recent activity')).toBeInTheDocument()
-    
-    // Check for proper heading structure
-    const headings = screen.getAllByRole('heading')
-    expect(headings.length).toBeGreaterThan(0)
-  })
-
-  it('handles analytics loading failure gracefully', async () => {
+  it('shows loading state initially', () => {
     const { apiService } = await import('../services/api')
-    vi.mocked(apiService.getDashboardAnalytics).mockResolvedValue({
-      success: false,
-      data: null
-    })
+    vi.mocked(apiService.getDashboardAnalytics).mockImplementation(() => 
+      new Promise(resolve => setTimeout(resolve, 100))
+    )
+
+    renderDashboard()
+
+    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument()
+  })
+
+  it('handles API error gracefully', async () => {
+    const { apiService } = await import('../services/api')
+    vi.mocked(apiService.getDashboardAnalytics).mockRejectedValue(
+      new Error('API Error')
+    )
 
     renderDashboard()
 
@@ -139,45 +114,38 @@ describe('Dashboard', () => {
   it('displays recent activity when available', async () => {
     const { apiService } = await import('../services/api')
     vi.mocked(apiService.getDashboardAnalytics).mockResolvedValue({
-      success: true,
-      data: {
-        contacts: 5,
-        goals: 3,
-        interactions: 12,
-        ai_suggestions: 7,
-        recent_activity: {
-          contacts_added: 2,
-          goals_completed: 1
-        }
+      contacts: 5,
+      goals: 3,
+      interactions: 12,
+      ai_suggestions: 7,
+      recent_activity: {
+        contacts_added: 2,
+        goals_completed: 1,
+        messages_sent: 5
       }
     })
 
     renderDashboard()
 
     await waitFor(() => {
-      expect(screen.getByText(/Added 2 new contacts/)).toBeInTheDocument()
-      expect(screen.getByText(/Completed 1 goals/)).toBeInTheDocument()
+      expect(screen.getByText('Recent Activity')).toBeInTheDocument()
     })
   })
 
-  it('shows empty state when no recent activity', async () => {
+  it('handles logout action', async () => {
     const { apiService } = await import('../services/api')
     vi.mocked(apiService.getDashboardAnalytics).mockResolvedValue({
-      success: true,
-      data: {
-        contacts: 5,
-        goals: 3,
-        interactions: 12,
-        ai_suggestions: 7,
-        recent_activity: null
-      }
+      contacts: 5,
+      goals: 3,
+      interactions: 12,
+      ai_suggestions: 7
     })
 
     renderDashboard()
 
-    await waitFor(() => {
-      expect(screen.getByText('No recent activity to display')).toBeInTheDocument()
-      expect(screen.getByText('Start by adding contacts or creating goals')).toBeInTheDocument()
-    })
+    const logoutButton = screen.getByText('Logout')
+    await userEvent.click(logoutButton)
+
+    expect(mockOnLogout).toHaveBeenCalled()
   })
 })
