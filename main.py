@@ -1693,6 +1693,905 @@ def serve_intelligence_page():
 </html>
     ''')
 
+@app.route('/settings')
+def serve_settings_page():
+    """Serve Settings page with tabbed interface"""
+    # Check authentication
+    if 'user_id' not in session:
+        return redirect(url_for('serve_login_page'))
+    
+    return render_template_string('''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Rhiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(-45deg, #1e3a8a, #3730a3, #581c87, #7c2d12);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            color: white;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .settings-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .settings-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .settings-title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .save-btn {
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .save-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+        }
+        
+        .save-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .settings-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            flex: 1;
+        }
+        
+        .settings-sidebar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1.5rem 0;
+            height: fit-content;
+        }
+        
+        .tab-button {
+            width: 100%;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.8);
+            padding: 1rem 1.5rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+            border-left: 3px solid transparent;
+        }
+        
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+        
+        .tab-button.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left-color: #4f46e5;
+        }
+        
+        .settings-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 2rem;
+        }
+        
+        .tab-panel {
+            display: none;
+        }
+        
+        .tab-panel.active {
+            display: block;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 0.75rem;
+            color: white;
+            outline: none;
+            font-family: inherit;
+        }
+        
+        .form-input::placeholder, .form-textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+        
+        .photo-upload {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .photo-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .upload-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        
+        .upload-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.2);
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background: #4f46e5;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .notification-item {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+        
+        .notification-label {
+            flex: 1;
+        }
+        
+        .notification-title {
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 0.25rem;
+        }
+        
+        .notification-desc {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .integration-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .integration-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .integration-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+        
+        .integration-details h3 {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 0.25rem;
+        }
+        
+        .integration-details p {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .integration-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .status-connected {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .status-disconnected {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .connect-btn {
+            background: linear-gradient(135deg, #4f46e5, #9333ea);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        
+        .disconnect-btn {
+            background: rgba(239, 68, 68, 0.8);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        
+        .connect-btn:hover, .disconnect-btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        .danger-zone {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .danger-title {
+            color: #ef4444;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .danger-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .danger-btn:hover {
+            background: #dc2626;
+        }
+        
+        .time-input-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .time-input {
+            width: 80px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        @media (max-width: 768px) {
+            .settings-layout {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .settings-sidebar {
+                display: flex;
+                overflow-x: auto;
+                padding: 0.75rem;
+                gap: 0.5rem;
+            }
+            
+            .tab-button {
+                white-space: nowrap;
+                padding: 0.75rem 1rem;
+                border-left: none;
+                border-bottom: 3px solid transparent;
+            }
+            
+            .tab-button.active {
+                border-left: none;
+                border-bottom-color: #4f46e5;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <!-- Settings Header -->
+        <div class="settings-header">
+            <h1 class="settings-title">Settings</h1>
+            <button class="save-btn" id="saveBtn" onclick="saveSettings()">Save Changes</button>
+        </div>
+        
+        <!-- Settings Layout -->
+        <div class="settings-layout">
+            <!-- Sidebar -->
+            <div class="settings-sidebar">
+                <button class="tab-button active" onclick="switchTab('profile')">Profile</button>
+                <button class="tab-button" onclick="switchTab('notifications')">Notifications</button>
+                <button class="tab-button" onclick="switchTab('integrations')">Integrations</button>
+                <button class="tab-button" onclick="switchTab('privacy')">Privacy & Security</button>
+            </div>
+            
+            <!-- Content Area -->
+            <div class="settings-content">
+                <!-- Profile Tab -->
+                <div id="profile-panel" class="tab-panel active">
+                    <h2 class="section-title">Profile Settings</h2>
+                    
+                    <!-- Photo Upload -->
+                    <div class="photo-upload">
+                        <div class="photo-preview" id="photoPreview">
+                            <span id="photoInitial">U</span>
+                        </div>
+                        <div>
+                            <input type="file" id="photoInput" accept="image/*" style="display: none;" onchange="handlePhotoUpload(event)">
+                            <button class="upload-btn" onclick="document.getElementById('photoInput').click()">Upload Photo</button>
+                            <p style="font-size: 0.875rem; color: rgba(255, 255, 255, 0.7); margin-top: 0.5rem;">JPG, PNG up to 5MB</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Profile Form -->
+                    <div class="form-group">
+                        <label class="form-label" for="fullName">Full Name</label>
+                        <input type="text" id="fullName" class="form-input" placeholder="Enter your full name" value="Demo User">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email Address</label>
+                        <input type="email" id="email" class="form-input" placeholder="Enter your email" value="demo@rhiz.app">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="timezone">Timezone</label>
+                        <select id="timezone" class="form-select">
+                            <option value="UTC">UTC (Coordinated Universal Time)</option>
+                            <option value="America/New_York">Eastern Time (ET)</option>
+                            <option value="America/Chicago">Central Time (CT)</option>
+                            <option value="America/Denver">Mountain Time (MT)</option>
+                            <option value="America/Los_Angeles" selected>Pacific Time (PT)</option>
+                            <option value="Europe/London">GMT (London)</option>
+                            <option value="Europe/Paris">CET (Paris)</option>
+                            <option value="Asia/Tokyo">JST (Tokyo)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Notifications Tab -->
+                <div id="notifications-panel" class="tab-panel">
+                    <h2 class="section-title">Notification Preferences</h2>
+                    
+                    <div class="notification-item">
+                        <div class="notification-label">
+                            <div class="notification-title">Email Reminders</div>
+                            <div class="notification-desc">Get relationship tips and follow-up reminders via email</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="emailReminders" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="notification-item">
+                        <div class="notification-label">
+                            <div class="notification-title">SMS Nudges</div>
+                            <div class="notification-desc">Important relationship opportunities sent via text</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="smsNudges">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="notification-item">
+                        <div class="notification-label">
+                            <div class="notification-title">Weekly Digest</div>
+                            <div class="notification-desc">Weekly summary of network insights and opportunities</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="weeklyDigest" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 2rem;">
+                        <label class="form-label">Quiet Hours</label>
+                        <p style="font-size: 0.875rem; color: rgba(255, 255, 255, 0.7); margin-bottom: 1rem;">Don't send notifications during these hours</p>
+                        <div class="time-input-group">
+                            <input type="time" id="quietStart" class="form-input time-input" value="22:00">
+                            <span style="color: rgba(255, 255, 255, 0.7);">to</span>
+                            <input type="time" id="quietEnd" class="form-input time-input" value="08:00">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Integrations Tab -->
+                <div id="integrations-panel" class="tab-panel">
+                    <h2 class="section-title">Connected Accounts</h2>
+                    
+                    <!-- Google Integration -->
+                    <div class="integration-card">
+                        <div class="integration-info">
+                            <div class="integration-icon">G</div>
+                            <div class="integration-details">
+                                <h3>Google Contacts</h3>
+                                <p>Sync your contacts and calendar events</p>
+                            </div>
+                        </div>
+                        <div class="integration-actions">
+                            <span class="status-badge status-disconnected">Disconnected</span>
+                            <button class="connect-btn" onclick="connectIntegration('google')">Connect</button>
+                        </div>
+                    </div>
+                    
+                    <!-- LinkedIn Integration -->
+                    <div class="integration-card">
+                        <div class="integration-info">
+                            <div class="integration-icon">in</div>
+                            <div class="integration-details">
+                                <h3>LinkedIn</h3>
+                                <p>Import professional connections and updates</p>
+                            </div>
+                        </div>
+                        <div class="integration-actions">
+                            <span class="status-badge status-disconnected">Disconnected</span>
+                            <button class="connect-btn" onclick="connectIntegration('linkedin')">Connect</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Twitter Integration -->
+                    <div class="integration-card">
+                        <div class="integration-info">
+                            <div class="integration-icon">𝕏</div>
+                            <div class="integration-details">
+                                <h3>Twitter / X</h3>
+                                <p>Track social interactions and updates</p>
+                            </div>
+                        </div>
+                        <div class="integration-actions">
+                            <span class="status-badge status-disconnected">Disconnected</span>
+                            <button class="connect-btn" onclick="connectIntegration('twitter')">Connect</button>
+                        </div>
+                    </div>
+                    
+                    <!-- iCloud Integration -->
+                    <div class="integration-card">
+                        <div class="integration-info">
+                            <div class="integration-icon">☁</div>
+                            <div class="integration-details">
+                                <h3>iCloud Contacts</h3>
+                                <p>Sync your Apple contacts and calendar</p>
+                            </div>
+                        </div>
+                        <div class="integration-actions">
+                            <span class="status-badge status-disconnected">Disconnected</span>
+                            <button class="connect-btn" onclick="connectIntegration('icloud')">Connect</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Privacy & Security Tab -->
+                <div id="privacy-panel" class="tab-panel">
+                    <h2 class="section-title">Privacy & Security</h2>
+                    
+                    <!-- Change Password -->
+                    <div class="form-group">
+                        <label class="form-label" for="currentPassword">Current Password</label>
+                        <input type="password" id="currentPassword" class="form-input" placeholder="Enter current password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" class="form-input" placeholder="Enter new password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="confirmPassword">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm new password">
+                    </div>
+                    
+                    <!-- 2FA Toggle -->
+                    <div class="notification-item" style="margin: 2rem 0;">
+                        <div class="notification-label">
+                            <div class="notification-title">Two-Factor Authentication</div>
+                            <div class="notification-desc">Add an extra layer of security to your account</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="twoFactor">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <!-- Data Management -->
+                    <div style="margin: 2rem 0;">
+                        <h3 style="color: rgba(255, 255, 255, 0.9); margin-bottom: 1rem;">Data Management</h3>
+                        <button class="btn-secondary" onclick="downloadData()" style="margin-bottom: 1rem; display: block;">
+                            📄 Download My Data
+                        </button>
+                        <p style="font-size: 0.875rem; color: rgba(255, 255, 255, 0.7);">Export all your data including contacts, goals, and interactions</p>
+                    </div>
+                    
+                    <!-- Danger Zone -->
+                    <div class="danger-zone">
+                        <h3 class="danger-title">Danger Zone</h3>
+                        <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 1rem;">Once you delete your account, there is no going back. Please be certain.</p>
+                        <button class="danger-btn" onclick="confirmDeleteAccount()">Delete My Account</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Account Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <h3 style="color: #ef4444; margin-bottom: 1rem;">Delete Account</h3>
+            <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 1.5rem;">
+                Are you sure you want to delete your account? This action cannot be undone and will permanently remove all your data.
+            </p>
+            <div class="form-group">
+                <label class="form-label">Type "DELETE" to confirm:</label>
+                <input type="text" id="deleteConfirmInput" class="form-input" placeholder="DELETE">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button class="danger-btn" id="confirmDeleteBtn" onclick="deleteAccount()" disabled>Delete Account</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let hasChanges = false;
+        
+        // Tab switching
+        function switchTab(tabName) {
+            // Update buttons
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update panels
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(tabName + '-panel').classList.add('active');
+        }
+        
+        // Track changes
+        document.addEventListener('input', function() {
+            hasChanges = true;
+            updateSaveButton();
+        });
+        
+        document.addEventListener('change', function() {
+            hasChanges = true;
+            updateSaveButton();
+        });
+        
+        function updateSaveButton() {
+            const saveBtn = document.getElementById('saveBtn');
+            if (hasChanges) {
+                saveBtn.textContent = 'Save Changes';
+                saveBtn.disabled = false;
+            } else {
+                saveBtn.textContent = 'Saved';
+                saveBtn.disabled = true;
+            }
+        }
+        
+        // Photo upload
+        function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const photoPreview = document.getElementById('photoPreview');
+                    photoPreview.innerHTML = `<img src="${e.target.result}" alt="Profile Photo">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        // Save settings
+        async function saveSettings() {
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.textContent = 'Saving...';
+            saveBtn.disabled = true;
+            
+            try {
+                // Collect all settings data
+                const settings = {
+                    profile: {
+                        fullName: document.getElementById('fullName').value,
+                        email: document.getElementById('email').value,
+                        timezone: document.getElementById('timezone').value
+                    },
+                    notifications: {
+                        emailReminders: document.getElementById('emailReminders').checked,
+                        smsNudges: document.getElementById('smsNudges').checked,
+                        weeklyDigest: document.getElementById('weeklyDigest').checked,
+                        quietHours: {
+                            start: document.getElementById('quietStart').value,
+                            end: document.getElementById('quietEnd').value
+                        }
+                    },
+                    privacy: {
+                        twoFactor: document.getElementById('twoFactor').checked
+                    }
+                };
+                
+                const response = await fetch('/api/user/settings', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+                
+                if (response.ok) {
+                    hasChanges = false;
+                    saveBtn.textContent = 'Saved';
+                    showMessage('Settings saved successfully!', 'success');
+                } else {
+                    throw new Error('Failed to save settings');
+                }
+            } catch (error) {
+                console.error('Settings save error:', error);
+                saveBtn.textContent = 'Save Changes';
+                saveBtn.disabled = false;
+                showMessage('Failed to save settings. Please try again.', 'error');
+            }
+        }
+        
+        // Integration connections
+        function connectIntegration(provider) {
+            // This would typically open OAuth popup
+            showMessage(`${provider} integration will be available soon!`, 'info');
+        }
+        
+        // Data download
+        function downloadData() {
+            // Trigger data export
+            window.open('/api/user/settings?export=true', '_blank');
+        }
+        
+        // Delete account confirmation
+        function confirmDeleteAccount() {
+            document.getElementById('deleteModal').classList.add('show');
+        }
+        
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('show');
+            document.getElementById('deleteConfirmInput').value = '';
+            document.getElementById('confirmDeleteBtn').disabled = true;
+        }
+        
+        // Enable delete button when "DELETE" is typed
+        document.getElementById('deleteConfirmInput').addEventListener('input', function() {
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            confirmBtn.disabled = this.value !== 'DELETE';
+        });
+        
+        async function deleteAccount() {
+            try {
+                const response = await fetch('/api/user/account', {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('Account deleted successfully. You will be redirected to the homepage.');
+                    window.location.href = '/';
+                } else {
+                    throw new Error('Failed to delete account');
+                }
+            } catch (error) {
+                console.error('Delete account error:', error);
+                showMessage('Failed to delete account. Please try again.', 'error');
+            }
+        }
+        
+        // Utility function for showing messages
+        function showMessage(text, type) {
+            // Simple alert for now - could be enhanced with toast notifications
+            alert(text);
+        }
+        
+        // Initialize
+        updateSaveButton();
+    </script>
+</body>
+</html>
+    ''')
+
 @app.route('/contacts')
 def serve_react():
     """Serve React frontend application"""
@@ -2049,6 +2948,148 @@ def get_insights():
     except Exception as e:
         logging.error(f"Insights error: {e}")
         return jsonify({'error': 'Failed to load insights'}), 500
+
+# User Settings API endpoints
+@app.route('/api/user/settings', methods=['PATCH'])
+def update_user_settings():
+    """Update user settings"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        data = request.get_json()
+        user_id = session.get('user_id')
+        
+        # In a real implementation, this would save to database
+        # For demo purposes, we'll just return success
+        
+        return jsonify({
+            'success': True,
+            'message': 'Settings updated successfully'
+        })
+        
+    except Exception as e:
+        logging.error(f"Settings update error: {e}")
+        return jsonify({'error': 'Failed to update settings'}), 500
+
+@app.route('/api/user/settings')
+def get_user_settings():
+    """Get user settings or export data"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        export_data = request.args.get('export') == 'true'
+        user_id = session.get('user_id')
+        
+        if export_data:
+            # Generate data export
+            export_content = {
+                'user_id': user_id,
+                'export_date': datetime.utcnow().isoformat(),
+                'contacts': [
+                    {
+                        'name': 'Sarah Chen',
+                        'email': 'sarah@techcorp.com',
+                        'company': 'TechCorp',
+                        'notes': 'VP Engineering, interested in AI partnerships'
+                    },
+                    {
+                        'name': 'Marcus Rodriguez',
+                        'email': 'marcus@vcfirm.com',
+                        'company': 'VC Firm',
+                        'notes': 'Partner focusing on early-stage AI startups'
+                    }
+                ],
+                'goals': [
+                    {
+                        'title': 'Raise Series A',
+                        'description': 'Secure $5M Series A funding',
+                        'status': 'active'
+                    }
+                ],
+                'interactions': [
+                    {
+                        'date': '2024-01-15',
+                        'contact': 'Sarah Chen',
+                        'type': 'email',
+                        'notes': 'Discussed potential partnership opportunities'
+                    }
+                ]
+            }
+            
+            # Return as downloadable JSON file
+            from flask import make_response
+            import json
+            
+            response = make_response(json.dumps(export_content, indent=2))
+            response.headers['Content-Type'] = 'application/json'
+            response.headers['Content-Disposition'] = f'attachment; filename=rhiz_data_export_{user_id}.json'
+            return response
+        
+        else:
+            # Return current settings
+            settings = {
+                'profile': {
+                    'fullName': 'Demo User',
+                    'email': 'demo@rhiz.app',
+                    'timezone': 'America/Los_Angeles'
+                },
+                'notifications': {
+                    'emailReminders': True,
+                    'smsNudges': False,
+                    'weeklyDigest': True,
+                    'quietHours': {
+                        'start': '22:00',
+                        'end': '08:00'
+                    }
+                },
+                'integrations': {
+                    'google': {'connected': False},
+                    'linkedin': {'connected': False},
+                    'twitter': {'connected': False},
+                    'icloud': {'connected': False}
+                },
+                'privacy': {
+                    'twoFactor': False
+                }
+            }
+            
+            return jsonify({
+                'success': True,
+                'settings': settings
+            })
+        
+    except Exception as e:
+        logging.error(f"Settings error: {e}")
+        return jsonify({'error': 'Failed to load settings'}), 500
+
+@app.route('/api/user/account', methods=['DELETE'])
+def delete_user_account():
+    """Delete user account"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        user_id = session.get('user_id')
+        
+        # In a real implementation, this would:
+        # 1. Delete all user data from database
+        # 2. Cancel any subscriptions
+        # 3. Send confirmation email
+        # 4. Log the deletion for compliance
+        
+        # Clear the session
+        session.clear()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Account deleted successfully'
+        })
+        
+    except Exception as e:
+        logging.error(f"Account deletion error: {e}")
+        return jsonify({'error': 'Failed to delete account'}), 500
 
 @app.route('/api/auth/request-link', methods=['POST'])
 def request_magic_link():
